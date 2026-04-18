@@ -156,3 +156,89 @@ Stage Summary:
 - Islamic geometric star pattern added as SVG background
 - 9 source files updated with 200+ color reference changes
 - All compilation and lint checks pass
+
+---
+Task ID: 4
+Agent: openclaw-workspace-creator
+Task: Create complete OpenClaw workspace and custom skills for QuranPulse
+
+Work Log:
+- Created workspace directory structure at ~/quranpulse-workspace/
+- Created HEARTBEAT.md - Prayer reminder checklist, daily/weekly tasks, special events (Ramadan, Eid)
+- Created AGENTS.md - 4 agent personas: Ustaz AI (default), Ustaz Azhar (Fiqh), Ustazah Aishah (Akidah), Ustaz Zak (Sirah)
+- Created MEMORY.md - User preferences (Bahasa Melayu, KL timezone, JAKIM method), Islamic calendar notes, common greetings
+- Created SOUL.md - Agent behavioral guidelines (Bismillah, JAKIM disclaimer, source citations, encouraging tone)
+- Created 6 custom OpenClaw skills in ~/quranpulse-workspace/skills/:
+  - quranpulse: Quran verse lookup and tafsir
+  - quranpulse-solat: Prayer times, reminders, solah guidance
+  - quranpulse-tasbih: Digital tasbih counter and dhikr guidance
+  - quranpulse-iqra: Iqra Quran reading method learning support
+  - quranpulse-hadith: Hadith lookup and authenticity verification
+  - quranpulse-daily: Daily Islamic content delivery (morning/evening/Friday/Ramadan)
+- Created openclaw-gateway mini-service at mini-services/openclaw-gateway/
+  - Updated package.json with bun --hot dev script
+  - Created index.ts: HTTP API server on port 3030 with 6 endpoints (health, status, sessions, cron, skills, message)
+- Wrote agent context record to agent-ctx/4-openclaw-workspace-creator.md
+
+Stage Summary:
+- Complete OpenClaw workspace with 4 core files (HEARTBEAT, AGENTS, MEMORY, SOUL)
+- 6 custom skills with SKILL.md frontmatter (name, version, description, tools)
+- OpenClaw gateway mini-service ready for integration
+- All files verified and structurally complete
+
+---
+Task ID: 5
+Agent: openclaw-frontend-integrator
+Task: Deeply integrate OpenClaw features into QuranPulse frontend
+
+Work Log:
+- Read existing UstazAITab.tsx, AppShell.tsx, API routes, and project structure
+- Created 5 OpenClaw API routes:
+  - /api/openclaw/status (GET) - Health check to OpenClaw Gateway
+  - /api/openclaw/sessions (GET) - Fetch active sessions
+  - /api/openclaw/skills (GET) - Fetch available OpenClaw skills
+  - /api/openclaw/cron (GET) - Fetch scheduled cron jobs (prayer reminders)
+  - /api/openclaw/message (POST) - Send message to OpenClaw Gateway
+  All routes include 5-second timeouts and graceful offline error handling
+- Created useOpenClaw custom hook (/src/hooks/useOpenClaw.ts)
+  - OpenClawStatus, OpenClawSkill, OpenClawCronJob, OpenClawSession interfaces
+  - Auto-polling status check every 30 seconds
+  - isOnline state derived from gateway health check
+  - Skills, cron jobs, sessions fetching with error resilience
+  - sendMessage function for OpenClaw agent communication
+- Completely rewrote UstazAITab.tsx with comprehensive OpenClaw integration:
+  - Header with OpenClaw status indicator (green=online, red=offline, pulsing animation)
+  - Mode toggle: "Classic Chat" vs "OpenClaw Agent" tabs
+  - Enhanced Persona Selector: avatar cards with emojis and specialization descriptions
+  - Collapsible Tools Panel showing:
+    - Active OpenClaw Skills badges (quranpulse, quranpulse-solat, quranpulse-tasbih, web-search)
+    - 6 Agent Tools grid (Web Search, Islamic Art, Voice Output, Prayer Reminders, Quran Search, Prayer Times)
+    - Prayer Reminders from OpenClaw cron system
+    - Web Search toggle switch
+  - Enhanced Chat Area with:
+    - User messages (right-aligned, blue gradient, gold user icon)
+    - AI messages (left-aligned, blue card, bot icon)
+    - Voice playback button (TTS) on AI messages
+    - Copy message button
+    - Emoji reactions (👍 ❤️ 🤲 ✨ 🕌) on assistant messages
+    - Web search indicator when agent is searching
+    - Image display for generated Islamic art
+    - OpenClaw agent thinking indicator with Cpu icon
+    - Message timestamps with OpenClaw branding
+  - Enhanced Input Area with:
+    - Voice input button (ASR via /api/asr, 10-second auto-stop)
+    - Text input with mode indicator
+    - Send button with gradient
+    - OpenClaw connection status indicator
+  - Quick Actions: "Generate Islamic Art", "Search Quran", "Prayer Times"
+  - JAKIM disclaimer with shield icon
+  - Graceful fallback: OpenClaw offline → Classic Chat (z-ai-web-dev-sdk LLM)
+- All new files pass ESLint with zero errors
+- Dev server compiles and serves successfully (GET / 200)
+- API routes tested: return proper offline responses when Gateway not running
+
+Stage Summary:
+- Deep Blue theme maintained throughout (#1a1a4a bg, #2a2a6a cards, #4a4aa6 primary, #d4af37 gold)
+- OpenClaw features enhance but don't replace existing LLM functionality
+- Graceful offline handling: all UI works with classic chat fallback
+- 5 new API routes, 1 custom hook, 1 fully rewritten tab component

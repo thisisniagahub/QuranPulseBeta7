@@ -1,9 +1,8 @@
 {
   "name": "openclaw-gateway",
   "version": "1.0.0",
-  "private": true,
+  "description": "OpenClaw Gateway mini-service for QuranPulse",
   "scripts": {
-    "dev": "openclaw gateway start --foreground",
-    "status": "openclaw gateway status"
+    "dev": "bun run index.ts"
   }
 }
