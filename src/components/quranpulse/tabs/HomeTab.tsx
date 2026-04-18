@@ -4,20 +4,23 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Bot, Moon, GraduationCap, CircleDot, Compass, Clock, Share2, Bookmark, ChevronRight, Flame, Star } from 'lucide-react'
 import { useQuranPulseStore, type ActiveTab } from '@/stores/quranpulse-store'
-import { getDailyVerse, getIslamicGreeting, getDailyHikmah, PRAYER_TIMES_KL, getCurrentPrayerIndex, getSurahName, SURAH_LIST } from '@/lib/quran-data'
+import { getDailyVerse, getIslamicGreeting, getDailyHikmah, PRAYER_TIMES_KL, getCurrentPrayerIndex, getSurahName, SURAH_LIST, type DailyVerse } from '@/lib/quran-data'
 
 export function HomeTab() {
   const { streak, xp, level, lastReadSurah, lastReadAyah, lastReadSurahName, setActiveTab, addXp } = useQuranPulseStore()
-  const dailyVerse = getDailyVerse(new Date().getDate())
-  const hikmah = getDailyHikmah()
 
-  // Defer time-dependent values to avoid hydration mismatch
+  // Defer ALL date-dependent values to avoid hydration mismatch
+  // (server and client may be in different timezones)
   const [greeting, setGreeting] = useState('Assalamualaikum')
   const [currentPrayerIdx, setCurrentPrayerIdx] = useState(0)
+  const [dailyVerse, setDailyVerse] = useState<DailyVerse>(getDailyVerse(1))
+  const [hikmah, setHikmah] = useState('')
 
   useEffect(() => {
     setGreeting(getIslamicGreeting())
     setCurrentPrayerIdx(getCurrentPrayerIndex())
+    setDailyVerse(getDailyVerse(new Date().getDate()))
+    setHikmah(getDailyHikmah())
   }, [])
 
   const quickActions = [
