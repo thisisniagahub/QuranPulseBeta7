@@ -13,14 +13,16 @@ export function HomeTab() {
   // (server and client may be in different timezones)
   const [greeting, setGreeting] = useState('Assalamualaikum')
   const [currentPrayerIdx, setCurrentPrayerIdx] = useState(0)
-  const [dailyVerse, setDailyVerse] = useState<DailyVerse>(getDailyVerse(1))
+  const [dailyVerse, setDailyVerse] = useState<DailyVerse | null>(null)
   const [hikmah, setHikmah] = useState('')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setGreeting(getIslamicGreeting())
     setCurrentPrayerIdx(getCurrentPrayerIndex())
     setDailyVerse(getDailyVerse(new Date().getDate()))
     setHikmah(getDailyHikmah())
+    setMounted(true)
   }, [])
 
   const quickActions = [
@@ -160,46 +162,61 @@ export function HomeTab() {
       </motion.div>
 
       {/* Daily Verse Card */}
-      <motion.div
-        className="mt-4 rounded-xl p-5 relative overflow-hidden"
-        style={{
-          background: 'rgba(74, 74, 166, 0.08)',
-          border: '1px solid rgba(74, 74, 166, 0.2)',
-          borderLeft: '3px solid #d4af37',
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.4 }}
-      >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#4a4aa6' }}>
-            📖 Ayat Hari Ini
-          </span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}>
-            {dailyVerse.reference}
-          </span>
+      {mounted && dailyVerse ? (
+        <motion.div
+          className="mt-4 rounded-xl p-5 relative overflow-hidden"
+          style={{
+            background: 'rgba(74, 74, 166, 0.08)',
+            border: '1px solid rgba(74, 74, 166, 0.2)',
+            borderLeft: '3px solid #d4af37',
+          }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#4a4aa6' }}>
+              📖 Ayat Hari Ini
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}>
+              {dailyVerse.reference}
+            </span>
+          </div>
+          <p className="text-right text-2xl leading-[2.2] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
+            {dailyVerse.arabic}
+          </p>
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: 'rgba(204,204,204,0.7)' }}>
+            {dailyVerse.translationMs}
+          </p>
+          <div className="flex gap-2 mt-3">
+            <button
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-transform active:scale-95"
+              style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.2)' }}
+            >
+              <Bookmark className="h-3 w-3" /> Simpan
+            </button>
+            <button
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-transform active:scale-95"
+              style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.2)' }}
+            >
+              <Share2 className="h-3 w-3" /> Kongsi
+            </button>
+          </div>
+        </motion.div>
+      ) : (
+        <div
+          className="mt-4 rounded-xl p-5 relative overflow-hidden animate-pulse"
+          style={{
+            background: 'rgba(74, 74, 166, 0.08)',
+            border: '1px solid rgba(74, 74, 166, 0.2)',
+            borderLeft: '3px solid #d4af37',
+          }}
+        >
+          <div className="h-3 w-24 rounded" style={{ background: 'rgba(74,74,166,0.2)' }} />
+          <div className="mt-3 h-8 w-3/4 rounded" style={{ background: 'rgba(74,74,166,0.15)' }} />
+          <div className="mt-3 h-4 w-full rounded" style={{ background: 'rgba(74,74,166,0.1)' }} />
         </div>
-        <p className="text-right text-2xl leading-[2.2] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
-          {dailyVerse.arabic}
-        </p>
-        <p className="mt-3 text-sm leading-relaxed" style={{ color: 'rgba(204,204,204,0.7)' }}>
-          {dailyVerse.translationMs}
-        </p>
-        <div className="flex gap-2 mt-3">
-          <button
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-transform active:scale-95"
-            style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.2)' }}
-          >
-            <Bookmark className="h-3 w-3" /> Simpan
-          </button>
-          <button
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-transform active:scale-95"
-            style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.2)' }}
-          >
-            <Share2 className="h-3 w-3" /> Kongsi
-          </button>
-        </div>
-      </motion.div>
+      )}
 
       {/* Quick Actions Grid */}
       <motion.div
