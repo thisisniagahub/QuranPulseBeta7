@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+	<html><head><meta charset="UTF-8"><title>404 Error, Page Not Found</title>
+	<meta name="keywords" content="404 error"><meta name="description" content="this Page can not Found on arabic keyboard">
+	<link rel="stylesheet" type="text/css" href="/tpl/tpl.css">
+	<link rel="SHORTCUT ICON" type="image/ico" href="/favicon.ico?1">
+	<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+</head><body>
+		<div id="bgheader">
+			<div id="header">
+				<div id="LogoText"><a href="/" id="logo"></a><h1>404 Error, Page Not Found</h1></div>
+				<div id="navigation">
+				  <ul id="nav">
+					<li><a href="/">Home</a></li>
+					<li><a href="/search">Search</a></li>
+				   
+					<li><a href="/translate" >Translate</a> </li>
+					<li><a href="#" >Tools &nabla;</a>
+						<ul>	 
+							<li><a href="/editor">Editor </a></li>
+							<li><a href="/currency">Currency Converter</a></li>  
+							<li><a href="/photoshop-arabic">Photoshop arabic</a></li>  
+						
+						</ul>
+					</li>
+					<li><a href="#">Games &nabla; </a> 
+						<ul>
+							 <li><a href="/typing-test">Typing Test </a></li>
+							 <li><a href="/arabic-typing-test">Arabic Typing Test </a></li>	
+						</ul>		
+					</li>
+					<li><a href="/arabic">Learn arabic</a></li>
+					<li><a href="/tashkeel">تشكيل الكلمات<sup style="color:red !important" >New</sup></a></li>	
+					
+				  </ul>
+				</div> 
+				<div id="bann">
+				
+			
+				<a href="https://www.facebook.com/pages/arabic-keyboard/217335650733" rel="nofollow"><img src="https://www.arabic-keyboard.org/banner/facebook.png" border="0" height="21" width="130" ></a>
+				</div>
+				<div id="bann"></div></div>                             
+		</div><!--/header-->
+		
+
+
+<div id="main">
+<div style=" position:absolute; text-align:center; width:800px; top:50px; right:20px; color:red; font-size:24px">
+<p><strong>عذراً الصفحة التي تبحث عنها غير موجودة بالموقع الرجاء التأكد من عنوان الصفحة</strong></p><br>
+  <p><a style="color:blue; text-decoration:underline" href="/" class="style1">Back to home إضغط هنا للدخول للصفحة الرئيسية</a></p>
+  
+</div>  
+
+<div id="i" style="position:absolute; top:20px; left:40px;"><img src="/pages/i/error.png"></div>
+
+
+
+
+<style type="text/css"> 
+  #try {position:absolute; top:200px; left:260px; width:500px; direction:rtl; }
+  #try input[type='text']{height:26px; width:320px; border:2px solid #ccc; font-size:20px; margin-right:5px; margin-top:10px}
+  #try input[type='submit']{height:26px; width:120px; font-size:16px; float:right;margin-top:10px}
+    
+
+  #goog-wm h3.closest-match { }
+  #goog-wm h3.closest-match a { color:blue; text-decoration:underline }
+  #goog-wm h3.other-things {  padding:10px; color:#222}
+  #goog-wm ul li { padding:5px }
+  #goog-wm li.search-goog { display: block; direction:rtl; }
+</style>
+
+
+<div id="try">
+<script type="text/javascript"> 
+  var GOOG_FIXURL_LANG = 'ar';
+  var GOOG_FIXURL_SITE = 'http://www.arabic-keyboard.org/';
+</script>
+
+<script type="text/javascript"  src="http://linkhelp.clients.google.com/tbproxy/lh/wm/fixurl.js"></script>
+</div>
+	<br><br><br><br><br><br><br><br>
+	<table cellpadding=10 style="color:#444"><tr><td><pre>
+
+               ,---.
+            ,.'-.   \
+           ( ( ,'"""""-.
+           `,X          `.
+           /` `           `._
+          (            ,   ,_\
+          |          ,---.,'o `.
+          |         / o   \     )
+           \ ,.    (      .____,
+            \| \    \____,'     \
+          '`'\  \        _,____,'
+          \  ,--      ,-'     \
+            ( C     ,'         \
+             `--'  .'           |
+               |   |         .O |
+             __|    \        ,-'_
+            / `L     `._  _,'  ' `.
+           /    `--.._  `',.   _\  `
+           `-.       /\  | `. ( ,\  \
+          _/  `-._  /  \ |--'  (     \
+         '  `-.   `'    \/\`.   `.    )
+               \  -404-    \ `.  |    | 
+
+
+              (o)           (o)      
+</pre></font></td></tr></table>
+
+</div>
+
+</div>
+
+<script type="text/javascript">
+
+	var timeout    = 300; //dropdown hide
+var closetimer = 0;
+var ddmenuitem = 0;
+var ok=0;
+function jsddm_open()
+{  jsddm_canceltimer();
+   jsddm_close();
+    ddmenuitem = $(this).find('ul').css('visibility', 'visible');
+}
+function jsddm_close()
+{  if(ddmenuitem) ddmenuitem.css('visibility', 'hidden');}
+function jsddm_timer()
+{  closetimer = window.setTimeout(jsddm_close, timeout);}
+function jsddm_canceltimer()
+{  if(closetimer)
+   {  window.clearTimeout(closetimer);
+      closetimer = null;}}
+	  
+	  
+	  
+$(document).ready(function() {		
+		$('#nav > li').bind('mouseover', jsddm_open);
+		$('#nav > li').bind('mouseout',  jsddm_timer);   
+			
+});
+
+</script>
+
+
+
+<div id="footer_bg">
+	<div id="footer"> 
+		<div id="copy">Copyright &copy; 2008, <h5>arabic keyboard </h5></div>
+		<div id="links">
+			<a href="/contact">Contact us</a> | <a href="/privacy.php">Privacy</a>
+			| <a href="/guestbook">Guestbook</a> 
+		</div> 
+		<div id="lang"><a id="keyy" href="/" title="arabic keyboard"></a> <a id="clavier" href="/clavier-arabe" title="clavier arabe"></a> <a id="tastatur" href="http://www.arabische-tastatur.de" title="arabische tastatur"></a> <a id="clavier" href="/teclado-arabe" title="Teclado Árabe"></a> 
+		</div>
+	</div>
+</div>
+<!--<script src="http://www.ejabat.co/last_result.php" type="text/javascript"></script>-->
+<script src="https://www.google-analytics.com/ga.js" type="text/javascript"></script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-3488722-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>		
+</body>
+</html>
+			
+			

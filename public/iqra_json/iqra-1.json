@@ -1,0 +1,522 @@
+{
+    "Iqra_1": [
+        {
+            "page": 1,
+            "title": "Pengenalan Huruf Alif dan Ba'",
+            "instruction_jawi": "باچ تروس أ، ب دان ستروسڽ. تيدق ڤرلو دايجا. باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca terus A, Ba dan seterusnya. Tidak perlu dieja. Baca dengan pendek.",
+            "content": [
+                "أَ بَ",
+                "بَ أَ بَ   أَ بَ أَ",
+                "بَ أَ أَ   أَ أَ بَ",
+                "بَ بَ أَ   أَ بَ بَ",
+                "بَ أَ بَ   أَ بَ أَ",
+                "أَ أَ أَ   بَ بَ بَ",
+                "أَ بَ أَ   بَ أَ بَ"
+            ]
+        },
+        {
+            "page": 2,
+            "title": "Pengenalan Huruf Ta'",
+            "instruction_jawi": "باچ تروس أ، ب، تَ دان ستروسڽ. تيدق ڤرلو دايجا. باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca terus A, Ba, Ta dan seterusnya. Tidak perlu dieja. Baca dengan pendek.",
+            "content": [
+                "بَ تَ",
+                "أَ تَ بَ   تَ بَ أَ",
+                "تَ أَ بَ   أَ بَ تَ",
+                "بَ تَ أَ   تَ أَ بَ",
+                "تَ بَ أَ   أَ تَ تَ",
+                "أَ تَ بَ   تَ بَ أَ",
+                "أَ بَ تَ"
+            ]
+        },
+        {
+            "page": 3,
+            "title": "Pengenalan Huruf Tsa'",
+            "content": [
+                "بَ تَ ثَ   ثَ أَ بَ",
+                "ثَ بَ تَ   بَ تَ تَ",
+                "بَ أَ ثَ   أَ تَ بَ",
+                "ثَ بَ ثَ   تَ بَ تَ",
+                "أَ ثَ ثَ",
+                "أَ بَ   تَ ثَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 4,
+            "title": "Pengenalan Huruf Jim",
+            "content": [
+                "جَ   أَ جَ جَ",
+                "ثَ أَ جَ   أَ تَ جَ",
+                "ثَ بَ جَ   بَ جَ ثَ",
+                "ثَ أَ جَ   جَ أَ بَ",
+                "جَ أَ ثَ   تَ أَ جَ",
+                "ثَ جَ جَ   جَ أَ جَ",
+                "جَ ثَ ثَ",
+                "أَ بَ تَ   ثَ جَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 5,
+            "title": "Pengenalan Huruf Ha'",
+            "content": [
+                "جَ حَ   جَ أَ حَ",
+                "حَ حَ ثَ   حَ جَ تَ",
+                "بَ حَ ثَ   جَ حَ تَ",
+                "أَ حَ بَ   جَ أَ ثَ",
+                "حَ أَ حَ   ثَ بَ حَ",
+                "تَ أَ حَ   أَ جَ جَ",
+                "أَ حَ حَ",
+                "أَ بَ تَ   ثَ جَ حَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 6,
+            "title": "Pengenalan Huruf Kho'",
+            "content": [
+                "جَ حَ خَ   حَ أَ خَ",
+                "جَ أَ خَ   ثَ أَ خَ",
+                "خَ تَ جَ   بَ أَ خَ",
+                "تَ حَ ثَ   جَ أَ حَ",
+                "بَ حَ ثَ   تَ أَ خَ",
+                "جَ حَ ثَ   أَ خَ خَ",
+                "جَ حَ خَ",
+                "أَ بَ تَ ثَ جَ حَ خَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 7,
+            "title": "Pengenalan Huruf Dal",
+            "content": [
+                "دَ   خَ دَ دَ",
+                "حَ دَ خَ   حَ دَ ثَ",
+                "جَ حَ دَ   ثَ بَ دَ",
+                "خَ تَ دَ   حَ جَ دَ",
+                "جَ حَ خَ   حَ بَ دَ",
+                "جَ دَ جَ   حَ جَ تَ",
+                "خَ دَ دَ",
+                "أَ بَ تَ ثَ   جَ حَ خَ دَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 8,
+            "title": "Pengenalan Huruf Dzal",
+            "content": [
+                "دَ ذَ   دَ أَ ذَ",
+                "خَ دَ ذَ   أَ حَ دَ",
+                "جَ حَ ذَ   خَ تَ دَ",
+                "ثَ أَ ذَ   جَ حَ خَ",
+                "ذَ بَ حَ   حَ دَ ثَ",
+                "أَ خَ ذَ   خَ دَ ذَ",
+                "دَ أَ ذَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 9,
+            "title": "Pengenalan Huruf Ra'",
+            "content": [
+                "رَ   دَ ذَ رَ",
+                "خَ ذَ رَ   رَ حَ دَ",
+                "جَ رَ ذَ   بَ رَ دَ",
+                "رَ حَ ثَ   تَ ذَ رَ",
+                "خَ رَ جَ   حَ ذَ رَ",
+                "بَ رَ تَ   خَ خَ ذَ",
+                "حَ جَ رَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ رَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 10,
+            "title": "Pengenalan Huruf Zai",
+            "content": [
+                "رَ زَ   رَ أَ زَ",
+                "ذَ رَ زَ   زَ دَ رَ",
+                "زَ خَ ذَ   زَ حَ دَ",
+                "ثَ رَ زَ   خَ رَ جَ",
+                "تَ زَ دَ   بَ زَ رَ",
+                "ثَ حَ ذَ   جَ أَ خَ",
+                "زَ أَ زَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ رَ زَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 11,
+            "title": "Pengenalan Huruf Sin",
+            "content": [
+                "سَ   زَ أَ سَ",
+                "زَ رَ سَ   سَ خَ ذَ",
+                "حَ سَ دَ   سَ خَ ثَ",
+                "جَ زَ رَ   سَ بَ تَ",
+                "ذَ رَ سَ   سَ خَ ذَ",
+                "زَ حَ دَ   سَ جَ ثَ",
+                "أَ بَ تَ",
+                "ثَ جَ حَ خَ دَ ذَ رَ زَ سَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 12,
+            "title": "Pengenalan Huruf Syin",
+            "content": [
+                "سَ شَ   سَ أَ شَ",
+                "سَ شَ شَ   زَ تَ شَ",
+                "شَ ذَ ثَ   دَ رَ سَ",
+                "شَ تَ ذَ   زَ حَ ثَ",
+                "خَ شَ بَ   جَ رَ سَ",
+                "سَ شَ أَ   رَ شَ ذَ",
+                "حَ سَ دَ   ذَ خَ زَ",
+                "أَ سَ شَ   شَ زَ رَ",
+                "خَ سَ دَ   شَ زَ جَ",
+                "أَ بَ تَ",
+                "ثَ جَ حَ خَ دَ ذَ رَ زَ سَ شَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 13,
+            "title": "Pengenalan Huruf Sod",
+            "content": [
+                "صَ   صَ أَ شَ",
+                "صَ شَ زَ   سَ رَ صَ",
+                "صَ ثَ ذَ   دَ سَ صَ",
+                "شَ رَ تَ   سَ خَ صَ",
+                "حَ صَ دَ   ذَ زَ صَ",
+                "حَ ذَ رَ   شَ رَ بَ",
+                "صَ سَ   جَ زَ",
+                "صَ دَ خَ   صَ جَ ذَ",
+                "شَ رَ زَ   شَ خَ صَ",
+                "أَ بَ تَ   ثَ جَ حَ",
+                "خَ دَ ذَ رَ   زَ سَ شَ صَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 14,
+            "title": "Pengenalan Huruf Dhod",
+            "content": [
+                "صَ ضَ   صَ أَ ضَ",
+                "حَ ضَ رَ   أَ صَ ضَ",
+                "شَ أَ ضَ   شَ خَ زَ",
+                "ضَ رَ بَ   صَ حَ ثَ",
+                "صَ دَ زَ   دَ شَ ضَ",
+                "سَ حَ ذَ   رَ صَ دَ",
+                "ضَ تَ ذَ   ثَ خَ زَ",
+                "ضَ جَ ذَ   سَ أَ شَ",
+                "صَ رَ ضَ",
+                "أَ بَ تَ ثَ جَ حَ خَ",
+                "دَ ذَ رَ زَ   سَ شَ صَ ضَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 15,
+            "title": "Pengenalan Huruf Tho'",
+            "content": [
+                "طَ   طَ أَ ضَ",
+                "زَ طَ شَ   حَ جَ طَ",
+                "تَ صَ ضَ   ذَ طَ سَ",
+                "زَ دَ طَ   دَ ضَ صَ",
+                "سَ رَ طَ   شَ ضَ تَ",
+                "شَ خَ طَ   طَ حَ ذَ",
+                "بَ صَ ضَ   ذَ رَ طَ",
+                "جَ زَ ضَ   ثَ أَ شَ",
+                "سَ خَ طَ",
+                "أَ بَ تَ ثَ جَ حَ خَ",
+                "دَ ذَ رَ زَ سَ شَ صَ ضَ طَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 16,
+            "title": "Pengenalan Huruf Zho'",
+            "content": [
+                "طَ ظَ   ظَ أَ طَ",
+                "بَ طَ ظَ   طَ حَ ذَ",
+                "سَ ضَ ظَ   دَ صَ ظَ",
+                "طَ حَ ذَ   شَ أَ ظَ",
+                "سَ رَ صَ   زَ خَ طَ",
+                "ثَ رَ ضَ   زَ خَ ضَ",
+                "تَ ضَ ظَ   صَ دَ شَ",
+                "جَ طَ ضَ   شَ طَ ظَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ شَ   صَ ضَ طَ ظَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 17,
+            "title": "Pengenalan Huruf 'Ain",
+            "content": [
+                "عَ   ظَ أَ عَ",
+                "تَ عَ رَ   بَ عَ طَ",
+                "صَ عَ زَ   صَ عَ ضَ",
+                "دَ حَ ظَ   بَ عَ ثَ",
+                "سَ عَ ظَ   شَ طَ عَ",
+                "جَ خَ ذَ   ضَ عَ شَ",
+                "زَ أَ ضَ   عَ جَ ظَ",
+                "دَ طَ ضَ   طَ عَ طَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ شَ صَ ضَ طَ ظَ عَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 18,
+            "title": "Pengenalan Huruf Ghain",
+            "content": [
+                "عَ غَ   غَ أَ عَ",
+                "دَ غَ ظَ   عَ طَ غَ",
+                "ثَ عَ ظَ   جَ غَ ظَ",
+                "سَ طَ عَ   حَ رَ ظَ",
+                "شَ غَ طَ   صَ رَ عَ",
+                "زَ خَ ظَ   ضَ عَ ذَ",
+                "تَ غَ ضَ   شَ رَ ظَ",
+                "طَ عَ ظَ   بَ غَ صَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ رَ زَ",
+                "سَ شَ صَ ضَ   طَ ظَ عَ غَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 19,
+            "title": "Pengenalan Huruf Fa'",
+            "content": [
+                "فَ   فَ أَ غَ",
+                "فَ عَ ضَ   غَ فَ صَ",
+                "فَ تَ حَ   غَ جَ زَ",
+                "حَ فَ ظَ   طَ عَ دَ",
+                "صَ فَ غَ   شَ خَ ضَ",
+                "سَ غَ ظَ   خَ فَ ذَ",
+                "شَ عَ ضَ   فَ زَ عَ",
+                "ثَ غَ طَ   ظَ فَ رَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ رَ زَ",
+                "سَ شَ صَ ضَ طَ ظَ عَ غَ فَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 20,
+            "title": "Pengenalan Huruf Qof",
+            "content": [
+                "فَ قَ   قَ بَ ضَ",
+                "قَ طَ فَ   فَ رَ قَ",
+                "ثَ غَ ظَ   فَ قَ ظَ",
+                "سَ عَ فَ   حَ ذَ خَ",
+                "قَ فَ صَ   عَ قَ دَ",
+                "ضَ عَ طَ   شَ فَ عَ",
+                "زَ قَ قَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ   شَ صَ ضَ",
+                "طَ ظَ عَ   غَ فَ قَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 21,
+            "title": "Pengenalan Huruf Kaf",
+            "content": [
+                "كَ   كَ حَ قَ",
+                "لَ قَ خَ   كَ قَ",
+                "ضَ حَ كَ   عَ طَ فَ",
+                "شَ كَ رَ   جَ كَ تَ",
+                "قَ لَ فَ   ذَ غَ سَ",
+                "صَ دَ ثَ   غَ فَ كَ",
+                "زَ كَ طَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ شَ   صَ ضَ طَ ظَ",
+                "عَ غَ فَ   قَ كَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 22,
+            "title": "Pengenalan Huruf Lam",
+            "content": [
+                "لَ   قَ لَ بَ",
+                "جَ عَ لَ   خَ لَ طَ",
+                "ذَ كَ رَ   غَ لَ ظَ",
+                "قَ فَ صَ   حَ لَ فَ",
+                "دَ غَ سَ   شَ كَ لَ",
+                "ضَ رَ عَ   زَ تَ ظَ",
+                "كَ لَ لَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ   شَ صَ ضَ",
+                "طَ ظَ عَ غَ   فَ قَ كَ لَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 23,
+            "title": "Pengenalan Huruf Mim",
+            "content": [
+                "مَ   غَ مَ ضَ",
+                "لَ مَ سَ   جَ مَ عَ",
+                "فَ رَ ضَ   كَ رَ مَ",
+                "خَ لَ طَ   صَ مَ دَ",
+                "ظَ تَ ذَ   مَ زَ قَ",
+                "شَ مَ لَ   فَ لَ حَ",
+                "غَ مَ مَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ شَ   صَ ضَ طَ ظَ",
+                "عَ غَ فَ قَ كَ لَ مَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 24,
+            "title": "Pengenalan Huruf Nun",
+            "content": [
+                "نَ   نَ ظَ فَ",
+                "نَ غَ شَ   طَ عَ نَ",
+                "صَ مَ ضَ   قَ رَ نَ",
+                "خَ لَ قَ   زَ مَ نَ",
+                "كَ ذَ بَ   جَ نَ دَ",
+                "كَ نَ سَ   لَ حَ ظَ",
+                "مَ نَ نَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ شَ   صَ ضَ طَ ظَ",
+                "عَ غَ فَ قَ   كَ لَ مَ نَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 25,
+            "title": "Pengenalan Huruf Wau",
+            "content": [
+                "وَ   وَ زَ رَ",
+                "وَ لَ غَ   دَ وَ مَ",
+                "فَ طَ نَ   قَ وَ مَ",
+                "طَ جَ عَ   كَ وَ نَ",
+                "سَ كَ تَ   خَ وَ صَ",
+                "شَ وَ لَ   ذَ حَ ضَ",
+                "وَ نَ وَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ شَ   صَ ضَ طَ ظَ",
+                "عَ غَ فَ قَ كَ لَ مَ نَ وَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 26,
+            "title": "Pengenalan Huruf Ha",
+            "content": [
+                "هَ   هَ مَ شَ",
+                "جَ هَ دَ   دَ وَ هَ",
+                "فَ خَ عَ   طَ هَ رَ",
+                "وَ ضَ حَ   وَ هَ ظَ",
+                "لَ مَ نَ   زَ هَ قَ",
+                "سَ هَ لَ   ذَ غَ صَ",
+                "جَ هَ هَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ",
+                "رَ زَ سَ شَ   صَ ضَ طَ ظَ",
+                "عَ غَ فَ قَ كَ لَ مَ نَ وَ هَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 27,
+            "title": "Pengenalan Huruf Ya'",
+            "content": [
+                "يَ   ضَ ىَ رَ",
+                "ضَ حَ ىَ   زَ يَ نَ",
+                "سَ يَ غَ   وَ كَ لَ",
+                "هَ يَ خَ   طَ هَ ظَ",
+                "شَ ىَ عَ   وَ قَ فَ",
+                "هَ ىَ مَ   جَ ذَ تَ",
+                "يَ دَ ىَ",
+                "أَ بَ تَ ثَ جَ حَ خَ دَ ذَ رَ زَ",
+                "سَ شَ صَ ضَ   طَ ظَ عَ غَ",
+                "فَ قَ كَ لَ مَ نَ وَ هَ يَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 28,
+            "title": "Pengenalan Hamzah & Latihan",
+            "content": [
+                "أَ = ءَ   رَ = رَ",
+                "مَ = مَ   هَ = هَ",
+                "بَ رَ أَ   بَ رَ رَ",
+                "قَ رَ أَ   أَ مَ مَ",
+                "جَ نَ أَ   سَ ءَ لَ",
+                "رَ زَ قَ   مَ دَ حَ",
+                "غَ مَ مَ   لَ ءَ كَ",
+                "مَ شَ ءَ   مَ دَ مَ",
+                "سَ يَ رَ   جَ زَ مَ",
+                "لَ بَ دَ   مَ قَ تَ",
+                "كَ لَ مَ   حَ سَ نَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 29,
+            "title": "Latihan Kalimah & Huruf",
+            "content": [
+                "ثَ بَ تَ   جَ حَ خَ",
+                "دَ ذَ رَ   زَ سَ شَ",
+                "أَ صَ ضَ   طَ ظَ عَ",
+                "غَ فَ قَ   كَ لَ مَ",
+                "نَ وَ هَ   حَ هَ لَ",
+                "بَ يَ نَ   ءَ أَ رَ",
+                "بَ عَ ثَ   جَ حَ خَ",
+                "دَ ذَ رَ   زَ سَ شَ",
+                "أَ صَ ضَ   طَ ظَ عَ",
+                "غَ فَ قَ   كَ لَ مَ",
+                "نَ وَ هَ   هَ ىَ تَ",
+                "أَ كَ لَ   مَ نَ وَ"
+            ],
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja."
+        },
+        {
+            "page": 30,
+            "title": "Latihan Perbezaan Sebutan Huruf",
+            "instruction_jawi": "ڤرهاتين! بيذاكن دڠن جلس انتارا:",
+            "instruction_rumi": "Perhatian! Bezakan dengan jelas antara:",
+            "content": [
+                "أَ - عَ   ثَ - سَ",
+                "حَ - هَ   ثَ - شَ",
+                "جَ - زَ   سَ - شَ",
+                "ذَ - زَ   سَ - صَ",
+                "خَ - غَ   تَ - طَ",
+                "خَ - قَ   ذَ - ظَ",
+                "كَ - قَ   ظَ - ضَ"
+            ]
+        }
+    ]
+}

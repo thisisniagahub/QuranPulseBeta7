@@ -1,0 +1,122 @@
+{
+    "Iqra_2": [
+        {
+            "page": 1,
+            "title": "Huruf dengan Kasrah - Alif sampai Tha",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اِ بِ   تِ ثِ",
+                "جِ حِ   خِ دِ",
+                "تِ بِ   بِ اِ",
+                "جِ حِ   خِ دِ"
+            ]
+        },
+        {
+            "page": 2,
+            "title": "Huruf dengan Kasrah - Dzal sampai Syin",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "ذِ رِ   زِ سِ",
+                "شِ صِ   ضِ طِ",
+                "سِ شِ   رِ زِ",
+                "صِ ضِ   طِ ظِ"
+            ]
+        },
+        {
+            "page": 3,
+            "title": "Huruf dengan Kasrah - Zho sampai Ya",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "ظِ عِ   غِ فِ",
+                "قِ كِ   لِ مِ",
+                "وِ هِ   يِ نِ"
+            ]
+        },
+        {
+            "page": 4,
+            "title": "Huruf dengan Dammah - Alif sampai Tha",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اُ بُ   تُ ثُ",
+                "جُ حُ   خُ دُ",
+                "تُ بُ   بُ اُ",
+                "جُ حُ   خُ دُ"
+            ]
+        },
+        {
+            "page": 5,
+            "title": "Huruf dengan Dammah - Dzal sampai Ya",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "ذُ رُ   زُ سُ",
+                "شُ صُ   ضُ طُ",
+                "عُ غُ   فُ ظُ"
+            ]
+        },
+        {
+            "page": 6,
+            "title": "Huruf dengan Dammah - Qaf sampai Ya",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "قُ كُ   لُ مُ",
+                "نُ وُ   هُ يُ",
+                "مُ نُ   قُ لُ",
+                "وُ هُ   يُ كُ"
+            ]
+        },
+        {
+            "page": 7,
+            "title": "Latihan Campuran - Fathah Kasrah Dammah",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بَ بِ بُ تَ تِ تُ ثَ ثِ ثُ",
+                "جَ جِ جُ حَ حِ حُ خَ خِ خُ",
+                "دَ دِ دُ ذَ ذِ ذُ رَ رِ رُ",
+                "زَ زِ زُ سَ سِ سُ شَ شِ شُ"
+            ]
+        },
+        {
+            "page": 8,
+            "title": "Latihan Campuran Lanjutan",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "صَ صِ صُ ضَ ضِ ضُ طَ طِ طُ",
+                "ظَ ظِ ظُ عَ عِ عُ غَ غِ غُ",
+                "فَ فِ فُ قَ قِ قُ كَ كِ كُ",
+                "لَ لِ لُ مَ مِ مُ نَ نِ نُ"
+            ]
+        },
+        {
+            "page": 9,
+            "title": "Latihan Perkataan Mudah",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بِتُ جُحِ دَرِ",
+                "سُمِ عَبِ فُقِ",
+                "كُتِ لَمِ نُوِ",
+                "هُدِ يَزِ"
+            ]
+        },
+        {
+            "page": 10,
+            "title": "Latihan Akhir Iqra 2",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بَتِثُ جَحِخُ",
+                "دَذِرُ زَسِشُ",
+                "صَضِطُ ظَعِغُ",
+                "فَقِكُ لَمِنُ"
+            ]
+        }
+    ]
+}

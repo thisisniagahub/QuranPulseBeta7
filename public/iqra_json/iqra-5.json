@@ -1,0 +1,84 @@
+{
+    "Iqra_5": [
+        {
+            "page": 1,
+            "title": "Tasydid dengan Fathah",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بَّ تَّ   ثَّ جَّ",
+                "حَّ خَّ   دَّ رَّ",
+                "شَّ صَّ   ضَّ سَّ"
+            ]
+        },
+        {
+            "page": 2,
+            "title": "Tasydid dengan Kasrah",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بِّ تِّ   ثِّ جِّ",
+                "حِّ خِّ   دِّ رِّ",
+                "شِّ صِّ   ضِّ سِّ"
+            ]
+        },
+        {
+            "page": 3,
+            "title": "Tasydid dengan Dammah",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بُّ تُّ   ثُّ جُّ",
+                "حُّ خُّ   دُّ رُّ",
+                "شُّ صُّ   ضُّ سُّ"
+            ]
+        },
+        {
+            "page": 4,
+            "title": "Perkataan dengan Tasydid",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "رَبَّنَا اِنَّا اَنَّ",
+                "اَللّٰهُمَّ اَيُّهَا",
+                "الْجَنَّةُ الْقُوَّةُ",
+                "مُحَمَّدٌ"
+            ]
+        },
+        {
+            "page": 5,
+            "title": "Ghunnah Musyaddadah - Mim & Nun",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "مَّ نَّ   مِّ نِّ",
+                "مُّ نُّ",
+                "اِنَّمَا اَمَّا",
+                "جَنَّاتٍ ثُمَّ"
+            ]
+        },
+        {
+            "page": 6,
+            "title": "Tanda Waqaf - Berhenti",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "ۚ ۖ ۗ",
+                "ۙ ۛ",
+                "هُوَ ۚ   هُمْ ۖ"
+            ]
+        },
+        {
+            "page": 7,
+            "title": "Latihan Ayat dengan Tasydid",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اِيَّاكَ نَعْبُدُ",
+                "وَاِيَّاكَ نَسْتَعِينُ",
+                "اِهْدِنَا الصِّرَاطَ",
+                "الْمُسْتَقِيمَ"
+            ]
+        }
+    ]
+}

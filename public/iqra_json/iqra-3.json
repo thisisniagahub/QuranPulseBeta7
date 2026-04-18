@@ -1,0 +1,97 @@
+{
+    "Iqra_3": [
+        {
+            "page": 1,
+            "title": "Tanwin Fathah (Fathatain) - Bunyi 'an'",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اً بًا   تًا ثًا",
+                "جًا حًا   خًا دًا",
+                "زًا سًا   شًا رًا"
+            ]
+        },
+        {
+            "page": 2,
+            "title": "Tanwin Kasrah (Kasratain) - Bunyi 'in'",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اٍ بٍ   تٍ ثٍ",
+                "جٍ حٍ   خٍ دٍ",
+                "زٍ سٍ   شٍ رٍ"
+            ]
+        },
+        {
+            "page": 3,
+            "title": "Tanwin Dammah (Dammatain) - Bunyi 'un'",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اٌ بٌ   تٌ ثٌ",
+                "جٌ حٌ   خٌ دٌ",
+                "زٌ سٌ   شٌ رٌ"
+            ]
+        },
+        {
+            "page": 4,
+            "title": "Madd dengan Alif - Panjang 2 Harakat",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بَا تَا ثَا",
+                "جَا حَا خَا",
+                "دَا رَا سَا",
+                "بَاتَا جَاحَا"
+            ]
+        },
+        {
+            "page": 5,
+            "title": "Madd dengan Ya - Panjang 2 Harakat",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بِي تِي ثِي",
+                "جِي حِي خِي",
+                "دِي رِي سِي",
+                "بِيتِي جِيحِي"
+            ]
+        },
+        {
+            "page": 6,
+            "title": "Madd dengan Wau - Panjang 2 Harakat",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بُو تُو ثُو",
+                "جُو حُو خُو",
+                "دُو رُو سُو",
+                "بُوتُو جُوحُو"
+            ]
+        },
+        {
+            "page": 7,
+            "title": "Latihan Campuran Madd",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بَا بِي بُو   تَا تِي تُو",
+                "جَا جِي جُو   دَا دِي دُو",
+                "سَا سِي سُو   كَا كِي كُو",
+                "مَا مِي مُو   نَا نِي نُو"
+            ]
+        },
+        {
+            "page": 8,
+            "title": "Perkataan dengan Madd & Tanwin",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "قَالَ نَارٌ كِتَابٌ",
+                "رَسُولٌ كَرِيمٌ",
+                "عَظِيمٌ رَحِيمٌ",
+                "حَكِيمٌ عَلِيمٌ"
+            ]
+        }
+    ]
+}

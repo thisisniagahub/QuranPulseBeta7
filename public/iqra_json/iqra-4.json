@@ -1,0 +1,87 @@
+{
+    "Iqra_4": [
+        {
+            "page": 1,
+            "title": "Sukun - Huruf Mati",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اَبْ اِبْ اُبْ",
+                "اَتْ اِتْ اُتْ",
+                "اَسْ اِسْ اُسْ",
+                "اَمْ اِمْ اُمْ"
+            ]
+        },
+        {
+            "page": 2,
+            "title": "Sukun Tengah Perkataan",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "يَبْكِي يَسْمَعُ",
+                "يَكْتُبُ يَنْصُرُ",
+                "يَعْلَمُ يَرْحَمُ",
+                "مَسْجِدٌ مُسْلِمٌ"
+            ]
+        },
+        {
+            "page": 3,
+            "title": "Qalqalah - Huruf ق ط ب ج د",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "قَدْ طَبْ بَجْ",
+                "جَدْ دَقْ",
+                "يَقْطَعُ يَجْعَلُ",
+                "يَبْدَأُ اَحَدْ"
+            ]
+        },
+        {
+            "page": 4,
+            "title": "Lam Qamariyyah - Lam Dibaca",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "الْقَمَرُ الْجَنَّةُ",
+                "الْبَيْتُ الْكِتَابُ",
+                "الْحَمْدُ الْمَلِكُ",
+                "الْعَالَمِينَ"
+            ]
+        },
+        {
+            "page": 5,
+            "title": "Lam Syamsiyyah - Lam Tidak Dibaca",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "الشَّمْسُ النَّاسُ",
+                "الرَّحْمٰنُ الصَّلَاةُ",
+                "الطَّيِّبُ الذِّكْرُ",
+                "الدِّينُ اللَّيْلُ"
+            ]
+        },
+        {
+            "page": 6,
+            "title": "Latihan Campuran Sukun",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "اَللّٰهُ مُحَمَّدٌ",
+                "اَلْحَمْدُ لِلّٰهِ",
+                "رَبِّ الْعَالَمِينَ"
+            ]
+        },
+        {
+            "page": 7,
+            "title": "Latihan Ayat Pendek",
+            "instruction_jawi": "باچ دڠن ڤينديق",
+            "instruction_rumi": "Baca dengan pendek.",
+            "content": [
+                "بِسْمِ اللّٰهِ",
+                "الرَّحْمٰنِ الرَّحِيمِ",
+                "الْحَمْدُ لِلّٰهِ",
+                "رَبِّ الْعَالَمِينَ"
+            ]
+        }
+    ]
+}

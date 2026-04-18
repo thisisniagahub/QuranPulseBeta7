@@ -1,0 +1,20 @@
+{
+    "Iqra_1_Latihan_Khas": [
+        {
+            "page": "Latihan Khas 1",
+            "page_type": "lesson",
+            "title": "Latihan Khas: Huruf أَ dan بَ",
+            "instruction_jawi": "باچ تروس دغن ڤينديق. تيدق ڤرلو دايجا.",
+            "instruction_rumi": "Baca terus dengan pendek. Tidak perlu dieja.",
+            "content": [
+                "أَ بَ",
+                "بَ أَ بَ   أَ بَ أَ",
+                "بَ أَ أَ   أَ أَ بَ",
+                "بَ بَ أَ   أَ بَ بَ",
+                "بَ أَ بَ   أَ بَ أَ",
+                "أَ أَ أَ   بَ بَ بَ",
+                "أَ بَ   أَ بَ   أَ بَ"
+            ]
+        }
+    ]
+}

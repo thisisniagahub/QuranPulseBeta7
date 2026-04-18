@@ -1,0 +1,27 @@
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <pattern id="islamic-grid" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+            <!-- Base Grid -->
+            <path d="M60 0L0 60M0 0L60 60" stroke="#22d3ee" stroke-width="0.5" opacity="0.1"/>
+            
+            <!-- Islamic Star Motif (Simplified) -->
+            <rect x="25" y="25" width="10" height="10" transform="rotate(45 30 30)" fill="none" stroke="#22d3ee" stroke-width="0.8" opacity="0.15"/>
+            <circle cx="30" cy="30" r="2" fill="#22d3ee" opacity="0.2"/>
+            
+            <!-- Connecting Lines -->
+            <path d="M30 0v10M30 50v10M0 30h10M50 30h10" stroke="#22d3ee" stroke-width="0.5" opacity="0.1"/>
+        </pattern>
+        
+        <!-- Cyber Glow Gradient -->
+        <radialGradient id="cyber-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#0c224b" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#031a38" stop-opacity="0.8"/>
+        </radialGradient>
+    </defs>
+    
+    <!-- Background -->
+    <rect width="60" height="60" fill="transparent"/>
+    
+    <!-- Pattern Fill -->
+    <rect width="60" height="60" fill="url(#islamic-grid)"/>
+</svg>
