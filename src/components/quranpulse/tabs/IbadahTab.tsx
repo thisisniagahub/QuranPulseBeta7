@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Moon, Compass, CircleDot, RotateCcw, Check, Navigation, MapPin, Clock } from 'lucide-react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
@@ -10,7 +10,12 @@ type IbadahView = 'prayer' | 'qibla' | 'tasbih'
 
 export function IbadahTab() {
   const [activeView, setActiveView] = useState<IbadahView>('prayer')
-  const currentPrayerIdx = getCurrentPrayerIndex()
+  // Defer time-dependent value to avoid hydration mismatch
+  const [currentPrayerIdx, setCurrentPrayerIdx] = useState(0)
+
+  useEffect(() => {
+    setCurrentPrayerIdx(getCurrentPrayerIndex())
+  }, [])
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">

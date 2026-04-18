@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BookOpen, Bot, Moon, GraduationCap, CircleDot, Compass, Clock, Share2, Bookmark, ChevronRight, Flame, Star } from 'lucide-react'
 import { useQuranPulseStore, type ActiveTab } from '@/stores/quranpulse-store'
@@ -8,9 +9,16 @@ import { getDailyVerse, getIslamicGreeting, getDailyHikmah, PRAYER_TIMES_KL, get
 export function HomeTab() {
   const { streak, xp, level, lastReadSurah, lastReadAyah, lastReadSurahName, setActiveTab, addXp } = useQuranPulseStore()
   const dailyVerse = getDailyVerse(new Date().getDate())
-  const greeting = getIslamicGreeting()
   const hikmah = getDailyHikmah()
-  const currentPrayerIdx = getCurrentPrayerIndex()
+
+  // Defer time-dependent values to avoid hydration mismatch
+  const [greeting, setGreeting] = useState('Assalamualaikum')
+  const [currentPrayerIdx, setCurrentPrayerIdx] = useState(0)
+
+  useEffect(() => {
+    setGreeting(getIslamicGreeting())
+    setCurrentPrayerIdx(getCurrentPrayerIndex())
+  }, [])
 
   const quickActions = [
     { icon: <BookOpen className="h-5 w-5" />, label: 'Baca Quran', tab: 'quran' as ActiveTab, color: '#4a4aa6' },
