@@ -7,12 +7,12 @@ import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import { HIJAIYAH_LETTERS } from '@/lib/quran-data'
 
 const IQRA_BOOKS = [
-  { id: 1, title: 'Iqra 1', desc: 'Hijaiyah & Harakat', color: '#1B6B5A', pages: 28 },
-  { id: 2, title: 'Iqra 2', desc: 'Gabungan Huruf', color: '#2A8B74', pages: 28 },
-  { id: 3, title: 'Iqra 3', desc: 'Kasrah & Dhammah', color: '#C4972A', pages: 28 },
-  { id: 4, title: 'Iqra 4', desc: 'Tanwin & Mad', color: '#D4A84A', pages: 28 },
-  { id: 5, title: 'Iqra 5', desc: 'Tajwid Asas', color: '#8B5CF6', pages: 28 },
-  { id: 6, title: 'Iqra 6', desc: 'Tajwid Lanjutan', color: '#EC4899', pages: 28 },
+  { id: 1, title: 'Iqra 1', desc: 'Hijaiyah & Harakat', color: '#4a4aa6', pages: 28 },
+  { id: 2, title: 'Iqra 2', desc: 'Gabungan Huruf', color: '#6a6ab6', pages: 28 },
+  { id: 3, title: 'Iqra 3', desc: 'Kasrah & Dhammah', color: '#d4af37', pages: 28 },
+  { id: 4, title: 'Iqra 4', desc: 'Tanwin & Mad', color: '#e0c060', pages: 28 },
+  { id: 5, title: 'Iqra 5', desc: 'Tajwid Asas', color: '#3a3a8a', pages: 28 },
+  { id: 6, title: 'Iqra 6', desc: 'Tajwid Lanjutan', color: '#2a2a6a', pages: 28 },
 ]
 
 export function IqraTab() {
@@ -49,12 +49,12 @@ export function IqraTab() {
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-lg font-bold" style={{ color: '#F5F0E8' }}>Iqra Digital</h2>
-                <p className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>Belajar membaca Al-Quran</p>
+                <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Iqra Digital</h2>
+                <p className="text-xs" style={{ color: 'rgba(204,204,204,0.6)' }}>Belajar membaca Al-Quran</p>
               </div>
               <button
                 className="px-3 py-1.5 rounded-xl text-xs flex items-center gap-1"
-                style={{ background: 'rgba(27,107,90,0.15)', color: '#1B6B5A', border: '1px solid rgba(27,107,90,0.2)' }}
+                style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.2)' }}
                 onClick={() => setShowLetters(true)}
               >
                 📝 Huruf Hijaiyah
@@ -65,18 +65,18 @@ export function IqraTab() {
             <div
               className="rounded-xl p-4 mb-4"
               style={{
-                background: 'linear-gradient(135deg, rgba(27,107,90,0.1), rgba(196,151,42,0.05))',
-                border: '1px solid rgba(27,107,90,0.15)',
+                background: 'linear-gradient(135deg, rgba(74,74,166,0.1), rgba(212,175,55,0.05))',
+                border: '1px solid rgba(74,74,166,0.15)',
               }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium" style={{ color: '#F5F0E8' }}>Keseluruhan Progres</span>
-                <span className="text-xs" style={{ color: '#1B6B5A' }}>{completedPages.size} halaman selesai</span>
+                <span className="text-xs font-medium" style={{ color: '#ffffff' }}>Keseluruhan Progres</span>
+                <span className="text-xs" style={{ color: '#4a4aa6' }}>{completedPages.size} halaman selesai</span>
               </div>
-              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(27,107,90,0.1)' }}>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.1)' }}>
                 <motion.div
                   className="h-full rounded-full"
-                  style={{ background: 'linear-gradient(90deg, #1B6B5A, #2A8B74)' }}
+                  style={{ background: 'linear-gradient(90deg, #4a4aa6, #6a6ab6)' }}
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min((completedPages.size / 168) * 100, 100)}%` }}
                   transition={{ duration: 0.5 }}
@@ -117,7 +117,7 @@ export function IqraTab() {
                       {progress > 0 && (
                         <div className="flex items-center gap-1">
                           {progress === 100 ? (
-                            <CheckCircle className="h-4 w-4" style={{ color: '#10B981' }} />
+                            <CheckCircle className="h-4 w-4" style={{ color: '#4a4aa6' }} />
                           ) : (
                             <span className="text-[10px] font-bold" style={{ color: book.color }}>{progress}%</span>
                           )}
@@ -125,8 +125,8 @@ export function IqraTab() {
                       )}
                     </div>
                     <div className="mt-2">
-                      <div className="text-sm font-semibold" style={{ color: '#F5F0E8' }}>{book.title}</div>
-                      <div className="text-[10px] mt-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>{book.desc}</div>
+                      <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>{book.title}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{book.desc}</div>
                     </div>
                     {progress > 0 && progress < 100 && (
                       <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: `${book.color}15` }}>
@@ -140,25 +140,25 @@ export function IqraTab() {
 
             {/* Quick Practice Section */}
             <div className="mt-4">
-              <h3 className="text-sm font-semibold mb-2" style={{ color: '#F5F0E8' }}>Latihan Pantas</h3>
+              <h3 className="text-sm font-semibold mb-2" style={{ color: '#ffffff' }}>Latihan Pantas</h3>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   className="rounded-xl p-3 text-left"
-                  style={{ background: 'rgba(10,30,61,0.5)', border: '1px solid rgba(27,107,90,0.1)' }}
+                  style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.1)' }}
                   onClick={() => setShowLetters(true)}
                 >
                   <div className="text-xl mb-1">🔤</div>
-                  <div className="text-xs font-medium" style={{ color: '#F5F0E8' }}>Hafalan Huruf</div>
-                  <div className="text-[10px]" style={{ color: 'rgba(245,240,232,0.4)' }}>29 huruf hijaiyah</div>
+                  <div className="text-xs font-medium" style={{ color: '#ffffff' }}>Hafalan Huruf</div>
+                  <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>29 huruf hijaiyah</div>
                 </button>
                 <button
                   className="rounded-xl p-3 text-left"
-                  style={{ background: 'rgba(10,30,61,0.5)', border: '1px solid rgba(27,107,90,0.1)' }}
+                  style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.1)' }}
                   onClick={() => { setIqraBook(1); setIqraPage(1); setView('reader') }}
                 >
                   <div className="text-xl mb-1">📖</div>
-                  <div className="text-xs font-medium" style={{ color: '#F5F0E8' }}>Baca Iqra</div>
-                  <div className="text-[10px]" style={{ color: 'rgba(245,240,232,0.4)' }}>Mula dari Iqra 1</div>
+                  <div className="text-xs font-medium" style={{ color: '#ffffff' }}>Baca Iqra</div>
+                  <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Mula dari Iqra 1</div>
                 </button>
               </div>
             </div>
@@ -175,7 +175,7 @@ export function IqraTab() {
             <div className="flex items-center justify-between mb-4">
               <button
                 className="flex items-center gap-1 text-sm"
-                style={{ color: '#1B6B5A' }}
+                style={{ color: '#4a4aa6' }}
                 onClick={() => setView('books')}
               >
                 <ChevronLeft className="h-5 w-5" /> Kembali
@@ -184,25 +184,25 @@ export function IqraTab() {
                 <div className="text-sm font-semibold" style={{ color: currentBook.color }}>
                   Iqra {iqraBook}
                 </div>
-                <div className="text-[10px]" style={{ color: 'rgba(245,240,232,0.4)' }}>
+                <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>
                   Halaman {iqraPage}/{currentBook.pages}
                 </div>
               </div>
               <button
                 className="p-2 rounded-lg"
-                style={{ background: 'rgba(27,107,90,0.15)' }}
+                style={{ background: 'rgba(74,74,166,0.15)' }}
                 onClick={markComplete}
               >
                 {completedPages.has(pageKey) ? (
-                  <CheckCircle className="h-4 w-4" style={{ color: '#10B981' }} />
+                  <CheckCircle className="h-4 w-4" style={{ color: '#4a4aa6' }} />
                 ) : (
-                  <Star className="h-4 w-4" style={{ color: '#1B6B5A' }} />
+                  <Star className="h-4 w-4" style={{ color: '#4a4aa6' }} />
                 )}
               </button>
             </div>
 
             {/* Page Progress Bar */}
-            <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(27,107,90,0.1)' }}>
+            <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(74,74,166,0.1)' }}>
               <motion.div
                 className="h-full rounded-full"
                 style={{ background: currentBook.color }}
@@ -214,7 +214,7 @@ export function IqraTab() {
             <motion.div
               className="rounded-xl p-6 min-h-[400px] flex flex-col items-center justify-center"
               style={{
-                background: 'rgba(10,30,61,0.3)',
+                background: 'rgba(42,42,106,0.3)',
                 border: `1px solid ${currentBook.color}20`,
               }}
               key={pageKey}
@@ -247,9 +247,9 @@ export function IqraTab() {
               <button
                 className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs"
                 style={{
-                  background: 'rgba(10,30,61,0.5)',
-                  border: '1px solid rgba(27,107,90,0.15)',
-                  color: iqraPage > 1 ? '#1B6B5A' : 'rgba(245,240,232,0.2)',
+                  background: 'rgba(42,42,106,0.5)',
+                  border: '1px solid rgba(74,74,166,0.15)',
+                  color: iqraPage > 1 ? '#4a4aa6' : 'rgba(204,204,204,0.3)',
                 }}
                 disabled={iqraPage <= 1}
                 onClick={() => navigatePage(-1)}
@@ -257,7 +257,7 @@ export function IqraTab() {
                 <ChevronLeft className="h-4 w-4" /> Sebelum
               </button>
               {completedPages.has(pageKey) && (
-                <span className="text-xs self-center" style={{ color: '#10B981' }}>✓ Selesai</span>
+                <span className="text-xs self-center" style={{ color: '#4a4aa6' }}>✓ Selesai</span>
               )}
               <button
                 className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs"
@@ -288,15 +288,15 @@ export function IqraTab() {
             <div className="absolute inset-0 bg-black/60" onClick={() => setShowLetters(false)} />
             <motion.div
               className="relative w-full max-w-[480px] rounded-t-2xl max-h-[70vh] overflow-hidden flex flex-col"
-              style={{ background: '#051324', border: '1px solid rgba(27,107,90,0.2)' }}
+              style={{ background: '#1a1a4a', border: '1px solid rgba(74,74,166,0.2)' }}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25 }}
             >
-              <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(27,107,90,0.1)' }}>
-                <h3 className="text-sm font-semibold" style={{ color: '#F5F0E8' }}>Huruf Hijaiyah</h3>
-                <button onClick={() => setShowLetters(false)} className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>Tutup</button>
+              <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(74,74,166,0.1)' }}>
+                <h3 className="text-sm font-semibold" style={{ color: '#ffffff' }}>Huruf Hijaiyah</h3>
+                <button onClick={() => setShowLetters(false)} className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>Tutup</button>
               </div>
               <div className="flex-1 overflow-y-auto p-4 qp-scroll">
                 <div className="grid grid-cols-5 gap-2">
@@ -305,38 +305,38 @@ export function IqraTab() {
                       key={letter.id}
                       className="aspect-square rounded-xl flex flex-col items-center justify-center"
                       style={{
-                        background: selectedLetter === i ? 'rgba(27,107,90,0.2)' : 'rgba(10,30,61,0.5)',
-                        border: `1px solid ${selectedLetter === i ? 'rgba(27,107,90,0.4)' : 'rgba(27,107,90,0.1)'}`,
+                        background: selectedLetter === i ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.5)',
+                        border: `1px solid ${selectedLetter === i ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
                       }}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: i * 0.02 }}
                       onClick={() => setSelectedLetter(selectedLetter === i ? null : i)}
                     >
-                      <span className="text-xl" style={{ color: '#F5F0E8' }}>{letter.letter}</span>
-                      <span className="text-[8px] mt-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>{letter.name}</span>
+                      <span className="text-xl" style={{ color: '#ffffff' }}>{letter.letter}</span>
+                      <span className="text-[8px] mt-0.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
                     </motion.button>
                   ))}
                 </div>
                 {selectedLetter !== null && (
                   <motion.div
                     className="mt-4 rounded-xl p-4 text-center"
-                    style={{ background: 'rgba(27,107,90,0.1)', border: '1px solid rgba(27,107,90,0.2)' }}
+                    style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.2)' }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <div className="text-5xl font-arabic" style={{ color: '#1B6B5A' }}>
+                    <div className="text-5xl font-arabic" style={{ color: '#4a4aa6' }}>
                       {HIJAIYAH_LETTERS[selectedLetter].letter}
                     </div>
-                    <div className="text-sm mt-2 font-medium" style={{ color: '#F5F0E8' }}>
+                    <div className="text-sm mt-2 font-medium" style={{ color: '#ffffff' }}>
                       {HIJAIYAH_LETTERS[selectedLetter].name}
                     </div>
-                    <div className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                    <div className="text-xs" style={{ color: 'rgba(204,204,204,0.6)' }}>
                       {HIJAIYAH_LETTERS[selectedLetter].nameEn}
                     </div>
                     <button
                       className="mt-3 flex items-center gap-1.5 mx-auto px-4 py-2 rounded-xl text-xs"
-                      style={{ background: 'rgba(27,107,90,0.2)', color: '#1B6B5A', border: '1px solid rgba(27,107,90,0.3)' }}
+                      style={{ background: 'rgba(74,74,166,0.2)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.3)' }}
                     >
                       <Volume2 className="h-3.5 w-3.5" /> Dengar Sebutan
                     </button>
@@ -366,7 +366,7 @@ function IqraBook1Content({ page }: { page: number }) {
   return (
     <div className="w-full">
       <div className="text-center mb-4">
-        <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(27,107,90,0.15)', color: '#1B6B5A' }}>
+        <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6' }}>
           Pengenalan Huruf Hijaiyah
         </span>
       </div>
@@ -375,10 +375,10 @@ function IqraBook1Content({ page }: { page: number }) {
           <div
             key={letter.id}
             className="aspect-square rounded-xl flex flex-col items-center justify-center"
-            style={{ background: 'rgba(27,107,90,0.08)', border: '1px solid rgba(27,107,90,0.15)' }}
+            style={{ background: 'rgba(74,74,166,0.08)', border: '1px solid rgba(74,74,166,0.15)' }}
           >
-            <span className="text-4xl" style={{ color: '#F5F0E8' }}>{letter.letter}</span>
-            <span className="text-[10px] mt-2" style={{ color: 'rgba(245,240,232,0.5)' }}>{letter.name}</span>
+            <span className="text-4xl" style={{ color: '#ffffff' }}>{letter.letter}</span>
+            <span className="text-[10px] mt-2" style={{ color: 'rgba(204,204,204,0.6)' }}>{letter.name}</span>
           </div>
         ))}
       </div>
@@ -401,7 +401,7 @@ function IqraBook2Content({ page }: { page: number }) {
   return (
     <div className="w-full">
       <div className="text-center mb-4">
-        <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(42,139,116,0.15)', color: '#2A8B74' }}>
+        <span className="text-xs px-2 py-1 rounded-full" style={{ background: 'rgba(106,106,182,0.15)', color: '#6a6ab6' }}>
           Gabungan Huruf
         </span>
       </div>
@@ -410,9 +410,9 @@ function IqraBook2Content({ page }: { page: number }) {
           <div
             key={i}
             className="aspect-square rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(42,139,116,0.08)', border: '1px solid rgba(42,139,116,0.15)' }}
+            style={{ background: 'rgba(106,106,182,0.08)', border: '1px solid rgba(106,106,182,0.15)' }}
           >
-            <span className="text-3xl" style={{ color: '#F5F0E8', direction: 'rtl' }}>{combo}</span>
+            <span className="text-3xl" style={{ color: '#ffffff', direction: 'rtl' }}>{combo}</span>
           </div>
         ))}
       </div>
@@ -451,14 +451,14 @@ function IqraGenericContent({ book, page, color }: { book: number; page: number;
             className="rounded-xl p-4 text-center"
             style={{ background: `${color}08`, border: `1px solid ${color}15` }}
           >
-            <p className="text-2xl leading-loose" style={{ color: '#F5F0E8', direction: 'rtl' }}>
+            <p className="text-2xl leading-loose" style={{ color: '#ffffff', direction: 'rtl' }}>
               {line}
             </p>
           </div>
         ))}
       </div>
       <div className="text-center mt-4">
-        <span className="text-[10px]" style={{ color: 'rgba(245,240,232,0.3)' }}>
+        <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.3)' }}>
           Halaman {page} · Iqra {book}
         </span>
       </div>

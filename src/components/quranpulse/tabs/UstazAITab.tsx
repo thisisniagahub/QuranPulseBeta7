@@ -107,31 +107,31 @@ export function UstazAITab() {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="px-4 pt-2 pb-3" style={{ borderBottom: '1px solid rgba(27,107,90,0.1)' }}>
+      <div className="px-4 pt-2 pb-3" style={{ borderBottom: '1px solid rgba(74,74,166,0.1)' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <motion.div
               className="h-10 w-10 rounded-xl flex items-center justify-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(27,107,90,0.3), rgba(196,151,42,0.2))',
-                border: '1px solid rgba(27,107,90,0.3)',
+                background: 'linear-gradient(135deg, rgba(74,74,166,0.3), rgba(212,175,55,0.2))',
+                border: '1px solid rgba(74,74,166,0.3)',
               }}
               animate={{
                 boxShadow: [
-                  '0 0 10px rgba(27,107,90,0.2)',
-                  '0 0 20px rgba(27,107,90,0.4)',
-                  '0 0 10px rgba(27,107,90,0.2)',
+                  '0 0 10px rgba(74,74,166,0.2)',
+                  '0 0 20px rgba(74,74,166,0.4)',
+                  '0 0 10px rgba(74,74,166,0.2)',
                 ],
               }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <Bot className="h-5 w-5" style={{ color: '#1B6B5A' }} />
+              <Bot className="h-5 w-5" style={{ color: '#4a4aa6' }} />
             </motion.div>
             <div>
-              <h3 className="text-sm font-semibold" style={{ color: '#F5F0E8' }}>
+              <h3 className="text-sm font-semibold" style={{ color: '#ffffff' }}>
                 {PERSONAS.find(p => p.id === activePersona)?.emoji} {PERSONAS.find(p => p.id === activePersona)?.label}
               </h3>
-              <p className="text-[10px]" style={{ color: 'rgba(245,240,232,0.4)' }}>
+              <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>
                 AI Islamic Assistant · {PERSONAS.find(p => p.id === activePersona)?.desc}
               </p>
             </div>
@@ -139,10 +139,10 @@ export function UstazAITab() {
           {messages.length > 0 && (
             <button
               className="p-2 rounded-lg"
-              style={{ background: 'rgba(196,151,42,0.1)' }}
+              style={{ background: 'rgba(212,175,55,0.1)' }}
               onClick={clearChat}
             >
-              <Trash2 className="h-4 w-4" style={{ color: '#C4972A' }} />
+              <Trash2 className="h-4 w-4" style={{ color: '#d4af37' }} />
             </button>
           )}
         </div>
@@ -154,9 +154,9 @@ export function UstazAITab() {
               key={p.id}
               className="flex-1 py-1.5 rounded-lg text-[10px] font-medium transition-all"
               style={{
-                background: activePersona === p.id ? 'rgba(27,107,90,0.2)' : 'rgba(10,30,61,0.3)',
-                color: activePersona === p.id ? '#1B6B5A' : 'rgba(245,240,232,0.4)',
-                border: `1px solid ${activePersona === p.id ? 'rgba(27,107,90,0.4)' : 'rgba(27,107,90,0.1)'}`,
+                background: activePersona === p.id ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+                color: activePersona === p.id ? '#4a4aa6' : 'rgba(204,204,204,0.4)',
+                border: `1px solid ${activePersona === p.id ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
               }}
               onClick={() => { setActivePersona(p.id); clearChat() }}
             >
@@ -167,8 +167,8 @@ export function UstazAITab() {
       </div>
 
       {/* JAKIM Disclaimer */}
-      <div className="px-4 py-1.5" style={{ background: 'rgba(196,151,42,0.05)' }}>
-        <p className="text-[9px] text-center" style={{ color: 'rgba(245,240,232,0.3)' }}>
+      <div className="px-4 py-1.5" style={{ background: 'rgba(212,175,55,0.05)' }}>
+        <p className="text-[9px] text-center" style={{ color: 'rgba(204,204,204,0.3)' }}>
           ⚠️ Jawapan AI adalah rujukan umum. Untuk hukum rasmi, sila rujuk mufti atau ulama bertauliah.
         </p>
       </div>
@@ -180,18 +180,18 @@ export function UstazAITab() {
             <motion.div
               className="h-20 w-20 rounded-2xl flex items-center justify-center mb-4"
               style={{
-                background: 'linear-gradient(135deg, rgba(27,107,90,0.15), rgba(196,151,42,0.1))',
-                border: '1px solid rgba(27,107,90,0.2)',
+                background: 'linear-gradient(135deg, rgba(74,74,166,0.15), rgba(212,175,55,0.1))',
+                border: '1px solid rgba(74,74,166,0.2)',
               }}
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Sparkles className="h-8 w-8" style={{ color: '#1B6B5A' }} />
+              <Sparkles className="h-8 w-8" style={{ color: '#4a4aa6' }} />
             </motion.div>
-            <h4 className="text-sm font-semibold mb-1" style={{ color: '#F5F0E8' }}>
+            <h4 className="text-sm font-semibold mb-1" style={{ color: '#ffffff' }}>
               Tanya Ustaz AI
             </h4>
-            <p className="text-xs text-center max-w-[250px]" style={{ color: 'rgba(245,240,232,0.4)' }}>
+            <p className="text-xs text-center max-w-[250px]" style={{ color: 'rgba(204,204,204,0.4)' }}>
               Tanya apa-apa soalan tentang Islam, fiqh, akidah, sirah, dan banyak lagi.
             </p>
 
@@ -202,9 +202,9 @@ export function UstazAITab() {
                   key={chip}
                   className="px-3 py-1.5 rounded-full text-[10px] transition-transform active:scale-95"
                   style={{
-                    background: 'rgba(10,30,61,0.5)',
-                    border: '1px solid rgba(27,107,90,0.15)',
-                    color: 'rgba(245,240,232,0.6)',
+                    background: 'rgba(42,42,106,0.5)',
+                    border: '1px solid rgba(74,74,166,0.15)',
+                    color: 'rgba(204,204,204,0.6)',
                   }}
                   onClick={() => { setInput(chip); inputRef.current?.focus() }}
                 >
@@ -225,38 +225,38 @@ export function UstazAITab() {
               transition={{ duration: 0.2 }}
             >
               {msg.role === 'assistant' && (
-                <div className="flex-shrink-0 h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(27,107,90,0.15)' }}>
-                  <Bot className="h-3.5 w-3.5" style={{ color: '#1B6B5A' }} />
+                <div className="flex-shrink-0 h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(74,74,166,0.15)' }}>
+                  <Bot className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
                 </div>
               )}
               <div
                 className="max-w-[80%] rounded-xl p-3"
                 style={{
                   background: msg.role === 'user'
-                    ? 'linear-gradient(135deg, #1B6B5A, #2A8B74)'
-                    : 'rgba(10, 30, 61, 0.5)',
-                  border: msg.role === 'assistant' ? '1px solid rgba(27,107,90,0.1)' : 'none',
+                    ? 'linear-gradient(135deg, #4a4aa6, #6a6ab6)'
+                    : 'rgba(42, 42, 106, 0.5)',
+                  border: msg.role === 'assistant' ? '1px solid rgba(74,74,166,0.1)' : 'none',
                 }}
               >
-                <p className="text-sm leading-relaxed" style={{ color: msg.role === 'user' ? '#FFFFFF' : 'rgba(245,240,232,0.85)' }}>
+                <p className="text-sm leading-relaxed" style={{ color: msg.role === 'user' ? '#FFFFFF' : 'rgba(204,204,204,0.85)' }}>
                   {msg.content}
                 </p>
                 <div className="flex items-center justify-between mt-1.5">
-                  <span className="text-[9px]" style={{ color: msg.role === 'user' ? 'rgba(255,255,255,0.5)' : 'rgba(245,240,232,0.25)' }}>
+                  <span className="text-[9px]" style={{ color: msg.role === 'user' ? 'rgba(204,204,204,0.6)' : 'rgba(204,204,204,0.25)' }}>
                     {msg.timestamp.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                   {msg.role === 'assistant' && (
                     <div className="flex gap-1">
-                      <button className="p-1 rounded" style={{ background: 'rgba(27,107,90,0.1)' }}>
-                        <Volume2 className="h-3 w-3" style={{ color: '#1B6B5A' }} />
+                      <button className="p-1 rounded" style={{ background: 'rgba(74,74,166,0.1)' }}>
+                        <Volume2 className="h-3 w-3" style={{ color: '#4a4aa6' }} />
                       </button>
                     </div>
                   )}
                 </div>
               </div>
               {msg.role === 'user' && (
-                <div className="flex-shrink-0 h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(196,151,42,0.15)' }}>
-                  <User className="h-3.5 w-3.5" style={{ color: '#C4972A' }} />
+                <div className="flex-shrink-0 h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(212,175,55,0.15)' }}>
+                  <User className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
                 </div>
               )}
             </motion.div>
@@ -269,16 +269,16 @@ export function UstazAITab() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(27,107,90,0.15)' }}>
-              <Bot className="h-3.5 w-3.5" style={{ color: '#1B6B5A' }} />
+            <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(74,74,166,0.15)' }}>
+              <Bot className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
             </div>
-            <div className="rounded-xl p-3" style={{ background: 'rgba(10,30,61,0.5)', border: '1px solid rgba(27,107,90,0.1)' }}>
+            <div className="rounded-xl p-3" style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.1)' }}>
               <div className="flex gap-1">
                 {[0, 1, 2].map(i => (
                   <motion.div
                     key={i}
                     className="h-2 w-2 rounded-full"
-                    style={{ background: '#1B6B5A' }}
+                    style={{ background: '#4a4aa6' }}
                     animate={{ opacity: [0.3, 1, 0.3] }}
                     transition={{ duration: 1, delay: i * 0.2, repeat: Infinity }}
                   />
@@ -299,7 +299,7 @@ export function UstazAITab() {
       </div>
 
       {/* Input Area */}
-      <div className="px-4 py-3" style={{ borderTop: '1px solid rgba(27,107,90,0.1)', background: 'rgba(5,19,36,0.5)' }}>
+      <div className="px-4 py-3" style={{ borderTop: '1px solid rgba(74,74,166,0.1)', background: 'rgba(26,26,74,0.5)' }}>
         <div className="flex gap-2 items-center">
           <div className="flex-1 relative">
             <input
@@ -311,9 +311,9 @@ export function UstazAITab() {
               onKeyDown={e => e.key === 'Enter' && sendMessage()}
               className="w-full rounded-xl pl-4 pr-10 py-2.5 text-sm outline-none"
               style={{
-                background: 'rgba(10, 30, 61, 0.5)',
-                border: '1px solid rgba(27,107,90,0.15)',
-                color: '#F5F0E8',
+                background: 'rgba(42, 42, 106, 0.5)',
+                border: '1px solid rgba(74,74,166,0.15)',
+                color: '#ffffff',
               }}
               disabled={isLoading}
             />
@@ -321,13 +321,13 @@ export function UstazAITab() {
           <motion.button
             className="h-10 w-10 rounded-xl flex items-center justify-center"
             style={{
-              background: input.trim() ? 'linear-gradient(135deg, #1B6B5A, #2A8B74)' : 'rgba(27,107,90,0.15)',
+              background: input.trim() ? 'linear-gradient(135deg, #4a4aa6, #6a6ab6)' : 'rgba(74,74,166,0.15)',
             }}
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
             whileTap={{ scale: 0.9 }}
           >
-            <Send className="h-4 w-4" style={{ color: input.trim() ? '#FFFFFF' : 'rgba(27,107,90,0.3)' }} />
+            <Send className="h-4 w-4" style={{ color: input.trim() ? '#FFFFFF' : 'rgba(74,74,166,0.3)' }} />
           </motion.button>
         </div>
       </div>

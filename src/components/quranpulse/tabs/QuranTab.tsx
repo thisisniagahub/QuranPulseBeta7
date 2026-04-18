@@ -56,17 +56,17 @@ export function QuranTab() {
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-lg font-bold" style={{ color: '#F5F0E8' }}>Al-Quran</h2>
-                <p className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>114 Surah · 30 Juz</p>
+                <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Al-Quran</h2>
+                <p className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>114 Surah · 30 Juz</p>
               </div>
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(27,107,90,0.15)' }}>
-                <BookOpen className="h-4 w-4" style={{ color: '#1B6B5A' }} />
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(74,74,166,0.15)' }}>
+                <BookOpen className="h-4 w-4" style={{ color: '#4a4aa6' }} />
               </div>
             </div>
 
             {/* Search Bar */}
             <div className="relative mb-3">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'rgba(245,240,232,0.3)' }} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'rgba(204,204,204,0.3)' }} />
               <input
                 type="text"
                 placeholder="Cari surah..."
@@ -74,9 +74,9 @@ export function QuranTab() {
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full rounded-xl pl-9 pr-9 py-2.5 text-sm outline-none"
                 style={{
-                  background: 'rgba(10, 30, 61, 0.5)',
-                  border: '1px solid rgba(27,107,90,0.15)',
-                  color: '#F5F0E8',
+                  background: 'rgba(42, 42, 106, 0.5)',
+                  border: '1px solid rgba(74,74,166,0.15)',
+                  color: '#ffffff',
                 }}
               />
               {searchQuery && (
@@ -84,7 +84,7 @@ export function QuranTab() {
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                   onClick={() => setSearchQuery('')}
                 >
-                  <X className="h-4 w-4" style={{ color: 'rgba(245,240,232,0.3)' }} />
+                  <X className="h-4 w-4" style={{ color: 'rgba(204,204,204,0.3)' }} />
                 </button>
               )}
             </div>
@@ -100,9 +100,9 @@ export function QuranTab() {
                   key={f.key}
                   className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                   style={{
-                    background: filter === f.key ? 'rgba(27,107,90,0.2)' : 'rgba(10,30,61,0.3)',
-                    color: filter === f.key ? '#1B6B5A' : 'rgba(245,240,232,0.5)',
-                    border: `1px solid ${filter === f.key ? 'rgba(27,107,90,0.4)' : 'rgba(27,107,90,0.1)'}`,
+                    background: filter === f.key ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+                    color: filter === f.key ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
+                    border: `1px solid ${filter === f.key ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
                   }}
                   onClick={() => setFilter(f.key)}
                 >
@@ -118,8 +118,8 @@ export function QuranTab() {
                   key={surah.id}
                   className="flex items-center justify-between rounded-xl p-3 cursor-pointer transition-transform active:scale-[0.98]"
                   style={{
-                    background: 'rgba(10, 30, 61, 0.4)',
-                    border: '1px solid rgba(27, 107, 90, 0.08)',
+                    background: 'rgba(42, 42, 106, 0.4)',
+                    border: '1px solid rgba(74, 74, 166, 0.08)',
                   }}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -129,21 +129,21 @@ export function QuranTab() {
                   <div className="flex items-center gap-3">
                     <div
                       className="flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold"
-                      style={{ background: 'rgba(27,107,90,0.15)', color: '#1B6B5A' }}
+                      style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6' }}
                     >
                       {surah.id}
                     </div>
                     <div>
-                      <div className="text-sm font-medium" style={{ color: '#F5F0E8' }}>
+                      <div className="text-sm font-medium" style={{ color: '#ffffff' }}>
                         {surah.nameMs}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>
+                        <span className="text-xs" style={{ color: 'rgba(204,204,204,0.4)' }}>
                           {surah.versesCount} ayat
                         </span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded" style={{
-                          background: surah.revelationType === 'Meccan' ? 'rgba(196,151,42,0.15)' : 'rgba(139,92,246,0.15)',
-                          color: surah.revelationType === 'Meccan' ? '#C4972A' : '#8B5CF6',
+                          background: surah.revelationType === 'Meccan' ? 'rgba(212,175,55,0.15)' : 'rgba(106,106,182,0.15)',
+                          color: surah.revelationType === 'Meccan' ? '#d4af37' : '#6a6ab6',
                         }}>
                           {surah.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyyah'}
                         </span>
@@ -151,7 +151,7 @@ export function QuranTab() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-arabic" style={{ color: 'rgba(245,240,232,0.6)' }}>
+                    <span className="text-lg font-arabic" style={{ color: 'rgba(204,204,204,0.6)' }}>
                       {surah.name}
                     </span>
                     <button
@@ -160,8 +160,8 @@ export function QuranTab() {
                     >
                       <Bookmark
                         className="h-4 w-4"
-                        style={{ color: isSurahBookmarked(surah.id) ? '#C4972A' : 'rgba(245,240,232,0.2)' }}
-                        fill={isSurahBookmarked(surah.id) ? '#C4972A' : 'none'}
+                        style={{ color: isSurahBookmarked(surah.id) ? '#d4af37' : 'rgba(204,204,204,0.2)' }}
+                        fill={isSurahBookmarked(surah.id) ? '#d4af37' : 'none'}
                       />
                     </button>
                   </div>
@@ -171,7 +171,7 @@ export function QuranTab() {
 
             {filteredSurahs.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-sm" style={{ color: 'rgba(245,240,232,0.4)' }}>
+                <p className="text-sm" style={{ color: 'rgba(204,204,204,0.4)' }}>
                   Tiada surah ditemui
                 </p>
               </div>
@@ -190,28 +190,28 @@ export function QuranTab() {
             <div className="flex items-center justify-between mb-4">
               <button
                 className="flex items-center gap-1 text-sm"
-                style={{ color: '#1B6B5A' }}
+                style={{ color: '#4a4aa6' }}
                 onClick={() => setView('list')}
               >
                 <ChevronLeft className="h-5 w-5" /> Kembali
               </button>
               <div className="text-center">
-                <div className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                <div className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>
                   Surah {selectedSurah}
                 </div>
-                <div className="text-sm font-semibold" style={{ color: '#F5F0E8' }}>
+                <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>
                   {surahInfo?.nameMs}
                 </div>
               </div>
               <button
                 className="p-2 rounded-lg"
-                style={{ background: 'rgba(27,107,90,0.15)' }}
+                style={{ background: 'rgba(74,74,166,0.15)' }}
                 onClick={() => toggleSurahBookmark(selectedSurah)}
               >
                 <Bookmark
                   className="h-4 w-4"
-                  style={{ color: isSurahBookmarked(selectedSurah) ? '#C4972A' : '#1B6B5A' }}
-                  fill={isSurahBookmarked(selectedSurah) ? '#C4972A' : 'none'}
+                  style={{ color: isSurahBookmarked(selectedSurah) ? '#d4af37' : '#4a4aa6' }}
+                  fill={isSurahBookmarked(selectedSurah) ? '#d4af37' : 'none'}
                 />
               </button>
             </div>
@@ -220,14 +220,14 @@ export function QuranTab() {
             <div
               className="rounded-xl p-4 mb-4 text-center"
               style={{
-                background: 'linear-gradient(135deg, rgba(27,107,90,0.15), rgba(196,151,42,0.1))',
-                border: '1px solid rgba(27,107,90,0.2)',
+                background: 'linear-gradient(135deg, rgba(74,74,166,0.15), rgba(212,175,55,0.1))',
+                border: '1px solid rgba(74,74,166,0.2)',
               }}
             >
-              <div className="text-3xl font-arabic mb-1" style={{ color: '#F5F0E8' }}>
+              <div className="text-3xl font-arabic mb-1" style={{ color: '#ffffff' }}>
                 {surahInfo?.name}
               </div>
-              <div className="text-sm" style={{ color: 'rgba(245,240,232,0.7)' }}>
+              <div className="text-sm" style={{ color: 'rgba(204,204,204,0.7)' }}>
                 {surahInfo?.nameEn} · {surahInfo?.versesCount} Ayat · {surahInfo?.revelationType === 'Meccan' ? 'Makkiyah' : 'Madaniyyah'}
               </div>
             </div>
@@ -235,7 +235,7 @@ export function QuranTab() {
             {/* Bismillah */}
             {selectedSurah !== 9 && selectedSurah !== 1 && (
               <div className="text-center mb-4 py-3">
-                <p className="text-2xl font-arabic" style={{ color: '#C4972A', direction: 'rtl' }}>
+                <p className="text-2xl font-arabic" style={{ color: '#d4af37', direction: 'rtl' }}>
                   بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                 </p>
               </div>
@@ -249,8 +249,8 @@ export function QuranTab() {
                     key={verse.verseNumber}
                     className="rounded-xl p-4"
                     style={{
-                      background: 'rgba(10, 30, 61, 0.3)',
-                      border: '1px solid rgba(27,107,90,0.08)',
+                      background: 'rgba(42, 42, 106, 0.3)',
+                      border: '1px solid rgba(74,74,166,0.08)',
                     }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -259,15 +259,15 @@ export function QuranTab() {
                     <div className="flex items-start gap-3">
                       <div
                         className="flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ background: 'rgba(196,151,42,0.15)', color: '#C4972A' }}
+                        style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}
                       >
                         {verse.verseNumber}
                       </div>
                       <div className="flex-1">
-                        <p className="text-right text-xl leading-[2] font-arabic" style={{ color: '#F5F0E8', direction: 'rtl' }}>
+                        <p className="text-right text-xl leading-[2] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
                           {verse.arabic}
                         </p>
-                        <p className="mt-2 text-sm leading-relaxed" style={{ color: 'rgba(245,240,232,0.6)' }}>
+                        <p className="mt-2 text-sm leading-relaxed" style={{ color: 'rgba(204,204,204,0.6)' }}>
                           {verse.translation}
                         </p>
                       </div>
@@ -275,16 +275,16 @@ export function QuranTab() {
                     <div className="flex justify-end gap-1 mt-2">
                       <button
                         className="p-1.5 rounded-lg text-xs"
-                        style={{ background: 'rgba(27,107,90,0.1)' }}
+                        style={{ background: 'rgba(74,74,166,0.1)' }}
                         onClick={() => addXp(2)}
                       >
-                        <Bookmark className="h-3.5 w-3.5" style={{ color: '#1B6B5A' }} />
+                        <Bookmark className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
                       </button>
                       <button
                         className="p-1.5 rounded-lg text-xs"
-                        style={{ background: 'rgba(196,151,42,0.1)' }}
+                        style={{ background: 'rgba(212,175,55,0.1)' }}
                       >
-                        <Share2 className="h-3.5 w-3.5" style={{ color: '#C4972A' }} />
+                        <Share2 className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
                       </button>
                     </div>
                   </motion.div>
@@ -292,11 +292,11 @@ export function QuranTab() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <BookOpen className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(27,107,90,0.3)' }} />
-                <p className="text-sm" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                <BookOpen className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(74,74,166,0.3)' }} />
+                <p className="text-sm" style={{ color: 'rgba(204,204,204,0.5)' }}>
                   Ayat-ayat {surahInfo?.nameMs} akan dimuat turun...
                 </p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(245,240,232,0.3)' }}>
+                <p className="text-xs mt-1" style={{ color: 'rgba(204,204,204,0.3)' }}>
                   {surahInfo?.versesCount} ayat · Juz {surahInfo?.juz.join(', ')}
                 </p>
               </div>
@@ -307,9 +307,9 @@ export function QuranTab() {
               <button
                 className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs"
                 style={{
-                  background: 'rgba(10,30,61,0.5)',
-                  border: '1px solid rgba(27,107,90,0.15)',
-                  color: selectedSurah > 1 ? '#1B6B5A' : 'rgba(245,240,232,0.2)',
+                  background: 'rgba(42,42,106,0.5)',
+                  border: '1px solid rgba(74,74,166,0.15)',
+                  color: selectedSurah > 1 ? '#4a4aa6' : 'rgba(204,204,204,0.2)',
                 }}
                 disabled={selectedSurah <= 1}
                 onClick={() => { setSelectedSurah(Math.max(1, selectedSurah - 1)); setLastRead(selectedSurah - 1, 1) }}
@@ -319,9 +319,9 @@ export function QuranTab() {
               <button
                 className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs"
                 style={{
-                  background: 'rgba(27,107,90,0.15)',
-                  border: '1px solid rgba(27,107,90,0.3)',
-                  color: '#1B6B5A',
+                  background: 'rgba(74,74,166,0.15)',
+                  border: '1px solid rgba(74,74,166,0.3)',
+                  color: '#4a4aa6',
                 }}
                 disabled={selectedSurah >= 114}
                 onClick={() => { setSelectedSurah(Math.min(114, selectedSurah + 1)); setLastRead(selectedSurah + 1, 1) }}

@@ -15,7 +15,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="qp-shell" style={{ background: '#051324', minHeight: '100vh' }}>
+    <div className="qp-shell qp-geometric-bg" style={{ background: '#1a1a4a', minHeight: '100vh' }}>
       <SplashScreen isVisible={showSplash} />
       <AppShell />
     </div>

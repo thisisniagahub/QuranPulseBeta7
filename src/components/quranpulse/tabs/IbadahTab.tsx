@@ -16,8 +16,8 @@ export function IbadahTab() {
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="px-4 pt-2 pb-2">
-        <h2 className="text-lg font-bold" style={{ color: '#F5F0E8' }}>Ibadah</h2>
-        <p className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>Solat, Kiblat & Tasbih</p>
+        <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Ibadah</h2>
+        <p className="text-xs" style={{ color: 'rgba(204,204,204,0.6)' }}>Solat, Kiblat & Tasbih</p>
       </div>
 
       {/* Sub-tab navigation */}
@@ -32,9 +32,9 @@ export function IbadahTab() {
               key={tab.key}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-medium transition-all"
               style={{
-                background: activeView === tab.key ? 'rgba(27,107,90,0.2)' : 'rgba(10,30,61,0.3)',
-                color: activeView === tab.key ? '#1B6B5A' : 'rgba(245,240,232,0.4)',
-                border: `1px solid ${activeView === tab.key ? 'rgba(27,107,90,0.4)' : 'rgba(27,107,90,0.1)'}`,
+                background: activeView === tab.key ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+                color: activeView === tab.key ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
+                border: `1px solid ${activeView === tab.key ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
               }}
               onClick={() => setActiveView(tab.key)}
             >
@@ -74,10 +74,10 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
       transition={{ duration: 0.2 }}
     >
       {/* Zone Selector */}
-      <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl" style={{ background: 'rgba(10,30,61,0.5)', border: '1px solid rgba(27,107,90,0.1)' }}>
-        <MapPin className="h-4 w-4" style={{ color: '#1B6B5A' }} />
-        <span className="text-xs" style={{ color: '#F5F0E8' }}>Wilayah Persekutuan Kuala Lumpur</span>
-        <span className="text-[10px] ml-auto px-2 py-0.5 rounded-full" style={{ background: 'rgba(27,107,90,0.15)', color: '#1B6B5A' }}>JAKIM</span>
+      <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl" style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.1)' }}>
+        <MapPin className="h-4 w-4" style={{ color: '#4a4aa6' }} />
+        <span className="text-xs" style={{ color: '#ffffff' }}>Wilayah Persekutuan Kuala Lumpur</span>
+        <span className="text-[10px] ml-auto px-2 py-0.5 rounded-full" style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6' }}>JAKIM</span>
       </div>
 
       {/* Current/Next Prayer Highlight */}
@@ -85,8 +85,8 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
         <motion.div
           className="rounded-xl p-5 mb-4 relative overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgba(27,107,90,0.2), rgba(27,107,90,0.08))',
-            border: '1px solid rgba(27,107,90,0.3)',
+            background: 'linear-gradient(135deg, rgba(74,74,166,0.2), rgba(74,74,166,0.08))',
+            border: '1px solid rgba(74,74,166,0.3)',
           }}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -94,16 +94,16 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
           <div className="absolute top-3 right-3 text-4xl opacity-20">
             {prayerIcons[currentPrayerIdx]}
           </div>
-          <div className="text-xs font-medium mb-1" style={{ color: '#1B6B5A' }}>
+          <div className="text-xs font-medium mb-1" style={{ color: '#4a4aa6' }}>
             Solat Seterusnya
           </div>
-          <div className="text-2xl font-bold" style={{ color: '#F5F0E8' }}>
+          <div className="text-2xl font-bold" style={{ color: '#ffffff' }}>
             {PRAYER_TIMES_KL[currentPrayerIdx].nameMs}
           </div>
-          <div className="text-3xl font-bold mt-1" style={{ color: '#1B6B5A' }}>
+          <div className="text-3xl font-bold mt-1" style={{ color: '#4a4aa6' }}>
             {PRAYER_TIMES_KL[currentPrayerIdx].time}
           </div>
-          <div className="text-xs mt-2" style={{ color: 'rgba(245,240,232,0.5)' }}>
+          <div className="text-xs mt-2" style={{ color: 'rgba(204,204,204,0.6)' }}>
             {currentPrayerIdx === 0 ? 'Segera' : 'Dalam masa terdekat'}
           </div>
         </motion.div>
@@ -118,8 +118,8 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
               key={prayer.name}
               className="flex items-center justify-between rounded-xl p-3.5"
               style={{
-                background: isCurrent ? prayerGradients[idx] : 'rgba(10,30,61,0.3)',
-                border: isCurrent ? '1px solid rgba(27,107,90,0.3)' : '1px solid rgba(27,107,90,0.06)',
+                background: isCurrent ? prayerGradients[idx] : 'rgba(42,42,106,0.3)',
+                border: isCurrent ? '1px solid rgba(74,74,166,0.3)' : '1px solid rgba(74,74,166,0.06)',
               }}
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -128,20 +128,20 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
               <div className="flex items-center gap-3">
                 <span className="text-xl">{prayerIcons[idx]}</span>
                 <div>
-                  <div className="text-sm font-medium" style={{ color: '#F5F0E8' }}>
+                  <div className="text-sm font-medium" style={{ color: '#ffffff' }}>
                     {prayer.nameMs}
                   </div>
-                  <div className="text-[10px]" style={{ color: 'rgba(245,240,232,0.4)' }}>
+                  <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>
                     {prayer.name}
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold" style={{ color: isCurrent ? '#1B6B5A' : '#F5F0E8' }}>
+                <div className="text-lg font-bold" style={{ color: isCurrent ? '#4a4aa6' : '#ffffff' }}>
                   {prayer.time}
                 </div>
                 {isCurrent && (
-                  <div className="text-[9px] px-1.5 py-0.5 rounded-full inline-block" style={{ background: 'rgba(27,107,90,0.2)', color: '#1B6B5A' }}>
+                  <div className="text-[9px] px-1.5 py-0.5 rounded-full inline-block" style={{ background: 'rgba(74,74,166,0.2)', color: '#4a4aa6' }}>
                     Seterusnya
                   </div>
                 )}
@@ -153,7 +153,7 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
 
       {/* Prayer logging hint */}
       <div className="mt-4 text-center">
-        <p className="text-[10px]" style={{ color: 'rgba(245,240,232,0.25)' }}>
+        <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.25)' }}>
           Waktu solat berdasarkan zon JAKIM WPKL · Kemas kini automatik
         </p>
       </div>
@@ -172,16 +172,16 @@ function QiblaView() {
       transition={{ duration: 0.2 }}
     >
       <div className="text-center mb-4">
-        <h3 className="text-sm font-semibold" style={{ color: '#F5F0E8' }}>Arah Kiblat</h3>
-        <p className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>Kaabah, Makkah Al-Mukarramah</p>
+        <h3 className="text-sm font-semibold" style={{ color: '#ffffff' }}>Arah Kiblat</h3>
+        <p className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>Kaabah, Makkah Al-Mukarramah</p>
       </div>
 
       {/* Compass */}
       <motion.div
         className="relative h-64 w-64 rounded-full flex items-center justify-center"
         style={{
-          background: 'radial-gradient(circle, rgba(27,107,90,0.1) 0%, rgba(5,19,36,0.5) 70%)',
-          border: '2px solid rgba(27,107,90,0.2)',
+          background: 'radial-gradient(circle, rgba(74,74,166,0.1) 0%, rgba(26,26,74,0.5) 70%)',
+          border: '2px solid rgba(74,74,166,0.2)',
         }}
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -193,7 +193,7 @@ function QiblaView() {
             key={dir}
             className="absolute text-xs font-bold"
             style={{
-              color: dir === 'U' ? '#1B6B5A' : 'rgba(245,240,232,0.3)',
+              color: dir === 'U' ? '#4a4aa6' : 'rgba(204,204,204,0.3)',
               top: i === 0 ? '8px' : 'auto',
               bottom: i === 2 ? '8px' : 'auto',
               left: i === 3 ? '8px' : 'auto',
@@ -212,11 +212,11 @@ function QiblaView() {
           animate={{ rotate: [qiblaAngle - 2, qiblaAngle + 2, qiblaAngle - 2] }}
           transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="h-24 w-0.5 mx-auto" style={{ background: 'linear-gradient(to top, transparent, #1B6B5A)' }} />
+          <div className="h-24 w-0.5 mx-auto" style={{ background: 'linear-gradient(to top, transparent, #4a4aa6)' }} />
           <div
             className="h-3 w-3 mx-auto -mt-0.5"
             style={{
-              background: '#C4972A',
+              background: '#d4af37',
               clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
             }}
           />
@@ -226,34 +226,34 @@ function QiblaView() {
         <div
           className="absolute h-4 w-4 rounded-full"
           style={{
-            background: 'radial-gradient(circle, #1B6B5A, rgba(27,107,90,0.3))',
-            boxShadow: '0 0 10px rgba(27,107,90,0.5)',
+            background: 'radial-gradient(circle, #4a4aa6, rgba(74,74,166,0.3))',
+            boxShadow: '0 0 10px rgba(74,74,166,0.5)',
           }}
         />
       </motion.div>
 
       {/* Degree info */}
       <div className="mt-4 text-center">
-        <div className="text-2xl font-bold" style={{ color: '#1B6B5A' }}>
+        <div className="text-2xl font-bold" style={{ color: '#4a4aa6' }}>
           {qiblaAngle}°
         </div>
-        <p className="text-xs mt-1" style={{ color: 'rgba(245,240,232,0.4)' }}>
+        <p className="text-xs mt-1" style={{ color: 'rgba(204,204,204,0.5)' }}>
           Dari utara mengikut arah jam
         </p>
       </div>
 
       {/* Info */}
-      <div className="mt-4 rounded-xl p-3 w-full" style={{ background: 'rgba(10,30,61,0.5)', border: '1px solid rgba(27,107,90,0.1)' }}>
+      <div className="mt-4 rounded-xl p-3 w-full" style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.1)' }}>
         <div className="flex items-center gap-2">
-          <Navigation className="h-4 w-4" style={{ color: '#1B6B5A' }} />
+          <Navigation className="h-4 w-4" style={{ color: '#4a4aa6' }} />
           <div>
-            <div className="text-xs font-medium" style={{ color: '#F5F0E8' }}>Lokasi: Kuala Lumpur</div>
-            <div className="text-[10px]" style={{ color: 'rgba(245,240,232,0.4)' }}>3.1390° N, 101.6869° E</div>
+            <div className="text-xs font-medium" style={{ color: '#ffffff' }}>Lokasi: Kuala Lumpur</div>
+            <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>3.1390° N, 101.6869° E</div>
           </div>
         </div>
       </div>
 
-      <p className="text-[9px] mt-3 text-center" style={{ color: 'rgba(245,240,232,0.25)' }}>
+      <p className="text-[9px] mt-3 text-center" style={{ color: 'rgba(204,204,204,0.25)' }}>
         * Arah kiblat adalah anggaran. Untuk ketepatan, sila rujuk kompas kiblat di masjid.
       </p>
     </motion.div>
@@ -300,14 +300,14 @@ function TasbihView() {
             key={i}
             className="flex-shrink-0 px-3 py-2 rounded-xl text-center transition-transform active:scale-95"
             style={{
-              background: selectedDhikr === i ? 'rgba(27,107,90,0.2)' : 'rgba(10,30,61,0.3)',
-              border: `1px solid ${selectedDhikr === i ? 'rgba(27,107,90,0.4)' : 'rgba(27,107,90,0.1)'}`,
+              background: selectedDhikr === i ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+              border: `1px solid ${selectedDhikr === i ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
               minWidth: '100px',
             }}
             onClick={() => { setSelectedDhikr(i); resetTasbih() }}
           >
-            <div className="text-lg font-arabic" style={{ color: '#F5F0E8', direction: 'rtl' }}>{dhikr.arabic}</div>
-            <div className="text-[10px] mt-0.5" style={{ color: selectedDhikr === i ? '#1B6B5A' : 'rgba(245,240,232,0.4)' }}>
+            <div className="text-lg font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>{dhikr.arabic}</div>
+            <div className="text-[10px] mt-0.5" style={{ color: selectedDhikr === i ? '#4a4aa6' : 'rgba(204,204,204,0.5)' }}>
               {dhikr.malay}
             </div>
           </button>
@@ -316,10 +316,10 @@ function TasbihView() {
 
       {/* Current Dhikr Display */}
       <div className="text-center mb-2">
-        <p className="text-2xl font-arabic" style={{ color: '#C4972A', direction: 'rtl' }}>
+        <p className="text-2xl font-arabic" style={{ color: '#d4af37', direction: 'rtl' }}>
           {dhikrList[selectedDhikr].arabic}
         </p>
-        <p className="text-xs mt-1" style={{ color: 'rgba(245,240,232,0.5)' }}>
+        <p className="text-xs mt-1" style={{ color: 'rgba(204,204,204,0.6)' }}>
           {dhikrList[selectedDhikr].meaning}
         </p>
       </div>
@@ -334,8 +334,8 @@ function TasbihView() {
           className="relative flex h-48 w-48 items-center justify-center rounded-full transition-transform"
           style={{
             background: isComplete
-              ? 'conic-gradient(#C4972A 100%, rgba(196,151,42,0.1) 100%)'
-              : `conic-gradient(#1B6B5A ${progress}%, rgba(27,107,90,0.08) ${progress}%)`,
+              ? 'conic-gradient(#d4af37 100%, rgba(212,175,55,0.1) 100%)'
+              : `conic-gradient(#4a4aa6 ${progress}%, rgba(74,74,166,0.08) ${progress}%)`,
           }}
           onClick={handleTap}
           whileTap={{ scale: 0.95 }}
@@ -344,8 +344,8 @@ function TasbihView() {
             className="flex h-40 w-40 flex-col items-center justify-center rounded-full"
             style={{
               background: isComplete
-                ? 'radial-gradient(circle, rgba(196,151,42,0.1), #051324)'
-                : '#051324',
+                ? 'radial-gradient(circle, rgba(212,175,55,0.1), #1a1a4a)'
+                : '#1a1a4a',
             }}
           >
             {isComplete ? (
@@ -354,13 +354,13 @@ function TasbihView() {
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 300 }}
               >
-                <Check className="h-12 w-12" style={{ color: '#C4972A' }} />
+                <Check className="h-12 w-12" style={{ color: '#d4af37' }} />
               </motion.div>
             ) : (
               <>
                 <motion.span
                   className="text-5xl font-bold"
-                  style={{ color: '#1B6B5A' }}
+                  style={{ color: '#4a4aa6' }}
                   key={tasbihCount}
                   initial={{ scale: 1.2, opacity: 0.5 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -368,7 +368,7 @@ function TasbihView() {
                 >
                   {tasbihCount}
                 </motion.span>
-                <span className="text-xs mt-1" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                <span className="text-xs mt-1" style={{ color: 'rgba(204,204,204,0.6)' }}>
                   / {tasbihTarget}
                 </span>
               </>
@@ -378,7 +378,7 @@ function TasbihView() {
 
         {/* Total count */}
         <div className="mt-3 text-center">
-          <span className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>
+          <span className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>
             Jumlah: {tasbihTotal} kali
           </span>
         </div>
@@ -388,9 +388,9 @@ function TasbihView() {
           <button
             className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs transition-transform active:scale-95"
             style={{
-              background: 'rgba(196,151,42,0.1)',
-              color: '#C4972A',
-              border: '1px solid rgba(196,151,42,0.2)',
+              background: 'rgba(212,175,55,0.1)',
+              color: '#d4af37',
+              border: '1px solid rgba(212,175,55,0.2)',
             }}
             onClick={resetTasbih}
           >
@@ -399,9 +399,9 @@ function TasbihView() {
           <select
             className="px-3 py-2 rounded-xl text-xs outline-none"
             style={{
-              background: 'rgba(10,30,61,0.5)',
-              border: '1px solid rgba(27,107,90,0.15)',
-              color: '#F5F0E8',
+              background: 'rgba(42,42,106,0.5)',
+              border: '1px solid rgba(74,74,166,0.15)',
+              color: '#ffffff',
             }}
             value={tasbihTarget}
             onChange={e => setTasbihTarget(Number(e.target.value))}

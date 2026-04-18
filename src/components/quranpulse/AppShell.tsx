@@ -41,7 +41,7 @@ export function AppShell() {
   return (
     <div
       className="relative mx-auto flex min-h-screen max-w-[480px] flex-col"
-      style={{ background: '#051324' }}
+      style={{ background: '#1a1a4a' }}
     >
       {/* Status bar spacer */}
       <div className="h-2" />
@@ -66,10 +66,10 @@ export function AppShell() {
       <nav
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{
-          background: 'rgba(5, 19, 36, 0.9)',
+          background: 'rgba(26, 26, 74, 0.9)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderTop: '1px solid rgba(27, 107, 90, 0.12)',
+          borderTop: '1px solid rgba(74, 74, 166, 0.12)',
         }}
       >
         <div className="mx-auto flex max-w-[480px] items-center justify-around px-2 py-1">
@@ -87,10 +87,10 @@ export function AppShell() {
                     className="flex h-14 w-14 items-center justify-center rounded-full"
                     style={{
                       background: isActive
-                        ? 'linear-gradient(135deg, #1B6B5A, #2A8B74)'
-                        : 'rgba(27, 107, 90, 0.2)',
+                        ? 'linear-gradient(135deg, #4a4aa6, #6a6ab6)'
+                        : 'rgba(74, 74, 166, 0.2)',
                       boxShadow: isActive
-                        ? '0 0 20px rgba(27, 107, 90, 0.4), 0 0 40px rgba(27, 107, 90, 0.2)'
+                        ? '0 0 20px rgba(74, 74, 166, 0.4), 0 0 40px rgba(74, 74, 166, 0.2)'
                         : 'none',
                     }}
                     whileTap={{ scale: 0.9 }}
@@ -98,9 +98,9 @@ export function AppShell() {
                       isActive
                         ? {
                             boxShadow: [
-                              '0 0 20px rgba(27,107,90,0.4)',
-                              '0 0 30px rgba(27,107,90,0.6)',
-                              '0 0 20px rgba(27,107,90,0.4)',
+                              '0 0 20px rgba(74,74,166,0.4)',
+                              '0 0 30px rgba(74,74,166,0.6)',
+                              '0 0 20px rgba(74,74,166,0.4)',
                             ],
                           }
                         : {}
@@ -113,12 +113,12 @@ export function AppShell() {
                   >
                     <Bot
                       className="h-6 w-6"
-                      style={{ color: isActive ? '#FFFFFF' : '#1B6B5A' }}
+                      style={{ color: isActive ? '#FFFFFF' : '#4a4aa6' }}
                     />
                   </motion.div>
                   <span
                     className="mt-0.5 text-[10px] font-medium"
-                    style={{ color: isActive ? '#1B6B5A' : 'rgba(245,240,232,0.4)' }}
+                    style={{ color: isActive ? '#4a4aa6' : 'rgba(204,204,204,0.4)' }}
                   >
                     Ustaz AI
                   </span>
@@ -135,26 +135,26 @@ export function AppShell() {
                 <motion.div
                   className="flex h-10 w-10 items-center justify-center rounded-xl"
                   style={{
-                    background: isActive ? 'rgba(27, 107, 90, 0.15)' : 'transparent',
+                    background: isActive ? 'rgba(74, 74, 166, 0.15)' : 'transparent',
                   }}
                   whileTap={{ scale: 0.9 }}
                 >
                   {tab.icon && (
-                    <div style={{ color: isActive ? '#1B6B5A' : 'rgba(245,240,232,0.4)' }}>
+                    <div style={{ color: isActive ? '#4a4aa6' : 'rgba(204,204,204,0.4)' }}>
                       {tab.icon}
                     </div>
                   )}
                 </motion.div>
                 <span
                   className="text-[10px] font-medium"
-                  style={{ color: isActive ? '#1B6B5A' : 'rgba(245,240,232,0.4)' }}
+                  style={{ color: isActive ? '#4a4aa6' : 'rgba(204,204,204,0.4)' }}
                 >
                   {tab.label}
                 </span>
                 {isActive && (
                   <motion.div
                     className="h-0.5 w-4 rounded-full"
-                    style={{ background: '#1B6B5A' }}
+                    style={{ background: '#4a4aa6' }}
                     layoutId="activeTabIndicator"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />

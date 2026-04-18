@@ -12,7 +12,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
       {isVisible && (
         <motion.div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-          style={{ background: '#051324' }}
+          style={{ background: '#1a1a4a' }}
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6, ease: 'easeInOut' }}
@@ -24,7 +24,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               style={{
                 width: '300px',
                 height: '300px',
-                background: 'radial-gradient(circle, rgba(27,107,90,0.15) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(74,74,166,0.15) 0%, transparent 70%)',
                 top: '20%',
                 left: '50%',
                 transform: 'translateX(-50%)',
@@ -44,7 +44,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               style={{
                 width: '200px',
                 height: '200px',
-                background: 'radial-gradient(circle, rgba(196,151,42,0.1) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%)',
                 top: '25%',
                 left: '50%',
                 transform: 'translateX(-50%)',
@@ -68,9 +68,9 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             style={{
               width: '80px',
               height: '80px',
-              background: 'rgba(27, 107, 90, 0.1)',
+              background: 'rgba(74, 74, 166, 0.1)',
               borderRadius: '1.25rem',
-              border: '1px solid rgba(27, 107, 90, 0.3)',
+              border: '1px solid rgba(74, 74, 166, 0.3)',
             }}
             animate={{
               scale: [1, 1.05, 1],
@@ -81,7 +81,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               ease: 'easeInOut',
             }}
           >
-            {/* Islamic geometric pattern hint */}
+            {/* Islamic geometric star pattern */}
             <svg
               width="40"
               height="40"
@@ -91,10 +91,10 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             >
               <path
                 d="M20 4L24 14H34L26 20L29 30L20 24L11 30L14 20L6 14H16L20 4Z"
-                fill="#1B6B5A"
+                fill="#4a4aa6"
                 opacity="0.9"
               />
-              <circle cx="20" cy="20" r="6" fill="#C4972A" opacity="0.8" />
+              <circle cx="20" cy="20" r="6" fill="#d4af37" opacity="0.8" />
             </svg>
           </motion.div>
 
@@ -105,14 +105,14 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
-            <span style={{ color: '#1B6B5A' }}>QURAN</span>
-            <span style={{ color: '#C4972A' }}>PULSE</span>
+            <span style={{ color: '#4a4aa6' }}>QURAN</span>
+            <span style={{ color: '#d4af37' }}>PULSE</span>
           </motion.h1>
 
           {/* Tagline */}
           <motion.p
             className="relative z-10 mt-2 text-xs tracking-wider"
-            style={{ color: 'rgba(255,255,255,0.4)' }}
+            style={{ color: 'rgba(204,204,204,0.5)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6, duration: 0.5 }}
@@ -129,26 +129,26 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
           >
             <span
               className="text-sm"
-              style={{ color: 'rgba(255,255,255,0.5)' }}
+              style={{ color: 'rgba(204,204,204,0.6)' }}
             >
               Memuatkan
             </span>
             <motion.span
-              style={{ color: 'rgba(255,255,255,0.5)' }}
+              style={{ color: 'rgba(204,204,204,0.6)' }}
               animate={{ opacity: [0, 1, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
             >
               .
             </motion.span>
             <motion.span
-              style={{ color: 'rgba(255,255,255,0.5)' }}
+              style={{ color: 'rgba(204,204,204,0.6)' }}
               animate={{ opacity: [0, 1, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
             >
               .
             </motion.span>
             <motion.span
-              style={{ color: 'rgba(255,255,255,0.5)' }}
+              style={{ color: 'rgba(204,204,204,0.6)' }}
               animate={{ opacity: [0, 1, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
             >
@@ -165,7 +165,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
                   width: '6px',
                   height: '6px',
                   borderRadius: '50%',
-                  background: i === 1 ? '#C4972A' : '#1B6B5A',
+                  background: i === 1 ? '#d4af37' : '#4a4aa6',
                 }}
                 animate={{
                   scale: [1, 1.5, 1],
