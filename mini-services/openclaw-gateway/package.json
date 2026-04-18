@@ -1,0 +1,9 @@
+{
+  "name": "openclaw-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "openclaw gateway start --foreground",
+    "status": "openclaw gateway status"
+  }
+}

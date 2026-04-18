@@ -1,0 +1,74 @@
+{
+  "gateway": {
+    "bind": "127.0.0.1",
+    "port": 18789,
+    "auth": {
+      "mode": "password",
+      "password": "quranpulse2025"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "systemPrompt": "You are Ustaz AI, an Islamic knowledge assistant for the QuranPulse app. You provide guidance on Quran, prayer times, Islamic rulings (fiqh), creed (akidah), and prophetic biography (sirah). You respond primarily in Bahasa Melayu. You are knowledgeable, respectful, and always reference Quran verses and hadith when possible. You always add a JAKIM disclaimer when giving fatwa or rulings.",
+      "skills": ["quranpulse", "quranpulse-solat", "quranpulse-tasbih", "quranpulse-iqra"],
+      "memorySearch": {
+        "enabled": true
+      }
+    }
+  },
+  "session": {
+    "dmScope": "per-channel-peer",
+    "reset": {
+      "daily": true,
+      "hour": 4,
+      "idleMinutes": 120
+    }
+  },
+  "maintenance": {
+    "mode": "enforce",
+    "pruneAfter": "30d",
+    "maxEntries": 500
+  },
+  "tools": {
+    "allow": [
+      "web_search",
+      "web_fetch",
+      "image",
+      "image_generate",
+      "tts",
+      "exec",
+      "read",
+      "write",
+      "edit",
+      "message",
+      "cron",
+      "memory_search",
+      "memory_get",
+      "canvas",
+      "sessions_status"
+    ]
+  },
+  "plugins": {
+    "enabled": true,
+    "allow": ["*"]
+  },
+  "channels": {
+    "webchat": {
+      "enabled": true
+    },
+    "telegram": {
+      "enabled": false,
+      "botToken": ""
+    },
+    "whatsapp": {
+      "enabled": false
+    },
+    "discord": {
+      "enabled": false
+    }
+  },
+  "cron": {
+    "enabled": true
+  }
+}
