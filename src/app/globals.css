@@ -76,6 +76,16 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* QuranPulse Raudhah Theme */
+  --qp-teal: #1B6B5A;
+  --qp-teal-light: #2A8B74;
+  --qp-gold: #C4972A;
+  --qp-gold-light: #D4A84A;
+  --qp-navy: #051324;
+  --qp-navy-light: #0A1E3D;
+  --qp-ivory: #F5F0E8;
+  --qp-emerald: #10B981;
 }
 
 .dark {
@@ -119,4 +129,34 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* QuranPulse custom scrollbar */
+.qp-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.qp-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.qp-scroll::-webkit-scrollbar-thumb {
+  background: rgba(27, 107, 90, 0.3);
+  border-radius: 2px;
+}
+
+/* QuranPulse pulse animation for loading */
+@keyframes qp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.95); }
+}
+
+/* QuranPulse base overrides for app shell */
+.qp-shell {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.qp-shell .font-arabic {
+  font-family: 'Amiri', 'Noto Naskh Arabic', 'Traditional Arabic', serif;
+  line-height: 2;
 }
