@@ -8,6 +8,7 @@ import { QuranTab } from '@/components/quranpulse/tabs/QuranTab'
 import { UstazAITab } from '@/components/quranpulse/tabs/UstazAITab'
 import { IbadahTab } from '@/components/quranpulse/tabs/IbadahTab'
 import { IqraTab } from '@/components/quranpulse/tabs/IqraTab'
+import { useSupabaseSync } from '@/lib/supabase/useSupabaseSync'
 
 interface TabConfig {
   key: ActiveTab
@@ -26,6 +27,9 @@ const TABS: TabConfig[] = [
 
 export function AppShell() {
   const { activeTab, setActiveTab } = useQuranPulseStore()
+
+  // Sync state to Supabase in the background
+  useSupabaseSync()
 
   const renderTab = () => {
     switch (activeTab) {

@@ -23,6 +23,7 @@ export function HomeTab() {
     setDailyVerse(getDailyVerse(new Date().getDate()))
     setHikmah(getDailyHikmah())
     setMounted(true)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Must set state in effect to avoid hydration mismatch
   }, [])
 
   const quickActions = [

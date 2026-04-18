@@ -15,6 +15,7 @@ export function IbadahTab() {
 
   useEffect(() => {
     setCurrentPrayerIdx(getCurrentPrayerIndex())
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Must set state in effect to avoid hydration mismatch
   }, [])
 
   return (
