@@ -198,3 +198,290 @@
 .qp-gold-glow {
   box-shadow: 0 0 15px rgba(212,175,55,0.3), 0 0 30px rgba(212,175,55,0.15);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   QuranPulse 2026 UI/UX Enhancement Classes
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Glassmorphism ─────────────────────────────────────────── */
+.qp-glass {
+  background: rgba(42, 42, 106, 0.45);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(74, 74, 166, 0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.qp-glass-strong {
+  background: rgba(26, 26, 74, 0.7);
+  backdrop-filter: blur(30px) saturate(1.6);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  border: 1px solid rgba(74, 74, 166, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.qp-glass-gold {
+  background: rgba(212, 175, 55, 0.08);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.08);
+}
+
+/* ─── Micro-animations ──────────────────────────────────────── */
+@keyframes qp-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes qp-pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+
+@keyframes qp-shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes qp-glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(212,175,55,0.2), 0 0 30px rgba(212,175,55,0.08); }
+  50% { box-shadow: 0 0 25px rgba(212,175,55,0.4), 0 0 50px rgba(212,175,55,0.15); }
+}
+
+@keyframes qp-rotate-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.qp-float {
+  animation: qp-float 3s ease-in-out infinite;
+  will-change: transform;
+}
+
+.qp-pulse-soft {
+  animation: qp-pulse-soft 2.5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.qp-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.qp-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 60%,
+    transparent 100%
+  );
+  animation: qp-shimmer-sweep 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ─── Islamic Pattern Border ────────────────────────────────── */
+.qp-islamic-border {
+  border-image: url("data:image/svg+xml,%3Csvg width='40' height='8' viewBox='0 0 40 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4 L5 0 L10 4 L15 0 L20 4 L25 0 L30 4 L35 0 L40 4' fill='none' stroke='rgba(212,175,55,0.3)' stroke-width='1'/%3E%3C/svg%3E") 4 fill / 4px / 0 round;
+}
+
+.qp-islamic-border-bottom {
+  position: relative;
+}
+
+.qp-islamic-border-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: url("data:image/svg+xml,%3Csvg width='40' height='8' viewBox='0 0 40 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 4 L5 0 L10 4 L15 0 L20 4 L25 0 L30 4 L35 0 L40 4' fill='none' stroke='rgba(212,175,55,0.35)' stroke-width='1'/%3E%3C/svg%3E") repeat-x;
+  background-size: 40px 8px;
+  pointer-events: none;
+}
+
+/* ─── Premium Gradient Utilities ────────────────────────────── */
+.qp-gradient-gold {
+  background: linear-gradient(135deg, #d4af37 0%, #e0c060 40%, #d4af37 60%, #b8962e 100%);
+  color: #1a1a4a;
+}
+
+.qp-gradient-gold-text {
+  background: linear-gradient(135deg, #d4af37, #e0c060, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.qp-gradient-blue {
+  background: linear-gradient(135deg, #1a1a4a 0%, #2a2a6a 40%, #4a4aa6 100%);
+}
+
+.qp-gradient-blue-deep {
+  background: linear-gradient(180deg, #1a1a4a 0%, #2a2a6a 50%, #1a1a4a 100%);
+}
+
+/* ─── Touch Feedback ────────────────────────────────────────── */
+.qp-touch {
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.qp-touch:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.qp-touch-lift {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.qp-touch-lift:active {
+  transform: scale(0.97) translateY(1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── Enhanced Custom Scrollbar ─────────────────────────────── */
+.qp-scroll-enhanced::-webkit-scrollbar {
+  width: 3px;
+}
+
+.qp-scroll-enhanced::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.qp-scroll-enhanced::-webkit-scrollbar-thumb {
+  background: rgba(74, 74, 166, 0.2);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.qp-scroll-enhanced::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.4);
+}
+
+/* Firefox scrollbar */
+.qp-scroll-enhanced {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 74, 166, 0.2) transparent;
+}
+
+.qp-scroll-enhanced:hover {
+  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+
+/* ─── Reading Mode ──────────────────────────────────────────── */
+.qp-reading-mode {
+  --qp-read-bg: #f5f0e1;
+  --qp-read-text: #3a3226;
+  --qp-read-border: #d4c5a0;
+  --qp-read-accent: #8b6914;
+  background-color: var(--qp-read-bg);
+  color: var(--qp-read-text);
+  caret-color: var(--qp-read-accent);
+}
+
+.qp-reading-mode .font-arabic {
+  color: #2a2010;
+  line-height: 2.4;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Card Hover Effects ────────────────────────────────────── */
+.qp-card-hover {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.qp-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(74, 74, 166, 0.2), 0 0 15px rgba(74, 74, 166, 0.08);
+}
+
+.qp-card-hover:active {
+  transform: translateY(0px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.qp-card-hover-gold {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.qp-card-hover-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.15), 0 0 15px rgba(212, 175, 55, 0.06);
+}
+
+/* ─── Skeleton Loading ──────────────────────────────────────── */
+.qp-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(74, 74, 166, 0.08);
+  border-radius: 8px;
+}
+
+.qp-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(74, 74, 166, 0.06) 30%,
+    rgba(106, 106, 182, 0.1) 50%,
+    rgba(74, 74, 166, 0.06) 70%,
+    transparent 100%
+  );
+  animation: qp-shimmer-sweep 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.qp-skeleton-gold::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.04) 30%,
+    rgba(212, 175, 55, 0.08) 50%,
+    rgba(212, 175, 55, 0.04) 70%,
+    transparent 100%
+  );
+}
+
+/* ─── Golden Glow Pulse for Active Elements ─────────────────── */
+.qp-glow-gold-pulse {
+  animation: qp-glow-pulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Geometric Spinner ─────────────────────────────────────── */
+.qp-geometric-spinner {
+  animation: qp-rotate-slow 8s linear infinite;
+  will-change: transform;
+}
+
+/* ─── Focus Ring for Accessibility ──────────────────────────── */
+.qp-focus-ring:focus-visible {
+  outline: 2px solid rgba(212, 175, 55, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ─── Minimum Touch Target (44px) ──────────────────────────── */
+.qp-touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

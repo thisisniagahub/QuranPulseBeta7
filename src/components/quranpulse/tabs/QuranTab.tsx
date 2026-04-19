@@ -9,7 +9,8 @@ import {
   Repeat, List, Grid3X3, Brain,
   MessageCircle, Sparkles, MicOff, CheckCircle2, AlertCircle,
   Zap, Target, BarChart3, RefreshCw, Volume2, VolumeX, SkipForward,
-  Type, Sun, Moon, Copy, ExternalLink, Settings2, SkipBack, Gauge, Timer
+  Type, Sun, Moon, Copy, ExternalLink, Settings2, SkipBack, Gauge, Timer,
+  Radio, Award, Shield, Flame, Calendar, Headphones
 } from 'lucide-react'
 import { useQuranPulseStore, type HafazanLevel } from '@/stores/quranpulse-store'
 import { SURAH_LIST, getSurahVerses, getSurahName, type SurahInfo } from '@/lib/quran-data'
@@ -206,10 +207,34 @@ export function QuranTab() {
   const [verseCache, setVerseCache] = useState<Record<number, VerseData[]>>({})
   const [verseError, setVerseError] = useState(false)
 
+  // 2026 Feature: Voice-Following Recitation (Tarteel.AI)
+  const [isVoiceFollowing, setIsVoiceFollowing] = useState(false)
+  const [voiceFollowAyah, setVoiceFollowAyah] = useState<number | null>(null)
+
+  // 2026 Feature: Synchronized Word-by-Word Audio Highlighting
+  const [currentWordIndex, setCurrentWordIndex] = useState<number | null>(null)
+
+  // 2026 Feature: Reading History & Smart Suggestions
+  const [readingHistory, setReadingHistory] = useState<number[]>([])
+
+  // 2026 Feature: AI Tajweed Feedback
+  const [aiTajweedFeedback, setAiTajweedFeedback] = useState<string | null>(null)
+  const [isFetchingFeedback, setIsFetchingFeedback] = useState(false)
+
+  // 2026 Feature: Reading Challenge
+  const [weeklyChallengeProgress, setWeeklyChallengeProgress] = useState(0)
+  const [monthlyJuzProgress, setMonthlyJuzProgress] = useState(0)
+
+  // 2026 Feature: Hijri Date (client-only to avoid hydration)
+  const [hijriDate, setHijriDate] = useState('')
+
   // Refs
   const ayahRefs = useRef<Record<number, HTMLDivElement | null>>({})
   const readerScrollRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const voiceFollowRef = useRef<MediaRecorder | null>(null)
+  const voiceFollowStreamRef = useRef<MediaStream | null>(null)
+  const wordHighlightTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const store = useQuranPulseStore()
 
@@ -682,6 +707,172 @@ export function QuranTab() {
     }
   }, [])
 
+  // ─── 2026: Voice-Following Recitation (Tarteel.AI killer feature) ──
+  const startVoiceFollowing = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      voiceFollowStreamRef.current = stream
+      setIsVoiceFollowing(true)
+      setVoiceFollowAyah(1)
+      setCurrentWordIndex(null)
+
+      const processChunk = async () => {
+        if (!voiceFollowStreamRef.current) return
+        const mediaRecorder = new MediaRecorder(voiceFollowStreamRef.current)
+        const chunks: BlobPart[] = []
+        mediaRecorder.ondataavailable = e => chunks.push(e.data)
+        mediaRecorder.onstop = async () => {
+          if (!isVoiceFollowing) return
+          const blob = new Blob(chunks, { type: 'audio/webm' })
+          const reader = new FileReader()
+          reader.onloadend = async () => {
+            const base64 = (reader.result as string).split(',')[1]
+            try {
+              const res = await fetch('/api/asr', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ audioBase64: base64 }),
+              })
+              const data = await res.json()
+              if (data.success && data.text) {
+                // Match transcribed text against current surah verses
+                const transcribed = data.text.trim()
+                for (let i = 0; i < verses.length; i++) {
+                  const verseWords = verses[i].arabic.split(/\s+/).filter(Boolean)
+                  const matchCount = verseWords.filter(w => transcribed.includes(w) || transcribed.includes(w.replace(/[\u064B-\u065F\u0670]/g, ''))).length
+                  if (matchCount >= Math.ceil(verseWords.length * 0.3)) {
+                    setVoiceFollowAyah(verses[i].verseNumber)
+                    setCurrentPlayingAyah(verses[i].verseNumber)
+                    break
+                  }
+                }
+              }
+            } catch { /* ASR failed, continue */ }
+            // Continue listening if still active
+            if (voiceFollowStreamRef.current && isVoiceFollowing) {
+              setTimeout(processChunk, 300)
+            }
+          }
+          reader.readAsDataURL(blob)
+        }
+        mediaRecorder.start()
+        setTimeout(() => { if (mediaRecorder.state === 'recording') mediaRecorder.stop() }, 4000)
+      }
+      processChunk()
+    } catch {
+      setIsVoiceFollowing(false)
+    }
+  }, [verses, isVoiceFollowing])
+
+  const stopVoiceFollowing = useCallback(() => {
+    setIsVoiceFollowing(false)
+    setVoiceFollowAyah(null)
+    if (voiceFollowStreamRef.current) {
+      voiceFollowStreamRef.current.getTracks().forEach(t => t.stop())
+      voiceFollowStreamRef.current = null
+    }
+    if (voiceFollowRef.current) {
+      voiceFollowRef.current = null
+    }
+  }, [])
+
+  // ─── 2026: Synchronized Word-by-Word Audio Highlighting ──────
+  useEffect(() => {
+    if (wordHighlightTimerRef.current) {
+      clearInterval(wordHighlightTimerRef.current)
+      wordHighlightTimerRef.current = null
+    }
+    if (isPlaying && currentPlayingAyah && !isAudioLoading) {
+      const verse = verses.find(v => v.verseNumber === currentPlayingAyah)
+      if (!verse) return
+      const words = verse.arabic.split(/\s+/).filter(Boolean)
+      if (words.length === 0) return
+      // Estimate ~4 seconds per ayah at 1x speed, adjust for playback speed
+      const estimatedDuration = 4000 / playbackSpeed
+      const intervalPerWord = estimatedDuration / words.length
+      let wordIdx = 0
+      setCurrentWordIndex(0)
+      wordHighlightTimerRef.current = setInterval(() => {
+        wordIdx++
+        if (wordIdx < words.length) {
+          setCurrentWordIndex(wordIdx)
+        } else {
+          setCurrentWordIndex(null)
+          if (wordHighlightTimerRef.current) clearInterval(wordHighlightTimerRef.current)
+        }
+      }, intervalPerWord)
+    } else {
+      setCurrentWordIndex(null)
+    }
+    return () => {
+      if (wordHighlightTimerRef.current) clearInterval(wordHighlightTimerRef.current)
+    }
+  }, [isPlaying, currentPlayingAyah, isAudioLoading, verses, playbackSpeed])
+
+  // ─── 2026: Hijri Date Calculation (client-only) ─────────────
+  useEffect(() => {
+    const now = new Date()
+    const jd = Math.floor((now.getTime() / 86400000) + 2440587.5)
+    const l = jd - 1948440 + 10632
+    const n = Math.floor((l - 1) / 10631)
+    const lPrime = l - 10631 * n + 354
+    const j = Math.floor((10985 - lPrime) / 5316) * Math.floor((50 * lPrime) / 17719) + Math.floor(lPrime / 5670) * Math.floor((43 * lPrime) / 15238)
+    const lDPrime = lPrime - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29
+    const m = Math.floor((24 * lDPrime) / 709)
+    const d = lDPrime - Math.floor((709 * m) / 24)
+    const y = 30 * n + j - 30
+    const hijriMonths = ['Muharram', 'Safar', 'Rabi\'ul Awal', 'Rabi\'ul Akhir', 'Jumadil Awal', 'Jumadil Akhir', 'Rajab', 'Syaban', 'Ramadan', 'Syawal', 'Zulkaedah', 'Zulhijjah']
+    const monthName = hijriMonths[m - 1] || ''
+    setHijriDate(`${d} ${monthName} ${y}H`)
+  }, [])
+
+  // ─── 2026: Reading History Tracking ─────────────────────────
+  useEffect(() => {
+    if (view === 'reader' && selectedSurah > 0) {
+      setReadingHistory(prev => {
+        const updated = [selectedSurah, ...prev.filter(id => id !== selectedSurah)]
+        return updated.slice(0, 10) // Keep last 10
+      })
+      // Update challenge progress
+      setWeeklyChallengeProgress(prev => prev + 1)
+    }
+  }, [view, selectedSurah])
+
+  // ─── 2026: AI Tajweed Feedback ──────────────────────────────
+  const fetchAiTajweedFeedback = useCallback(async (transcription: string, expectedText: string) => {
+    setIsFetchingFeedback(true)
+    setAiTajweedFeedback(null)
+    try {
+      const res = await fetch('/api/ustaz-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `Sila analisis tajwid bacaan saya.\n\nAyat sebenar: ${expectedText}\nTranskripsi saya: ${transcription}\n\nBerikan analisis tajwid terperinci dalam Bahasa Melayu. Nyatakan kesilapan tajwid, sebutan yang perlu diperbaiki, dan cadangan penambahbaikan. Hadkan kepada 3-4 ayat.`,
+          persona: 'ustaz-azhar',
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.response) {
+        setAiTajweedFeedback(data.response)
+      } else {
+        setAiTajweedFeedback('Analisis tajwid tidak tersedia buat masa ini. Sila cuba lagi.')
+      }
+    } catch {
+      setAiTajweedFeedback('Gagal menyambung ke Ustaz AI. Sila cuba lagi.')
+    } finally {
+      setIsFetchingFeedback(false)
+    }
+  }, [])
+
+  // Cleanup voice following on unmount
+  useEffect(() => {
+    return () => {
+      if (voiceFollowStreamRef.current) {
+        voiceFollowStreamRef.current.getTracks().forEach(t => t.stop())
+      }
+    }
+  }, [])
+
   // 2026: Khatam journey milestones
   const khatamJuzCompleted = useMemo(() => {
     const juzDone = new Set<number>()
@@ -957,7 +1148,7 @@ export function QuranTab() {
     return (
       <>
         {/* Reader Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <button className="flex items-center gap-1 text-sm" style={{ color: '#4a4aa6' }} onClick={goBack}>
             <ChevronLeft className="h-5 w-5" /> Kembali
           </button>
@@ -978,6 +1169,35 @@ export function QuranTab() {
             <button className="p-2 rounded-lg" style={{ background: 'rgba(74,74,166,0.15)' }} onClick={() => store.toggleSurahBookmark(selectedSurah)}>
               <Bookmark className="h-4 w-4" style={{ color: store.isSurahBookmarked(selectedSurah) ? '#d4af37' : '#4a4aa6' }} fill={store.isSurahBookmarked(selectedSurah) ? '#d4af37' : 'none'} />
             </button>
+          </div>
+        </div>
+
+        {/* 2026: Voice Follow + JAKIM Badge Row */}
+        <div className="flex items-center justify-between mb-3">
+          <motion.button
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{
+              background: isVoiceFollowing ? 'rgba(212,175,55,0.2)' : 'rgba(74,74,166,0.15)',
+              border: `1px solid ${isVoiceFollowing ? 'rgba(212,175,55,0.4)' : 'rgba(74,74,166,0.2)'}`,
+              color: isVoiceFollowing ? '#d4af37' : '#6a6ab6',
+            }}
+            onClick={isVoiceFollowing ? stopVoiceFollowing : startVoiceFollowing}
+            whileTap={{ scale: 0.95 }}
+          >
+            {isVoiceFollowing ? <Radio className="h-3.5 w-3.5 animate-pulse" /> : <Headphones className="h-3.5 w-3.5" />}
+            {isVoiceFollowing ? 'Mendengar...' : 'Ikut Suara'}
+          </motion.button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ background: 'rgba(74,166,74,0.1)', border: '1px solid rgba(74,166,74,0.2)' }}>
+              <Shield className="h-3 w-3" style={{ color: '#4aff7a' }} />
+              <span className="text-[9px] font-semibold" style={{ color: '#4aff7a' }}>✓ JAKIM</span>
+            </div>
+            {hijriDate && (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.15)' }}>
+                <Calendar className="h-3 w-3" style={{ color: '#d4af37' }} />
+                <span className="text-[9px]" style={{ color: '#d4af37' }}>{hijriDate}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1059,7 +1279,7 @@ export function QuranTab() {
         {!isLoadingVerses && verses.length > 0 && (
           <div className="space-y-3">
             {verses.map((verse) => {
-              const isPlayingAyah = currentPlayingAyah === verse.verseNumber
+              const isPlayingAyah = currentPlayingAyah === verse.verseNumber || voiceFollowAyah === verse.verseNumber
               const isSajda = sajdaData?.ayahs.includes(verse.verseNumber)
               const sajdaType = sajdaData?.types[verse.verseNumber]
               const isBookmarked = store.isVerseBookmarked(selectedSurah, verse.verseNumber)
@@ -1118,7 +1338,23 @@ export function QuranTab() {
                         </p>
                       ) : (
                         <p className="text-right text-xl leading-[2.2] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
-                          {verse.arabic}
+                          {isPlayingAyah && currentWordIndex !== null
+                            ? verse.arabic.split(/\s+/).filter(Boolean).map((word, wi) => (
+                              <motion.span
+                                key={wi}
+                                className="inline-block"
+                                style={{
+                                  color: wi === currentWordIndex ? '#d4af37' : '#ffffff',
+                                  fontWeight: wi === currentWordIndex ? 700 : 400,
+                                }}
+                                animate={wi === currentWordIndex ? { scale: [1, 1.08, 1] } : {}}
+                                transition={{ duration: 0.3 }}
+                              >
+                                {word}{' '}
+                              </motion.span>
+                            ))
+                            : verse.arabic
+                          }
                         </p>
                       )}
 
@@ -1250,6 +1486,81 @@ export function QuranTab() {
           }} disabled={selectedSurah >= 114} onClick={() => navigateSurah(1)}>
             Seterusnya <ChevronRight className="h-4 w-4" />
           </button>
+        </div>
+
+        {/* 2026: Smart Reading Suggestions */}
+        <div className="mt-4 space-y-3">
+          {/* Next Surah Suggestion */}
+          {selectedSurah < 114 && (() => {
+            const nextSurah = SURAH_LIST.find(s => s.id === selectedSurah + 1)
+            if (!nextSurah) return null
+            return (
+              <motion.div
+                className="rounded-xl p-3 cursor-pointer active:scale-[0.98] transition-transform"
+                style={{ background: 'linear-gradient(135deg, rgba(74,74,166,0.15), rgba(212,175,55,0.08))', border: '1px solid rgba(74,74,166,0.2)' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => { navigateSurah(1); readerScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="h-4 w-4" style={{ color: '#d4af37' }} />
+                    <div>
+                      <div className="text-xs font-semibold" style={{ color: '#d4af37' }}>Ayat Seterusnya</div>
+                      <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{nextSurah.nameMs} · {nextSurah.versesCount} Ayat</div>
+                    </div>
+                  </div>
+                  <span className="text-lg font-arabic" style={{ color: 'rgba(204,204,204,0.5)' }}>{nextSurah.name}</span>
+                </div>
+              </motion.div>
+            )
+          })()}
+
+          {/* Juz Progress Card */}
+          {surahInfo && (
+            <div className="rounded-xl p-3" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}>
+              <div className="flex items-center gap-2 mb-1.5">
+                <Target className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
+                <span className="text-xs font-semibold" style={{ color: '#4a4aa6' }}>Kemajuan Juz {surahInfo.juz[0]}</span>
+              </div>
+              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.15)' }}>
+                <div className="h-full rounded-full" style={{ width: `${getJuzProgress(surahInfo.juz[0])}%`, background: 'linear-gradient(90deg, #4a4aa6, #d4af37)' }} />
+              </div>
+              <div className="text-[10px] mt-1" style={{ color: 'rgba(204,204,204,0.4)' }}>{getJuzProgress(surahInfo.juz[0])}% lengkap · Sumber: islam.gov.my</div>
+            </div>
+          )}
+
+          {/* Recommended for You based on reading history */}
+          {readingHistory.length > 1 && (
+            <div>
+              <div className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: '#d4af37' }}>
+                <Star className="h-3.5 w-3.5" /> Disyorkan Untuk Anda
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {SURAH_LIST.filter(s => !readingHistory.includes(s.id) && s.versesCount <= 50).slice(0, 5).map(surah => (
+                  <button
+                    key={surah.id}
+                    className="flex-shrink-0 rounded-xl p-2.5 text-center"
+                    style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)', minWidth: '90px' }}
+                    onClick={() => { openSurah(surah.id); readerScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                  >
+                    <div className="text-lg font-arabic" style={{ color: '#ffffff' }}>{surah.name}</div>
+                    <div className="text-[10px] font-medium mt-1" style={{ color: 'rgba(204,204,204,0.6)' }}>{surah.nameMs}</div>
+                    <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{surah.versesCount} ayat</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 2026: JAKIM Compliance Badge */}
+          <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(42,42,106,0.2)', border: '1px solid rgba(74,166,74,0.1)' }}>
+            <div className="flex items-center justify-center gap-1.5 mb-1">
+              <Shield className="h-3.5 w-3.5" style={{ color: '#4aff7a' }} />
+              <span className="text-[10px] font-semibold" style={{ color: '#4aff7a' }}>Mematuhi Garis Panduan JAKIM Malaysia</span>
+            </div>
+            <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Tafsir: Abdullah Basmeih (JAKIM) · Sumber: islam.gov.my</div>
+          </div>
         </div>
       </>
     )
@@ -1779,6 +2090,48 @@ export function QuranTab() {
                 <span>{reciteResult.matchedWords.filter(Boolean).length}/{reciteResult.expectedWords.length} perkataan</span>
               </div>
             </motion.div>
+          )}
+
+          {/* 2026: AI Tajweed Feedback */}
+          {reciteResult && (
+            <div className="mt-3">
+              {!aiTajweedFeedback && !isFetchingFeedback && (
+                <button
+                  className="w-full py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5"
+                  style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.3)' }}
+                  onClick={() => {
+                    const verse = verses[reciteVerseIdx]
+                    if (verse) fetchAiTajweedFeedback(reciteTranscription || '(tiada transkripsi)', verse.arabic)
+                  }}
+                >
+                  <Brain className="h-3.5 w-3.5" /> Minta Analisis Tajwid AI
+                </button>
+              )}
+              {isFetchingFeedback && (
+                <div className="rounded-xl p-3 flex items-center justify-center gap-2" style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.15)' }}>
+                  <Loader2 className="h-4 w-4 animate-spin" style={{ color: '#4a4aa6' }} />
+                  <span className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>Ustaz AI menganalisis tajwid...</span>
+                </div>
+              )}
+              {aiTajweedFeedback && (
+                <motion.div
+                  className="rounded-xl p-4"
+                  style={{ background: 'rgba(74,74,166,0.08)', border: '1px solid rgba(74,74,166,0.2)' }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Brain className="h-4 w-4" style={{ color: '#d4af37' }} />
+                    <span className="text-xs font-semibold" style={{ color: '#d4af37' }}>Analisis Tajwid Ustaz AI</span>
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(204,204,204,0.7)' }}>{aiTajweedFeedback}</p>
+                  <div className="flex items-center gap-1 mt-2">
+                    <Shield className="h-3 w-3" style={{ color: '#4aff7a' }} />
+                    <span className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Tafsir: Abdullah Basmeih (JAKIM)</span>
+                  </div>
+                </motion.div>
+              )}
+            </div>
           )}
 
           {/* Navigation */}

@@ -7,6 +7,127 @@ interface SplashScreenProps {
   isVisible: boolean
 }
 
+// ─── Islamic Geometric Pattern ───────────────────────────────
+function GeometricPattern() {
+  return (
+    <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
+      <motion.svg
+        className="absolute"
+        style={{
+          width: '300px',
+          height: '300px',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+        viewBox="0 0 200 200"
+        initial={{ rotate: 0, scale: 0.8, opacity: 0 }}
+        animate={{ rotate: 90, scale: 1, opacity: 1 }}
+        transition={{ duration: 4, ease: 'easeInOut' }}
+      >
+        {/* 8-pointed star pattern */}
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+          <motion.line
+            key={i}
+            x1="100"
+            y1="100"
+            x2={100 + 80 * Math.cos((angle * Math.PI) / 180)}
+            y2={100 + 80 * Math.sin((angle * Math.PI) / 180)}
+            stroke="rgba(212,175,55,0.4)"
+            strokeWidth="0.5"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: 1 }}
+            transition={{ duration: 2, delay: 0.2 + i * 0.1, ease: 'easeOut' }}
+          />
+        ))}
+        {/* Inner octagon */}
+        <motion.polygon
+          points={[0, 45, 90, 135, 180, 225, 270, 315]
+            .map((angle) => {
+              const x = 100 + 40 * Math.cos((angle * Math.PI) / 180)
+              const y = 100 + 40 * Math.sin((angle * Math.PI) / 180)
+              return `${x},${y}`
+            })
+            .join(' ')}
+          fill="none"
+          stroke="rgba(212,175,55,0.3)"
+          strokeWidth="0.5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5, delay: 1 }}
+        />
+        {/* Outer octagon */}
+        <motion.polygon
+          points={[0, 45, 90, 135, 180, 225, 270, 315]
+            .map((angle) => {
+              const x = 100 + 70 * Math.cos((angle * Math.PI) / 180)
+              const y = 100 + 70 * Math.sin((angle * Math.PI) / 180)
+              return `${x},${y}`
+            })
+            .join(' ')}
+          fill="none"
+          stroke="rgba(212,175,55,0.2)"
+          strokeWidth="0.5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5, delay: 1.3 }}
+        />
+        {/* Connecting cross lines */}
+        {[0, 90, 180, 270].map((angle, i) => (
+          <motion.line
+            key={`cross-${i}`}
+            x1={100 + 40 * Math.cos((angle * Math.PI) / 180)}
+            y1={100 + 40 * Math.sin((angle * Math.PI) / 180)}
+            x2={100 + 70 * Math.cos((angle * Math.PI) / 180)}
+            y2={100 + 70 * Math.sin((angle * Math.PI) / 180)}
+            stroke="rgba(212,175,55,0.15)"
+            strokeWidth="0.3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1.6 + i * 0.1 }}
+          />
+        ))}
+        {/* Center diamond */}
+        <motion.polygon
+          points="100,90 110,100 100,110 90,100"
+          fill="none"
+          stroke="rgba(212,175,55,0.5)"
+          strokeWidth="0.5"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.5, type: 'spring', stiffness: 200 }}
+        />
+      </motion.svg>
+
+      {/* Smaller rotating pattern in corner */}
+      <motion.svg
+        className="absolute"
+        style={{
+          width: '120px',
+          height: '120px',
+          top: '10%',
+          right: '-20px',
+        }}
+        viewBox="0 0 100 100"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+      >
+        {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+          <line
+            key={i}
+            x1="50"
+            y1="50"
+            x2={50 + 45 * Math.cos((angle * Math.PI) / 180)}
+            y2={50 + 45 * Math.sin((angle * Math.PI) / 180)}
+            stroke="rgba(74,74,166,0.15)"
+            strokeWidth="0.3"
+          />
+        ))}
+      </motion.svg>
+    </div>
+  )
+}
+
 export function SplashScreen({ isVisible }: SplashScreenProps) {
   return (
     <AnimatePresence>
@@ -14,8 +135,8 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
         <motion.div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Splash background image */}
           <div className="absolute inset-0">
@@ -31,8 +152,11 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
           {/* Dark overlay for better text readability */}
           <div
             className="absolute inset-0"
-            style={{ background: 'rgba(26, 26, 74, 0.3)' }}
+            style={{ background: 'rgba(26, 26, 74, 0.4)' }}
           />
+
+          {/* Islamic geometric pattern animation */}
+          <GeometricPattern />
 
           {/* Decorative background circles */}
           <div className="absolute inset-0 overflow-hidden">
@@ -61,14 +185,14 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               style={{
                 width: '200px',
                 height: '200px',
-                background: 'radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)',
                 top: '25%',
                 left: '50%',
                 transform: 'translateX(-50%)',
               }}
               animate={{
                 scale: [1, 1.3, 1],
-                opacity: [0.2, 0.4, 0.2],
+                opacity: [0.2, 0.5, 0.2],
               }}
               transition={{
                 duration: 2.5,
@@ -79,7 +203,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             />
           </div>
 
-          {/* App Icon from generated image */}
+          {/* App Icon from generated image — with golden glow pulse */}
           <motion.div
             className="relative z-10"
             animate={{
@@ -91,6 +215,23 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               ease: 'easeInOut',
             }}
           >
+            {/* Golden glow pulse ring around icon */}
+            <motion.div
+              className="absolute inset-0 rounded-2xl"
+              style={{ margin: '-8px' }}
+              animate={{
+                boxShadow: [
+                  '0 0 20px rgba(212,175,55,0.15), 0 0 40px rgba(212,175,55,0.08)',
+                  '0 0 35px rgba(212,175,55,0.3), 0 0 60px rgba(212,175,55,0.15)',
+                  '0 0 20px rgba(212,175,55,0.15), 0 0 40px rgba(212,175,55,0.08)',
+                ],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
             <Image
               src="/icons/icon-512.png"
               alt="QuranPulse"
@@ -98,8 +239,8 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               height={100}
               className="rounded-2xl"
               style={{
-                border: '1px solid rgba(74, 74, 166, 0.3)',
-                boxShadow: '0 0 30px rgba(74, 74, 166, 0.2), 0 0 60px rgba(212, 175, 55, 0.1)',
+                border: '1px solid rgba(212, 175, 55, 0.25)',
+                boxShadow: '0 0 30px rgba(74, 74, 166, 0.2), 0 0 60px rgba(212, 175, 55, 0.12)',
               }}
               priority
             />
@@ -110,7 +251,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             className="relative z-10 mt-6 text-3xl font-bold tracking-widest"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ delay: 0.3, duration: 0.5, type: 'spring', stiffness: 180, damping: 18 }}
           >
             <span style={{ color: '#4a4aa6' }}>QURAN</span>
             <span style={{ color: '#d4af37' }}>PULSE</span>
@@ -163,7 +304,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             </motion.span>
           </motion.div>
 
-          {/* Pulse dots */}
+          {/* Pulse dots — enhanced with gold center */}
           <div className="relative z-10 mt-4 flex gap-1.5">
             {[0, 1, 2].map((i) => (
               <motion.div
@@ -173,6 +314,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
                   height: '6px',
                   borderRadius: '50%',
                   background: i === 1 ? '#d4af37' : '#4a4aa6',
+                  boxShadow: i === 1 ? '0 0 6px rgba(212,175,55,0.4)' : 'none',
                 }}
                 animate={{
                   scale: [1, 1.5, 1],

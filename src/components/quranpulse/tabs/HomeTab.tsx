@@ -195,9 +195,13 @@ export function HomeTab() {
   // Level up animation
   useEffect(() => {
     if (mounted && level > prevLevel.current) {
-      setShowLevelUp(true)
-      const timer = setTimeout(() => setShowLevelUp(false), 3000)
-      return () => clearTimeout(timer)
+      // Use setTimeout to defer state update and avoid synchronous re-render in effect
+      const showTimer = setTimeout(() => setShowLevelUp(true), 0)
+      const hideTimer = setTimeout(() => setShowLevelUp(false), 3000)
+      return () => {
+        clearTimeout(showTimer)
+        clearTimeout(hideTimer)
+      }
     }
     prevLevel.current = level
   }, [level, mounted])
@@ -265,6 +269,8 @@ export function HomeTab() {
   const [activityData, setActivityData] = useState<Array<{ day: string; level: number; active: boolean }>>([])
 
   useEffect(() => {
+    // Only compute if not already initialized
+    if (activityData.length > 0) return
     const weekDays = ['Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab', 'Ahd']
     const dayOfWeek = new Date().getDay()
     // Seeded pseudo-random based on date for consistent values per day
@@ -280,6 +286,7 @@ export function HomeTab() {
       }
     })
     setActivityData(data)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const prayerProgress = countdown.hours * 60 + countdown.minutes > 0

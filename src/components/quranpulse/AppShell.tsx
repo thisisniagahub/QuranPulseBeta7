@@ -70,6 +70,52 @@ function FloatingParticles() {
   )
 }
 
+// ─── Bismillah Golden Particles ──────────────────────────────
+function BismillahGoldenParticles() {
+  const [goldParticles] = useState(() =>
+    Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      x: 30 + Math.random() * 40, // cluster around center
+      y: 30 + Math.random() * 40,
+      size: 1 + Math.random() * 2,
+      duration: 2 + Math.random() * 3,
+      delay: Math.random() * 1.5,
+      xDrift: (Math.random() - 0.5) * 60,
+      yDrift: -20 - Math.random() * 40,
+    }))
+  )
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {goldParticles.map(p => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full"
+          style={{
+            width: p.size,
+            height: p.size,
+            left: `${p.x}%`,
+            top: `${p.y}%`,
+            background: '#d4af37',
+            boxShadow: '0 0 4px rgba(212,175,55,0.5)',
+          }}
+          initial={{ opacity: 0, x: 0, y: 0 }}
+          animate={{
+            opacity: [0, 0.8, 0.6, 0],
+            x: [0, p.xDrift * 0.5, p.xDrift],
+            y: [0, p.yDrift * 0.4, p.yDrift],
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            ease: 'easeOut',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 export function AppShell() {
   const { activeTab, setActiveTab } = useQuranPulseStore()
   const [showBismillah, setShowBismillah] = useState(true)
@@ -115,7 +161,7 @@ export function AppShell() {
       className="relative mx-auto flex min-h-screen max-w-[480px] flex-col"
       style={{ background: '#1a1a4a' }}
     >
-      {/* ═══ Bismillah Launch Animation ═══ */}
+      {/* ═══ Bismillah Launch Animation with Golden Particles ═══ */}
       <AnimatePresence>
         {showBismillah && (
           <motion.div
@@ -123,18 +169,32 @@ export function AppShell() {
             style={{ background: '#1a1a4a' }}
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           >
+            {/* Golden particle effect */}
+            <BismillahGoldenParticles />
+            {/* Subtle radial glow behind text */}
             <motion.div
-              className="text-center"
+              className="absolute"
+              style={{
+                width: 280,
+                height: 280,
+                background: 'radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%)',
+                borderRadius: '50%',
+              }}
+              animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <motion.div
+              className="text-center relative z-10"
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 1.1, opacity: 0 }}
-              transition={{ duration: 0.5, ease: 'easeOut' }}
+              exit={{ scale: 1.05, opacity: 0 }}
+              transition={{ duration: 0.5, type: 'spring', stiffness: 200, damping: 20 }}
             >
               <motion.div
                 className="font-arabic text-3xl mb-3"
-                style={{ color: '#d4af37', direction: 'rtl' }}
+                style={{ color: '#d4af37', direction: 'rtl', textShadow: '0 0 20px rgba(212,175,55,0.3)' }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
@@ -160,7 +220,7 @@ export function AppShell() {
                   <motion.div
                     key={i}
                     className="h-1.5 w-1.5 rounded-full"
-                    style={{ background: '#4a4aa6' }}
+                    style={{ background: '#d4af37' }}
                     animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
                     transition={{ duration: 0.8, delay: i * 0.2, repeat: Infinity }}
                   />
@@ -183,10 +243,10 @@ export function AppShell() {
           <motion.div
             key={activeTab}
             className="flex flex-1 flex-col"
-            initial={{ opacity: 0, x: 10 }}
+            initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.25, ease: 'easeOut' }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 0.8 }}
           >
             {renderTab()}
           </motion.div>
@@ -223,17 +283,18 @@ export function AppShell() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation — Enhanced Glassmorphism 2026 */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-40"
         style={{
-          background: 'rgba(26, 26, 74, 0.92)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderTop: '1px solid rgba(74, 74, 166, 0.12)',
+          background: 'rgba(26, 26, 74, 0.82)',
+          backdropFilter: 'blur(40px) saturate(1.5)',
+          WebkitBackdropFilter: 'blur(40px) saturate(1.5)',
+          borderTop: '1px solid rgba(74, 74, 166, 0.15)',
+          boxShadow: '0 -4px 30px rgba(0,0,0,0.15)',
         }}
       >
-        <div className="mx-auto flex max-w-[480px] items-center justify-around px-2 py-1">
+        <div className="mx-auto flex max-w-[480px] items-center justify-around px-2 py-1" style={{ paddingBottom: 'max(4px, env(safe-area-inset-bottom))' }}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key
 
@@ -312,6 +373,7 @@ export function AppShell() {
                   className="relative flex h-10 w-10 items-center justify-center rounded-xl"
                   style={{
                     background: isActive ? 'rgba(74, 74, 166, 0.15)' : 'transparent',
+                    boxShadow: isActive ? '0 0 12px rgba(74, 74, 166, 0.25)' : 'none',
                   }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -320,29 +382,38 @@ export function AppShell() {
                       {tab.icon}
                     </div>
                   )}
-                  {/* Notification badge */}
+                  {/* Active tab glow ring — 2026 enhancement */}
+                  {isActive && (
+                    <motion.div
+                      className="absolute inset-0 rounded-xl"
+                      style={{ border: '1.5px solid rgba(74,74,166,0.3)' }}
+                      animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
+                  {/* Notification badge — gold with pulse */}
                   {tab.badge && tab.badge > 0 && !isActive && (
                     <motion.div
-                      className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full flex items-center justify-center"
-                      style={{ background: '#d4af37' }}
+                      className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center"
+                      style={{ background: '#d4af37', boxShadow: '0 0 8px rgba(212,175,55,0.5)' }}
                       initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 400 }}
+                      animate={{ scale: [1, 1.15, 1] }}
+                      transition={{ scale: { type: 'spring', stiffness: 400 }, duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     >
-                      <span className="text-[7px] font-bold" style={{ color: '#1a1a4a' }}>{tab.badge}</span>
+                      <span className="text-[8px] font-bold" style={{ color: '#1a1a4a' }}>{tab.badge}</span>
                     </motion.div>
                   )}
                 </motion.div>
                 <span
                   className="text-[10px] font-medium"
-                  style={{ color: isActive ? '#4a4aa6' : 'rgba(204,204,204,0.4)' }}
+                  style={{ color: isActive ? '#d4af37' : 'rgba(204,204,204,0.4)' }}
                 >
                   {tab.label}
                 </span>
                 {isActive && (
                   <motion.div
                     className="h-0.5 w-4 rounded-full"
-                    style={{ background: '#4a4aa6' }}
+                    style={{ background: '#d4af37' }}
                     layoutId="activeTabIndicator"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />

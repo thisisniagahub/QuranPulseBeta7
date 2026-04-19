@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   keywords: ["app mengaji", "belajar quran", "iqra online", "waktu solat JAKIM", "AI ustaz", "quran malaysia", "quran pulse"],
   authors: [{ name: "QuranPulse" }],
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/icons/icon-192x192.png",
   },
   openGraph: {
     title: "QuranPulse - App Mengaji AI Pertama Malaysia",

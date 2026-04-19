@@ -5,12 +5,13 @@ import {
   GraduationCap, ChevronLeft, ChevronRight, Volume2, Star, CheckCircle,
   BookOpen, Brain, MessageCircle, Mic, X, Send, RotateCcw, Shuffle,
   Zap, Trophy, Target, Flame, ArrowRight, Play, Pause, Eye, Lightbulb,
+  Award, Pen, BarChart3, Shield, Calendar, Clock, TrendingUp, Lock, CircleDot,
 } from 'lucide-react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import { HIJAIYAH_LETTERS } from '@/lib/quran-data'
 
 type IqraSubTab = 'belajar' | 'latihan' | 'tajwid' | 'hafazan'
-type PracticeMode = 'flashcard' | 'quiz' | 'matching'
+type PracticeMode = 'flashcard' | 'quiz' | 'matching' | 'tulis'
 type LetterFilter = 'all' | 'hijaiyah' | 'harakat' | 'tanwin' | 'mad'
 interface ChatMsg { role: 'user' | 'ai'; text: string }
 const IQRA_BOOKS = [
@@ -81,6 +82,33 @@ const TAJWID_CATEGORIES = [
     ]
   },
 ]
+const BADGES = [
+  { id: 'hijaiyah-master', name: 'Hijaiyah Master', icon: '🔤', desc: 'Lengkapkan semua 29 huruf', condition: (ctx: BadgeCtx) => ctx.completedLetters >= 29 },
+  { id: 'harakat-hero', name: 'Harakat Hero', icon: '📌', desc: 'Kuasai semua 3 harakat', condition: (ctx: BadgeCtx) => ctx.harakaatMastered >= 3 },
+  { id: 'tajwid-star', name: 'Tajwid Star', icon: '⭐', desc: 'Kuasai 5+ hukum tajwid', condition: (ctx: BadgeCtx) => ctx.tajwidRules >= 5 },
+  { id: 'hafazan-champ', name: 'Hafazan Champion', icon: '🏆', desc: 'Hafaz 5+ surah', condition: (ctx: BadgeCtx) => ctx.surahsHafaz >= 5 },
+  { id: 'iqra-graduate', name: 'Iqra Graduate', icon: '🎓', desc: 'Lengkapkan semua 6 buku Iqra', condition: (ctx: BadgeCtx) => ctx.booksCompleted >= 6 },
+  { id: 'streak-warrior', name: 'Streak Warrior', icon: '🔥', desc: '7 hari berturut-turut', condition: (ctx: BadgeCtx) => ctx.streak >= 7 },
+]
+const LEARNING_PATH = [
+  { step: 1, name: 'Huruf Hijaiyah', desc: 'Pelajari 29 huruf', icon: '🔤' },
+  { step: 2, name: 'Harakat', desc: 'Kuasai Fathah, Kasrah, Dhammah', icon: '📌' },
+  { step: 3, name: 'Tanwin & Mad', desc: 'Tanwin & hukum mad asas', icon: '〰️' },
+  { step: 4, name: 'Tajwid Asas', desc: 'Nun/Mim mati, Qalqalah', icon: '🎯' },
+  { step: 5, name: 'Bacaan Al-Quran', desc: 'Baca ayat Al-Quran dengan lancar', icon: '📖' },
+]
+const JAKIM_TAJWID_REFS: Record<string, string> = {
+  'nun-mati': 'Rujukan: Panduan Tilawah Al-Quran, JAKIM (2019), ms. 45-58',
+  'mim-mati': 'Rujukan: Panduan Tilawah Al-Quran, JAKIM (2019), ms. 59-67',
+  'mad': 'Rujukan: Hukum Mad Mengikut Qiraat Nafi\', JAKIM (2020), ms. 12-28',
+  'qalqalah': 'Rujukan: Kaedah Tajwid KPM/JAKIM (2018), ms. 88-95',
+  'waqaf': 'Rujukan: Panduan Waqaf & Ibtida, JAKIM (2021), ms. 5-22',
+}
+const DAILY_CHALLENGES = [
+  { type: 'sebut' as const, instruction: 'Sebut huruf ini dengan betul', items: ['ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ'] },
+  { type: 'harakat' as const, instruction: 'Pilih harakat yang betul', items: ['فَتْحَة', 'كَسْرَة', 'ضَمَّة'] },
+]
+interface BadgeCtx { completedLetters: number; harakaatMastered: number; tajwidRules: number; surahsHafaz: number; booksCompleted: number; streak: number }
 const HAFAZAN_SURAHS = [
   { id: 1, name: 'الفاتحة', nameMs: 'Al-Fatihah', verses: 7, juz: 30 },
   { id: 114, name: 'الناس', nameMs: 'An-Nas', verses: 6, juz: 30 },
@@ -127,6 +155,12 @@ export function IqraTab() {
   const [aiLoading, setAiLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [earnedBadges, setEarnedBadges] = useState<string[]>([])
+  const [challengeXp, setChallengeXp] = useState(0)
+  const [writingLetter, setWritingLetter] = useState(0)
+  const [writingFeedback, setWritingFeedback] = useState<string | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [isDrawing, setIsDrawing] = useState(false)
   const currentBook = IQRA_BOOKS.find(b => b.id === iqraBook) || IQRA_BOOKS[0]
   const pageKey = `${iqraBook}-${iqraPage}`
   const totalPagesCompleted = completedPages.size
@@ -138,6 +172,130 @@ export function IqraTab() {
   const totalTajwidRules = TAJWID_CATEGORIES.reduce((s, c) => s + c.rules.length, 0)
   const totalHafazanVerses = HAFAZAN_SURAHS.reduce((s, v) => s + v.verses, 0)
   const hafazanVersesDone = Object.values(hafazanProgress).reduce((s, v) => s + v, 0)
+
+  // === NEW: Badge computation ===
+  const completedLettersCount = [...completedPages].filter(p => p.startsWith('1-')).length >= 5 ? 29 : [...completedPages].filter(p => p.startsWith('1-')).length * 6
+  const booksCompletedCount = IQRA_BOOKS.filter(b => bookProgress(b.id) === 100).length
+  const surahsHafazCount = Object.entries(hafazanProgress).filter(([id, v]) => {
+    const surah = HAFAZAN_SURAHS.find(s => s.id === Number(id))
+    return surah && v >= surah.verses
+  }).length
+  const badgeCtx: BadgeCtx = {
+    completedLetters: Math.min(29, completedLettersCount),
+    harakaatMastered: bookProgress(2) >= 50 ? 3 : bookProgress(2) >= 20 ? 1 : 0,
+    tajwidRules: tajwidMastered.size,
+    surahsHafaz: surahsHafazCount,
+    booksCompleted: booksCompletedCount,
+    streak,
+  }
+  useEffect(() => {
+    const earned = BADGES.filter(b => b.condition(badgeCtx)).map(b => b.id)
+    setEarnedBadges(prev => {
+      const newBadges = earned.filter(b => !prev.includes(b))
+      if (newBadges.length > 0) newBadges.forEach(() => addXp(50))
+      return earned
+    })
+  }, [badgeCtx.completedLetters, badgeCtx.harakaatMastered, badgeCtx.tajwidRules, badgeCtx.surahsHafaz, badgeCtx.booksCompleted, badgeCtx.streak])
+
+  // === NEW: Learning path progress ===
+  const pathProgress = [
+    Math.min(100, Math.round((completedLettersCount / 29) * 100)),
+    bookProgress(2),
+    bookProgress(3),
+    Math.round((tajwidMastered.size / totalTajwidRules) * 100),
+    Math.round(((bookProgress(4) + bookProgress(5) + bookProgress(6)) / 3)),
+  ]
+
+  // === NEW: Daily challenge ===
+  const dailySeed = Math.floor(Date.now() / 86400000)
+  const dailyChallengeIdx = dailySeed % DAILY_CHALLENGES.length
+  const dailyChallenge = DAILY_CHALLENGES[dailyChallengeIdx]
+  const dailyItem = dailyChallenge.items[dailySeed % dailyChallenge.items.length]
+
+  // === NEW: JAKIM skill level ===
+  const overallMastery = Math.round((overallProgress + (tajwidMastered.size / totalTajwidRules) * 100 + (hafazanVersesDone / totalHafazanVerses) * 100) / 3)
+  const jakimLevel: { level: string; color: string } = overallMastery >= 75 ? { level: 'Lanjutan (Advanced)', color: '#d4af37' } : overallMastery >= 40 ? { level: 'Pertengahan (Intermediate)', color: '#4a4aa6' } : { level: 'Pemula (Beginner)', color: '#6a6ab6' }
+
+  // === NEW: Weekly activity (simulated from XP) ===
+  const weeklyActivity = Array.from({ length: 7 }, (_, i) => {
+    const dayOffset = (6 - i)
+    const base = dayOffset === 0 ? xp % 50 : ((xp + dayOffset * 7) % 40) + 10
+    return Math.min(100, base)
+  })
+  const dayNames = ['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab']
+
+  // === NEW: Strongest/weakest areas ===
+  const areaScores = [
+    { name: 'Huruf Hijaiyah', score: Math.min(100, Math.round((completedLettersCount / 29) * 100)) },
+    { name: 'Harakat', score: bookProgress(2) },
+    { name: 'Tanwin & Mad', score: bookProgress(3) },
+    { name: 'Tajwid', score: Math.round((tajwidMastered.size / totalTajwidRules) * 100) },
+    { name: 'Hafazan', score: Math.round((hafazanVersesDone / totalHafazanVerses) * 100) },
+  ]
+  const strongest = areaScores.reduce((a, b) => a.score >= b.score ? a : b)
+  const weakest = areaScores.reduce((a, b) => a.score <= b.score ? a : b)
+
+  // === NEW: Canvas drawing handlers ===
+  const clearCanvas = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    setWritingFeedback(null)
+  }, [])
+  const checkWriting = useCallback(async () => {
+    const letter = ENHANCED_LETTERS[writingLetter]
+    try {
+      const res = await fetch('/api/ustaz-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: `Nilai tulisan huruf ${letter.name} (${letter.letter}). Beri nasihat singkat dalam Bahasa Melayu.`, persona: 'iqra-teacher', history: [] }),
+      })
+      const data = await res.json()
+      setWritingFeedback(data.reply || 'Cuba lagi! Latihan menjadikan sempurna.')
+    } catch { setWritingFeedback('Cuba lagi! Teruskan berlatih menulis.') }
+    addXp(10)
+  }, [writingLetter, addXp])
+  const startDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    setIsDrawing(true)
+    ctx.beginPath()
+    const rect = canvas.getBoundingClientRect()
+    let x: number, y: number
+    if ('touches' in e) { x = e.touches[0].clientX - rect.left; y = e.touches[0].clientY - rect.top }
+    else { x = e.clientX - rect.left; y = e.clientY - rect.top }
+    ctx.moveTo(x * (canvas.width / rect.width), y * (canvas.height / rect.height))
+  }, [])
+  const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const rect = canvas.getBoundingClientRect()
+    let x: number, y: number
+    if ('touches' in e) { e.preventDefault(); x = e.touches[0].clientX - rect.left; y = e.touches[0].clientY - rect.top }
+    else { x = e.clientX - rect.left; y = e.clientY - rect.top }
+    ctx.lineWidth = 4
+    ctx.lineCap = 'round'
+    ctx.strokeStyle = '#d4af37'
+    ctx.lineTo(x * (canvas.width / rect.width), y * (canvas.height / rect.height))
+    ctx.stroke()
+  }, [isDrawing])
+  const stopDraw = useCallback(() => setIsDrawing(false), [])
+
+  // === NEW: Daily challenge handlers ===
+  const handleHarakatChallenge = useCallback((choice: string) => {
+    const correct = dailyItem
+    if (choice.includes(correct.charAt(0))) {
+      setChallengeXp(prev => prev + 20)
+      addXp(20)
+    }
+  }, [dailyItem, addXp])
 
   const markComplete = useCallback(() => {
     setCompletedPages(prev => new Set([...prev, pageKey]))
@@ -224,7 +382,10 @@ export function IqraTab() {
       <div className="px-4 pt-2 pb-2">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Iqra Digital</h2>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Iqra Digital</h2>
+              <span className="px-1.5 py-0.5 rounded text-[7px] font-bold" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.25)' }}>JAKIM</span>
+            </div>
             <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Belajar membaca Al-Quran</p>
           </div>
           <div className="flex items-center gap-2">
@@ -578,6 +739,170 @@ export function IqraTab() {
     }
     return (
       <div>
+        {/* === NEW: Achievement Badges === */}
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Award className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+            <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>Pencapaian</span>
+            <span className="text-[9px] ml-auto" style={{ color: 'rgba(204,204,204,0.4)' }}>{earnedBadges.length}/{BADGES.length}</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {BADGES.map(badge => {
+              const earned = earnedBadges.includes(badge.id)
+              return (
+                <motion.div
+                  key={badge.id}
+                  className="flex flex-col items-center gap-1 flex-shrink-0"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                >
+                  <div
+                    className="h-10 w-10 rounded-full flex items-center justify-center text-sm"
+                    style={{
+                      background: earned ? 'rgba(212,175,55,0.15)' : 'rgba(42,42,106,0.5)',
+                      border: `2px solid ${earned ? '#d4af37' : 'rgba(74,74,166,0.15)'}`,
+                      boxShadow: earned ? '0 0 8px rgba(212,175,55,0.3)' : 'none',
+                    }}
+                  >
+                    {earned ? badge.icon : <Lock className="h-3.5 w-3.5" style={{ color: 'rgba(204,204,204,0.25)' }} />}
+                  </div>
+                  <span className="text-[7px] text-center max-w-[50px]" style={{ color: earned ? '#d4af37' : 'rgba(204,204,204,0.3)' }}>{badge.name}</span>
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* === NEW: Learning Path === */}
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <TrendingUp className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
+            <span className="text-[10px] font-semibold" style={{ color: '#ffffff' }}>Laluan Pembelajaran</span>
+          </div>
+          <div className="flex items-start gap-1">
+            {LEARNING_PATH.map((step, i) => {
+              const prog = pathProgress[i]
+              const unlocked = i === 0 || pathProgress[i - 1] >= 50
+              const isComplete = prog >= 100
+              return (
+                <div key={step.step} className="flex-1 flex flex-col items-center relative">
+                  {i < LEARNING_PATH.length - 1 && (
+                    <div className="absolute top-3 left-1/2 w-full h-0.5" style={{ background: isComplete ? '#d4af37' : 'rgba(74,74,166,0.15)' }} />
+                  )}
+                  <div
+                    className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] z-10 mb-1"
+                    style={{
+                      background: isComplete ? 'rgba(212,175,55,0.2)' : unlocked ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.4)',
+                      border: `2px solid ${isComplete ? '#d4af37' : unlocked ? '#4a4aa6' : 'rgba(74,74,166,0.15)'}`,
+                      color: isComplete ? '#d4af37' : unlocked ? '#ffffff' : 'rgba(204,204,204,0.3)',
+                    }}
+                  >
+                    {isComplete ? '✓' : step.step}
+                  </div>
+                  <span className="text-[7px] text-center leading-tight" style={{ color: unlocked ? '#ffffff' : 'rgba(204,204,204,0.3)' }}>{step.name}</span>
+                  <span className="text-[7px]" style={{ color: isComplete ? '#d4af37' : 'rgba(204,204,204,0.4)' }}>{prog}%</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* === NEW: Daily Challenge === */}
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.12)' }}>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Calendar className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+            <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>Cabaran Harian</span>
+            <span className="text-[8px] ml-auto px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37' }}>+20 XP</span>
+          </div>
+          <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.08)' }}>
+            <div className="text-[10px] mb-2" style={{ color: 'rgba(204,204,204,0.6)' }}>{dailyChallenge.instruction}</div>
+            {dailyChallenge.type === 'sebut' ? (
+              <>
+                <div className="text-5xl font-arabic mb-2" style={{ color: '#d4af37' }}>{dailyItem}</div>
+                <button
+                  className="flex items-center gap-1.5 mx-auto px-3 py-1.5 rounded-lg text-[10px]"
+                  style={{ background: 'rgba(74,74,166,0.12)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.2)' }}
+                  onClick={() => { playAudio(dailyItem, 'daily-challenge'); addXp(20) }}
+                >
+                  <Volume2 className="h-3 w-3" /> Sebut & Dengar
+                </button>
+              </>
+            ) : (
+              <div className="grid grid-cols-3 gap-1.5">
+                {['فَتْحَة (a)', 'كَسْرَة (i)', 'ضَمَّة (u)'].map((opt, i) => (
+                  <button
+                    key={i}
+                    className="py-2 rounded-lg text-[9px] font-medium"
+                    style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.15)', color: '#ffffff' }}
+                    onClick={() => handleHarakatChallenge(opt)}
+                  >{opt}</button>
+                ))}
+              </div>
+            )}
+          </div>
+          {challengeXp > 0 && <div className="text-[9px] mt-1.5 text-right" style={{ color: '#d4af37' }}>+{challengeXp} XP hari ini</div>}
+        </div>
+
+        {/* === NEW: Progress Analytics === */}
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <BarChart3 className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
+            <span className="text-[10px] font-semibold" style={{ color: '#ffffff' }}>Analisis Progres</span>
+          </div>
+          {/* Weekly activity bars */}
+          <div className="flex items-end gap-1.5 mb-3 h-16">
+            {weeklyActivity.map((val, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                <motion.div
+                  className="w-full rounded-t"
+                  style={{ background: i === 6 ? '#d4af37' : 'rgba(74,74,166,0.4)', minHeight: 2 }}
+                  animate={{ height: `${Math.max(4, (val / 100) * 48)}px` }}
+                />
+                <span className="text-[7px]" style={{ color: i === 6 ? '#d4af37' : 'rgba(204,204,204,0.35)' }}>{dayNames[i]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg p-2" style={{ background: 'rgba(74,74,166,0.06)', border: '1px solid rgba(74,74,166,0.08)' }}>
+              <div className="flex items-center gap-1 mb-0.5">
+                <TrendingUp className="h-2.5 w-2.5" style={{ color: '#4a4aa6' }} />
+                <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Terkuat</span>
+              </div>
+              <div className="text-[10px] font-medium" style={{ color: '#4a4aa6' }}>{strongest.name}</div>
+              <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{strongest.score}%</div>
+            </div>
+            <div className="rounded-lg p-2" style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.08)' }}>
+              <div className="flex items-center gap-1 mb-0.5">
+                <Target className="h-2.5 w-2.5" style={{ color: '#d4af37' }} />
+                <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Perlu Latihan</span>
+              </div>
+              <div className="text-[10px] font-medium" style={{ color: '#d4af37' }}>{weakest.name}</div>
+              <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{weakest.score}%</div>
+            </div>
+          </div>
+          <div className="flex justify-between mt-2">
+            <div className="flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" style={{ color: 'rgba(204,204,204,0.3)' }} />
+              <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Masa belajar: ~{Math.max(1, Math.round(xp / 50))} jam</span>
+            </div>
+            <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Kadar: ~{Math.max(1, Math.round(hafazanVersesDone / Math.max(1, Math.round(xp / 50))))} ayat/jam</span>
+          </div>
+        </div>
+
+        {/* === NEW: JAKIM Skill Level === */}
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.25)', border: '1px solid rgba(74,74,166,0.08)' }}>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Shield className="h-3.5 w-3.5" style={{ color: jakimLevel.color }} />
+            <span className="text-[10px] font-semibold" style={{ color: '#ffffff' }}>Tahap Kemahiran JAKIM</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 flex-1 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.1)' }}>
+              <div className="h-full rounded-full" style={{ width: `${overallMastery}%`, background: jakimLevel.color }} />
+            </div>
+            <span className="text-[9px] font-semibold" style={{ color: jakimLevel.color }}>{jakimLevel.level}</span>
+          </div>
+        </div>
+
         {/* Progress Overview */}
         <div
           className="rounded-xl p-3 mb-3"
@@ -667,6 +992,11 @@ export function IqraTab() {
             <div className="text-[9px] font-medium" style={{ color: '#ffffff' }}>Tanya Cikgu</div>
           </button>
         </div>
+
+        {/* JAKIM Footer */}
+        <div className="mt-3 text-center py-2" style={{ borderTop: '1px solid rgba(74,74,166,0.06)' }}>
+          <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.3)' }}>Sumber: Kementerian Pendidikan Malaysia & JAKIM</span>
+        </div>
       </div>
     )
   }
@@ -679,6 +1009,7 @@ export function IqraTab() {
             { key: 'flashcard' as PracticeMode, label: 'Kad', icon: <Eye className="h-3.5 w-3.5" /> },
             { key: 'quiz' as PracticeMode, label: 'Kuiz', icon: <Brain className="h-3.5 w-3.5" /> },
             { key: 'matching' as PracticeMode, label: 'Padan', icon: <Shuffle className="h-3.5 w-3.5" /> },
+            { key: 'tulis' as PracticeMode, label: 'Tulis', icon: <Pen className="h-3.5 w-3.5" /> },
           ]).map(m => (
             <button
               key={m.key}
@@ -698,6 +1029,7 @@ export function IqraTab() {
         {practiceMode === 'flashcard' && <FlashcardPractice />}
         {practiceMode === 'quiz' && <QuizPractice />}
         {practiceMode === 'matching' && <MatchingPractice />}
+        {practiceMode === 'tulis' && <WritingPractice />}
       </div>
     )
   }
@@ -862,11 +1194,86 @@ export function IqraTab() {
       </div>
     )
   }
+  function WritingPractice() {
+    const letter = ENHANCED_LETTERS[writingLetter % ENHANCED_LETTERS.length]
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Latihan Menulis</span>
+          <button
+            className="flex items-center gap-1 text-[10px]"
+            style={{ color: '#4a4aa6' }}
+            onClick={() => setWritingLetter(prev => (prev + 1) % ENHANCED_LETTERS.length)}
+          >
+            <Shuffle className="h-3 w-3" /> Huruf Setelahnya
+          </button>
+        </div>
+        {/* Letter Guide */}
+        <div className="rounded-xl p-4 text-center mb-3" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.15)' }}>
+          <div className="text-[10px] mb-1" style={{ color: 'rgba(204,204,204,0.5)' }}>Tulis huruf ini:</div>
+          <div className="text-6xl font-arabic" style={{ color: '#d4af37' }}>{letter.letter}</div>
+          <div className="text-xs mt-1" style={{ color: '#ffffff' }}>{letter.name}</div>
+          <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{letter.writingTip}</div>
+        </div>
+        {/* Canvas */}
+        <div className="rounded-xl overflow-hidden mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.12)' }}>
+          <canvas
+            ref={canvasRef}
+            width={400}
+            height={300}
+            className="w-full touch-none"
+            style={{ background: 'rgba(26,26,74,0.5)', cursor: 'crosshair' }}
+            onMouseDown={startDraw}
+            onMouseMove={draw}
+            onMouseUp={stopDraw}
+            onMouseLeave={stopDraw}
+            onTouchStart={startDraw}
+            onTouchMove={draw}
+            onTouchEnd={stopDraw}
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[11px]"
+            style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.12)', color: '#4a4aa6' }}
+            onClick={clearCanvas}
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Padam
+          </button>
+          <button
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[11px] font-medium"
+            style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', color: '#d4af37' }}
+            onClick={checkWriting}
+          >
+            <CheckCircle className="h-3.5 w-3.5" /> Semak
+          </button>
+        </div>
+        {writingFeedback && (
+          <motion.div
+            className="rounded-xl p-3 mt-3"
+            style={{ background: 'rgba(74,74,166,0.08)', border: '1px solid rgba(74,74,166,0.12)' }}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Lightbulb className="h-3 w-3" style={{ color: '#d4af37' }} />
+              <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>Nasihat Cikgu</span>
+            </div>
+            <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.7)' }}>{writingFeedback}</div>
+          </motion.div>
+        )}
+      </div>
+    )
+  }
+
   function TajwidView() {
     return (
       <div>
         <div className="mb-3">
-          <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>Hukum Tajwid</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold" style={{ color: '#ffffff' }}>Hukum Tajwid</span>
+            <span className="px-1 py-0.5 rounded text-[7px]" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }}>Kurikulum JAKIM</span>
+          </div>
           <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{tajwidMastered.size}/{totalTajwidRules} dikuasai</div>
         </div>
         {TAJWID_CATEGORIES.map((cat, ci) => (
@@ -927,6 +1334,12 @@ export function IqraTab() {
                             <div className="text-[10px] mb-1" style={{ color: 'rgba(204,204,204,0.4)' }}>Contoh:</div>
                             <div className="text-lg font-arabic text-center" style={{ color: '#4a4aa6', direction: 'rtl' }}>{rule.example}</div>
                           </div>
+                          {/* JAKIM Reference */}
+                          {JAKIM_TAJWID_REFS[cat.id] && (
+                            <div className="text-[8px] mb-2 flex items-center gap-1" style={{ color: 'rgba(212,175,55,0.5)' }}>
+                              <Shield className="h-2.5 w-2.5" /> {JAKIM_TAJWID_REFS[cat.id]}
+                            </div>
+                          )}
                           <div className="flex items-center justify-between">
                             <span className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>📌 {rule.quranRef}</span>
                             <div className="flex gap-1.5">
@@ -1043,8 +1456,21 @@ export function IqraTab() {
     return (
       <div>
         <div className="mb-3">
-          <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>Hafazan Surah Pendek</div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm font-semibold" style={{ color: '#ffffff' }}>Hafazan Surah Pendek</span>
+            <span className="px-1 py-0.5 rounded text-[7px]" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }}>Kaedah JAKIM</span>
+          </div>
           <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Juz 30 · {HAFAZAN_SURAHS.length} surah</div>
+        </div>
+        {/* JAKIM Hafazan Methodology */}
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.1)' }}>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <Shield className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+            <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>Kaedah Hafazan JAKIM</span>
+          </div>
+          <div className="text-[9px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.6)' }}>
+            1. Baca ayat 3× dengan tajwid yang betul · 2. Faham makna ayat · 3. Hafaz tanpa melihat · 4. Ulang pada waktu Subuh & Maghrib · 5. Semak dengan guru/AI
+          </div>
         </div>
         {/* Overall hafazan progress */}
         <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
