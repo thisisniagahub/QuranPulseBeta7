@@ -28,16 +28,22 @@ const TABS: TabConfig[] = [
   { key: 'iqra', label: 'Iqra', icon: <GraduationCap className="h-5 w-5" /> },
 ]
 
+// Deterministic pseudo-random — same output on server & client
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453
+  return x - Math.floor(x)
+}
+
 // ─── Floating Particles Component ────────────────────────────
 function FloatingParticles() {
   const [particles] = useState(() =>
     Array.from({ length: 12 }).map((_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: 2 + Math.random() * 3,
-      duration: 15 + Math.random() * 20,
-      delay: Math.random() * 10,
+      x: seededRandom(i * 7 + 1) * 100,
+      y: seededRandom(i * 7 + 2) * 100,
+      size: 2 + seededRandom(i * 7 + 3) * 3,
+      duration: 15 + seededRandom(i * 7 + 4) * 20,
+      delay: seededRandom(i * 7 + 5) * 10,
     }))
   )
 
@@ -75,13 +81,13 @@ function BismillahGoldenParticles() {
   const [goldParticles] = useState(() =>
     Array.from({ length: 20 }).map((_, i) => ({
       id: i,
-      x: 30 + Math.random() * 40, // cluster around center
-      y: 30 + Math.random() * 40,
-      size: 1 + Math.random() * 2,
-      duration: 2 + Math.random() * 3,
-      delay: Math.random() * 1.5,
-      xDrift: (Math.random() - 0.5) * 60,
-      yDrift: -20 - Math.random() * 40,
+      x: 30 + seededRandom(i * 7 + 10) * 40,
+      y: 30 + seededRandom(i * 7 + 11) * 40,
+      size: 1 + seededRandom(i * 7 + 12) * 2,
+      duration: 2 + seededRandom(i * 7 + 13) * 3,
+      delay: seededRandom(i * 7 + 14) * 1.5,
+      xDrift: (seededRandom(i * 7 + 15) - 0.5) * 60,
+      yDrift: -20 - seededRandom(i * 7 + 16) * 40,
     }))
   )
 
@@ -395,7 +401,7 @@ export function AppShell() {
                       style={{ background: '#d4af37', boxShadow: '0 0 8px rgba(212,175,55,0.5)' }}
                       initial={{ scale: 0 }}
                       animate={{ scale: [1, 1.15, 1] }}
-                      transition={{ scale: { type: 'spring', stiffness: 400 }, duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     >
                       <span className="text-[8px] font-bold" style={{ color: '#1a1a4a' }}>{tab.badge}</span>
                     </motion.div>

@@ -198,6 +198,13 @@ export function IqraTab() {
   const [isDrawing, setIsDrawing] = useState(false)
   const [audioSpeed, setAudioSpeed] = useState<number>(1.0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(false)
+  const [learningMode, setLearningMode] = useState<'kids' | 'adult'>('kids')
+  const [assessmentActive, setAssessmentActive] = useState(false)
+  const [assessmentIdx, setAssessmentIdx] = useState(0)
+  const [assessmentScore, setAssessmentScore] = useState(0)
+  const [assessmentLetters, setAssessmentLetters] = useState<typeof ENHANCED_LETTERS[number][]>([])
+  const [assessmentDone, setAssessmentDone] = useState(false)
+  const [assessmentOptions, setAssessmentOptions] = useState<string[][]>([])
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const currentBook = IQRA_BOOKS.find(b => b.id === iqraBook) || IQRA_BOOKS[0]
   const pageKey = `${iqraBook}-${iqraPage}`
@@ -423,6 +430,35 @@ export function IqraTab() {
   useEffect(() => { if (practiceMode === 'quiz' && !quizQuestion) generateQuiz() }, [practiceMode])
   useEffect(() => { if (practiceMode === 'matching' && matchingPairs.length === 0) initMatching() }, [practiceMode])
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [aiMessages])
+
+  // Auto-play TTS when letter detail modal opens
+  useEffect(() => {
+    if (showLetterDetail !== null) {
+      const l = ENHANCED_LETTERS[showLetterDetail]
+      playAudio(l.name, `letter-auto-${l.id}`)
+    }
+  }, [showLetterDetail])
+
+  // Assessment helper functions
+  const startAssessment = useCallback(() => {
+    const shuffled = [...ENHANCED_LETTERS].sort(() => Math.random() - 0.5)
+    const picked = shuffled.slice(0, 5)
+    setAssessmentLetters(picked)
+    setAssessmentIdx(0)
+    setAssessmentScore(0)
+    setAssessmentDone(false)
+    setAssessmentActive(true)
+    const opts = picked.map(letter => {
+      const correct = letter.name
+      const options = [correct]
+      while (options.length < 4) {
+        const r = ENHANCED_LETTERS[Math.floor(Math.random() * ENHANCED_LETTERS.length)].name
+        if (!options.includes(r)) options.push(r)
+      }
+      return options.sort(() => Math.random() - 0.5)
+    })
+    setAssessmentOptions(opts)
+  }, [])
   const SUB_TABS: { key: IqraSubTab; label: string; icon: React.ReactNode }[] = [
     { key: 'belajar', label: 'Belajar', icon: <BookOpen className="h-4 w-4" /> },
     { key: 'latihan', label: 'Latihan', icon: <Brain className="h-4 w-4" /> },
@@ -443,9 +479,38 @@ export function IqraTab() {
           <div>
             <div className="flex items-center gap-1.5">
               <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Iqra Digital</h2>
+              {playingAudio && (
+                <motion.span
+                  className="text-sm"
+                  style={{ color: '#d4af37' }}
+                  animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                >♪</motion.span>
+              )}
               <span className="px-1.5 py-0.5 rounded text-[7px] font-bold" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.25)' }}>JAKIM</span>
             </div>
             <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Belajar membaca Al-Quran</p>
+            {/* Learning Mode Toggle */}
+            <div className="flex gap-1 mt-1">
+              <button
+                className="px-2.5 py-0.5 rounded-full text-[9px] font-medium transition-all"
+                style={{
+                  background: learningMode === 'kids' ? 'rgba(212,175,55,0.15)' : 'transparent',
+                  color: learningMode === 'kids' ? '#d4af37' : 'rgba(204,204,204,0.4)',
+                  border: learningMode === 'kids' ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent',
+                }}
+                onClick={() => setLearningMode('kids')}
+              >🧒 Kanak-kanak</button>
+              <button
+                className="px-2.5 py-0.5 rounded-full text-[9px] font-medium transition-all"
+                style={{
+                  background: learningMode === 'adult' ? 'rgba(212,175,55,0.15)' : 'transparent',
+                  color: learningMode === 'adult' ? '#d4af37' : 'rgba(204,204,204,0.4)',
+                  border: learningMode === 'adult' ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent',
+                }}
+                onClick={() => setLearningMode('adult')}
+              >👨 Dewasa</button>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(212,175,55,0.12)' }}>
@@ -669,30 +734,98 @@ export function IqraTab() {
               </button>
               {(() => {
                 const l = ENHANCED_LETTERS[showLetterDetail]
+                const encouragements = ['Hebat! 🌟', 'Cuba lagi! 💪', 'Bagus! ⭐', 'Teruskan! 🚀']
+                const encouragement = encouragements[Math.floor(Math.random() * encouragements.length)]
+                const playAllHarakat = () => {
+                  const entries = Object.entries(l.harakat)
+                  entries.forEach(([key, val], i) => {
+                    setTimeout(() => playAudio(val, `${l.id}-all-${key}`), i * 1500)
+                  })
+                }
+                const harakatBg = (key: string) => {
+                  if (learningMode === 'kids') {
+                    if (key === 'fathah') return 'rgba(212,175,55,0.12)'
+                    if (key === 'kasrah') return 'rgba(74,74,166,0.12)'
+                    if (key === 'dhammah') return 'rgba(128,90,182,0.12)'
+                    if (key === 'shaddah') return 'rgba(212,175,55,0.08)'
+                    if (key === 'sukun') return 'rgba(106,106,182,0.08)'
+                  }
+                  return key === 'shaddah' ? 'rgba(212,175,55,0.08)' : key === 'sukun' ? 'rgba(106,106,182,0.08)' : 'rgba(74,74,166,0.08)'
+                }
+                const harakatBorder = (key: string) => {
+                  if (learningMode === 'kids') {
+                    if (key === 'fathah') return 'rgba(212,175,55,0.25)'
+                    if (key === 'kasrah') return 'rgba(74,74,166,0.25)'
+                    if (key === 'dhammah') return 'rgba(128,90,182,0.25)'
+                    if (key === 'shaddah') return 'rgba(212,175,55,0.15)'
+                    if (key === 'sukun') return 'rgba(106,106,182,0.15)'
+                  }
+                  return key === 'shaddah' ? 'rgba(212,175,55,0.15)' : key === 'sukun' ? 'rgba(106,106,182,0.15)' : 'rgba(74,74,166,0.12)'
+                }
                 return (
                   <div className="text-center">
-                    <div className="text-7xl font-arabic mb-2" style={{ color: '#4a4aa6' }}>{l.letter}</div>
+                    <div className={`${learningMode === 'kids' ? 'text-8xl' : 'text-7xl'} font-arabic mb-2`} style={{ color: '#4a4aa6' }}>{l.letter}</div>
                     <div className="text-sm font-bold" style={{ color: '#ffffff' }}>{l.name}</div>
-                    <div className="text-[10px] mb-3" style={{ color: 'rgba(204,204,204,0.5)' }}>{l.nameEn}</div>
+                    <div className="text-[10px] mb-1" style={{ color: 'rgba(204,204,204,0.5)' }}>{l.nameEn}</div>
+                    {learningMode === 'kids' && (
+                      <div className="text-sm mb-2" style={{ color: '#d4af37' }}>{encouragement}</div>
+                    )}
 
-                    {/* Harakat Examples — 5 baris for kids */}
+                    {/* Harakat Examples — 5 baris */}
                     <div className="mb-1">
                       <div className="text-[9px] font-semibold mb-1.5" style={{ color: '#4a4aa6' }}>Baris (Harakat) — Ketik untuk dengar</div>
                       <div className="grid grid-cols-5 gap-1.5">
                         {Object.entries(l.harakat).map(([key, val]) => (
                           <motion.div
                             key={key}
-                            className="rounded-lg p-1.5 text-center cursor-pointer"
-                            style={{ background: key === 'shaddah' ? 'rgba(212,175,55,0.08)' : key === 'sukun' ? 'rgba(106,106,182,0.08)' : 'rgba(74,74,166,0.08)', border: `1px solid ${key === 'shaddah' ? 'rgba(212,175,55,0.15)' : key === 'sukun' ? 'rgba(106,106,182,0.15)' : 'rgba(74,74,166,0.12)'}` }}
+                            className={`rounded-lg text-center cursor-pointer ${learningMode === 'kids' ? 'p-2.5' : 'p-1.5'}`}
+                            style={{ background: harakatBg(key), border: `1px solid ${harakatBorder(key)}` }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => playAudio(val, `${l.id}-${key}`)}
                           >
-                            <div className="text-xl font-arabic" style={{ color: '#ffffff' }}>{val}</div>
-                            <div className="text-[7px] capitalize" style={{ color: 'rgba(204,204,204,0.5)' }}>{key}</div>
+                            <div className={`${learningMode === 'kids' ? 'text-2xl' : 'text-xl'} font-arabic`} style={{ color: '#ffffff' }}>{val}</div>
+                            <div className={`${learningMode === 'kids' ? 'text-[8px]' : 'text-[7px]'} capitalize`} style={{ color: 'rgba(204,204,204,0.5)' }}>{key}</div>
                           </motion.div>
                         ))}
                       </div>
                     </div>
+
+                    {/* Kids: Dengar Semua Baris button */}
+                    {learningMode === 'kids' && (
+                      <button
+                        className="flex items-center gap-1.5 mx-auto px-3 py-1.5 rounded-lg text-[10px] mt-2 mb-2"
+                        style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.2)' }}
+                        onClick={playAllHarakat}
+                      >
+                        <Volume2 className="h-3 w-3" /> Dengar Semua Baris
+                      </button>
+                    )}
+
+                    {/* Adult: Bentuk Huruf (Letter Forms) */}
+                    {learningMode === 'adult' && (
+                      <div className="mt-2 mb-2">
+                        <div className="text-[9px] font-semibold mb-1.5" style={{ color: '#4a4aa6' }}>Bentuk Huruf — Ketik untuk dengar</div>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {[
+                            { label: 'Awal (Initial)', form: l.forms.initial },
+                            { label: 'Tengah (Medial)', form: l.forms.medial },
+                            { label: 'Akhir (Final)', form: l.forms.final },
+                            { label: 'Bersendirian (Isolated)', form: l.forms.isolated },
+                          ].map(({ label, form }) => (
+                            <motion.button
+                              key={label}
+                              className="rounded-lg p-2 text-center"
+                              style={{ background: 'rgba(74,74,166,0.08)', border: '1px solid rgba(74,74,166,0.12)' }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => playAudio(`${l.name} ${label.split(' ')[0].toLowerCase()}`, `form-${l.id}-${label}`)}
+                            >
+                              <div className="text-2xl font-arabic" style={{ color: '#ffffff' }}>{form}</div>
+                              <div className="text-[7px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{label}</div>
+                            </motion.button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Writing Tip */}
                     <div
@@ -706,14 +839,23 @@ export function IqraTab() {
                       <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.6)' }}>{l.writingTip}</div>
                     </div>
 
-                    {/* Audio Button */}
-                    <button
-                      className="flex items-center gap-2 mx-auto px-4 py-2 rounded-xl text-xs"
-                      style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.25)' }}
-                      onClick={() => playAudio(l.name, `letter-${l.id}`)}
-                    >
-                      <Volume2 className="h-3.5 w-3.5" /> Dengar Sebutan
-                    </button>
+                    {/* Audio Buttons */}
+                    <div className="flex items-center gap-2 justify-center">
+                      <button
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs"
+                        style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.25)' }}
+                        onClick={() => playAudio(l.name, `letter-${l.id}`)}
+                      >
+                        <Volume2 className="h-3.5 w-3.5" /> Dengar Sebutan
+                      </button>
+                      <button
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs"
+                        style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.2)' }}
+                        onClick={() => playAudio(l.name, `letter-repeat-${l.id}`)}
+                      >
+                        🔁 Ulang
+                      </button>
+                    </div>
                   </div>
                 )
               })()}
@@ -818,22 +960,44 @@ export function IqraTab() {
             )}
           </div>
           {(letterFilter === 'all' || letterFilter === 'hijaiyah') && (
-          <div className="grid grid-cols-5 gap-2">
+          <div className={`grid ${learningMode === 'kids' ? 'grid-cols-3' : 'grid-cols-5'} gap-2`}>
             {filteredLetters.map((letter, i) => (
               <motion.button
                 key={letter.id}
-                className="aspect-square rounded-xl flex flex-col items-center justify-center"
-                style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.1)' }}
+                className="aspect-square rounded-xl flex flex-col items-center justify-center relative"
+                style={{
+                  background: 'rgba(42,42,106,0.5)',
+                  border: playingAudio === `letter-grid-${letter.id}`
+                    ? '2px solid #d4af37'
+                    : '1px solid rgba(74,74,166,0.1)',
+                  boxShadow: learningMode === 'kids'
+                    ? '0 0 12px rgba(212,175,55,0.08)'
+                    : playingAudio === `letter-grid-${letter.id}`
+                      ? '0 0 8px rgba(212,175,55,0.3)'
+                      : 'none',
+                }}
                 initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.015 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  ...(playingAudio === `letter-grid-${letter.id}` ? { scale: [1, 1.05, 1] } : {}),
+                }}
+                transition={{ delay: i * 0.015, ...(playingAudio === `letter-grid-${letter.id}` ? { repeat: Infinity, duration: 1 } : {}) }}
                 onClick={() => { setShowLetterDetail(i); playAudio(letter.name, `letter-grid-${letter.id}`) }}
               >
-                <span className="text-lg" style={{ color: '#ffffff' }}>{letter.letter}</span>
-                <span className="text-[7px] mt-0.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
+                <span className={`${learningMode === 'kids' ? 'text-3xl' : 'text-lg'}`} style={{ color: '#ffffff' }}>{letter.letter}</span>
+                <span className={`${learningMode === 'kids' ? 'text-[10px]' : 'text-[7px]'} mt-0.5`} style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
+                {learningMode === 'kids' && (
+                  <span className="absolute bottom-1 right-1 text-[10px]" style={{ color: 'rgba(212,175,55,0.5)' }}>🔊</span>
+                )}
               </motion.button>
             ))}
           </div>
+          )}
+          {learningMode === 'kids' && (letterFilter === 'all' || letterFilter === 'hijaiyah') && (
+            <div className="text-center mt-2">
+              <span className="text-[10px]" style={{ color: 'rgba(212,175,55,0.6)' }}>Ketik untuk dengar! 🔊</span>
+            </div>
           )}
           {letterFilter === 'harakat' && (
             <div className="grid grid-cols-2 gap-2.5">
@@ -905,6 +1069,74 @@ export function IqraTab() {
     }
     return (
       <div>
+        {/* Adult: Quick Assessment */}
+        {learningMode === 'adult' && !assessmentActive && (
+          <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(74,74,166,0.08)', border: '1px solid rgba(74,74,166,0.15)' }}>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Target className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
+              <span className="text-[10px] font-semibold" style={{ color: '#ffffff' }}>Penilaian Pantas</span>
+            </div>
+            <div className="text-[10px] mb-2" style={{ color: 'rgba(204,204,204,0.6)' }}>Uji tahap anda untuk melangkau kandungan yang sudah dikuasai</div>
+            {assessmentDone && assessmentLetters.length > 0 && (
+              <div className="rounded-lg p-2.5 mb-2" style={{ background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.12)' }}>
+                <div className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>
+                  Anda mengenali {assessmentScore}/5 huruf. Tahap: {assessmentScore >= 4 ? 'Lanjutan' : assessmentScore >= 2 ? 'Pertengahan' : 'Pemula'}
+                </div>
+                <div className="text-[9px] mt-1" style={{ color: 'rgba(204,204,204,0.5)' }}>
+                  Cadangan: Mula dari {assessmentScore >= 4 ? 'Iqra 3 (Tanwin & Mad)' : assessmentScore >= 2 ? 'Iqra 2 (Harakat)' : 'Iqra 1 (Hijaiyah)'}
+                </div>
+              </div>
+            )}
+            <button
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium"
+              style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.25)' }}
+              onClick={startAssessment}
+            >
+              <Zap className="h-3 w-3" /> Mula Penilaian
+            </button>
+          </div>
+        )}
+
+        {/* Adult: Assessment In-Progress */}
+        {learningMode === 'adult' && assessmentActive && assessmentLetters.length > 0 && (
+          <div className="rounded-xl p-4 mb-3" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.2)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-semibold" style={{ color: '#ffffff' }}>Penilaian Pantas</span>
+              <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{assessmentIdx + 1}/5</span>
+            </div>
+            {assessmentIdx < 5 ? (
+              <>
+                <div className="text-center mb-3">
+                  <div className="text-[10px] mb-1" style={{ color: 'rgba(204,204,204,0.5)' }}>Huruf apakah ini?</div>
+                  <div className="text-6xl font-arabic" style={{ color: '#4a4aa6' }}>{assessmentLetters[assessmentIdx].letter}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {(assessmentOptions[assessmentIdx] || []).map((opt, i) => (
+                    <motion.button
+                      key={i}
+                      className="py-2.5 rounded-xl text-[11px] font-medium"
+                      style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.15)', color: '#ffffff' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        if (opt === assessmentLetters[assessmentIdx].name) {
+                          setAssessmentScore(s => s + 1)
+                        }
+                        if (assessmentIdx + 1 >= 5) {
+                          setAssessmentDone(true)
+                          setAssessmentActive(false)
+                          addXp(25)
+                        } else {
+                          setAssessmentIdx(assessmentIdx + 1)
+                        }
+                      }}
+                    >{opt}</motion.button>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </div>
+        )}
+
         {/* === NEW: Achievement Badges === */}
         <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
           <div className="flex items-center gap-1.5 mb-2">

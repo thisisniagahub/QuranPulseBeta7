@@ -825,3 +825,28 @@ Stage Summary:
 - layout.tsx updated with SVG favicon + apple-touch-icon support
 - Content filter workaround: avoided "Quran" in AI prompts, used generic terms
 - Next.js build passes successfully
+---
+Task ID: 1
+Agent: main
+Task: Fix hydration errors and improve IQRA section
+
+Work Log:
+- Fixed Math.random() in FloatingParticles (AppShell.tsx) → replaced with deterministic seededRandom()
+- Fixed Math.random() in BismillahGoldenParticles (AppShell.tsx) → replaced with deterministic seededRandom()
+- Fixed greeting hydration mismatch (HomeTab.tsx) → added mounted guard
+- Fixed Framer Motion spring animation error → removed type:'spring' from 3-keyframe animation
+- Added learningMode toggle (Kids/Dewasa) in IQRA header
+- Added live TTS indicator with animated ♪ in IQRA header
+- Added auto-play TTS when letter detail modal opens
+- Added repeat (Ulang) button in letter detail modal
+- Made letter grid bigger (3 cols) in kids mode with 🔊 icons
+- Added kids-mode enhancements: text-8xl letters, encouragement, color-coded harakat, "Dengar Semua Baris" sequential play
+- Added adult quick assessment (Penilaian Pantas) in Belajar view
+- Added adult letter forms (Bentuk Huruf) in detail modal
+- Added pulsing gold ring on currently-playing letter card
+
+Stage Summary:
+- All 3 hydration errors fixed (Math.random, greeting, spring animation)
+- IQRA section significantly improved with kids/adult modes and live TTS
+- Lint: 0 errors, 0 warnings
+- Dev server: serving pages successfully (GET / 200)

@@ -407,7 +407,7 @@ export function HomeTab() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold" style={{ color: '#ffffff' }}>
-              {greeting} 👋
+              {mounted ? greeting : 'Assalamualaikum'} 👋
             </h2>
             <p className="text-sm mt-0.5" style={{ color: 'rgba(204,204,204,0.6)' }}>
               Mari teruskan perjalanan Quran anda
