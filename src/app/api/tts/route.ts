@@ -18,24 +18,28 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Clamp speed to valid range [0.5, 2.0]
+    const clampedSpeed = Math.min(2.0, Math.max(0.5, speed || 1.0))
+
     const ZAI = (await import('z-ai-web-dev-sdk')).default
     const zai = await ZAI.create()
 
     const response = await zai.audio.tts.create({
       input: text.trim(),
       voice: voice || 'tongtong',
-      speed: speed || 1.0,
-      response_format: 'mp3',
+      speed: clampedSpeed,
+      response_format: 'wav',
       stream: false,
     })
 
+    // Get array buffer from Response object
     const arrayBuffer = await response.arrayBuffer()
     const buffer = Buffer.from(new Uint8Array(arrayBuffer))
 
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': 'audio/wav',
         'Content-Length': buffer.length.toString(),
         'Cache-Control': 'no-cache',
       },

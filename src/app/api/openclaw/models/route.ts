@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-const GATEWAY_PORT = 3030
+const GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || 'http://localhost:3030'
 
 export async function GET() {
   try {
-    const response = await fetch(`/api/models?XTransformPort=${GATEWAY_PORT}`, {
+    const response = await fetch(`${GATEWAY_URL}/api/models`, {
       headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(5000),
     })
 
     const data = await response.json()
     return NextResponse.json(data, { status: response.status })
   } catch (error: any) {
     return NextResponse.json(
-      { error: 'Failed to fetch models', message: error.message },
+      { error: 'OpenClaw Gateway tidak dapat diakses', models: [], message: error.message },
       { status: 503 }
     )
   }

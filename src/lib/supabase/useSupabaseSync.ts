@@ -98,6 +98,5 @@ export function useSupabaseSync() {
     }
 
     loadFromSupabase()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Home, BookOpen, Bot, Moon, GraduationCap, MessageCircle, Sparkles } from 'lucide-react'
 import { useQuranPulseStore, type ActiveTab } from '@/stores/quranpulse-store'
@@ -120,7 +120,6 @@ export function AppShell() {
   const { activeTab, setActiveTab } = useQuranPulseStore()
   const [showBismillah, setShowBismillah] = useState(true)
   const [showFAB, setShowFAB] = useState(false)
-  const [dailyVersePreview, setDailyVersePreview] = useState<string | null>(null)
 
   // Sync state to Supabase in the background
   useSupabaseSync()
@@ -137,12 +136,10 @@ export function AppShell() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Daily verse preview for FAB
-  useEffect(() => {
+  // Daily verse preview for FAB — computed via useMemo to avoid setState in effect
+  const dailyVersePreview = useMemo(() => {
     const verse = getDailyVerse(new Date().getDate())
-    if (verse) {
-      setDailyVersePreview(verse.translationMs)
-    }
+    return verse?.translationMs ?? null
   }, [])
 
   const renderTab = () => {

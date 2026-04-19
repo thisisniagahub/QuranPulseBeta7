@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BookOpen, Bot, GraduationCap, CircleDot, Compass, Clock, Share2, Bookmark, ChevronRight, Flame, Star, Volume2, Headphones, Brain, Zap, Target, Shield, ExternalLink, Award, Calendar, Sparkles } from 'lucide-react'
 import { useQuranPulseStore, type ActiveTab } from '@/stores/quranpulse-store'
@@ -137,41 +137,35 @@ export function HomeTab() {
   const { streak, xp, level, lastReadSurah, lastReadAyah, lastReadSurahName, setActiveTab, addXp, selectedZone } = useQuranPulseStore()
 
   // Defer ALL date-dependent values to avoid hydration mismatch
-  const [greeting, setGreeting] = useState('Assalamualaikum')
-  const [currentPrayerIdx, setCurrentPrayerIdx] = useState(0)
-  const [dailyVerse, setDailyVerse] = useState<DailyVerse | null>(null)
-  const [hikmah, setHikmah] = useState('')
   const [mounted, setMounted] = useState(false)
   const [livePrayers, setLivePrayers] = useState<PrayerTimes | null>(null)
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 })
   const [showLevelUp, setShowLevelUp] = useState(false)
-  const [hadith, setHadith] = useState(HOME_HADITHS[0])
-  const [challenge, setChallenge] = useState(DAILY_CHALLENGES[0])
   const [showWordBreakdown, setShowWordBreakdown] = useState(false)
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
-  const [hijriDate, setHijriDate] = useState('')
-  const [gregorianDate, setGregorianDate] = useState('')
   const prevLevel = useRef(level)
 
-  useEffect(() => {
-    setGreeting(getIslamicGreeting())
-    setCurrentPrayerIdx(getCurrentPrayerIndex())
-    setDailyVerse(getDailyVerse(new Date().getDate()))
-    setHikmah(getDailyHikmah())
-    setMounted(true)
-
-    // Daily hadith rotation
-    const dayOfYear = Math.floor(
-      (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
-    )
-    setHadith(HOME_HADITHS[dayOfYear % HOME_HADITHS.length])
-    setChallenge(DAILY_CHALLENGES[dayOfYear % DAILY_CHALLENGES.length])
-
-    // Hijri date
+  // Compute date-dependent values via useMemo (avoids setState in effect)
+  const greeting = useMemo(() => getIslamicGreeting(), [])
+  const currentPrayerIdx = useMemo(() => getCurrentPrayerIndex(), [])
+  const dailyVerse = useMemo(() => getDailyVerse(new Date().getDate()), [])
+  const hikmah = useMemo(() => getDailyHikmah(), [])
+  const dayOfYear = useMemo(() => Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
+  ), [])
+  const hadith = HOME_HADITHS[dayOfYear % HOME_HADITHS.length]
+  const challenge = DAILY_CHALLENGES[dayOfYear % DAILY_CHALLENGES.length]
+  const hijriDate = useMemo(() => {
     const now = new Date()
     const hijri = jakimService.gregorianToHijri(now)
-    setHijriDate(`${hijri.day} ${hijri.monthNameMs} ${hijri.year}H`)
-    setGregorianDate(now.toLocaleDateString('ms-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
+    return `${hijri.day} ${hijri.monthNameMs} ${hijri.year}H`
+  }, [])
+  const gregorianDate = useMemo(() =>
+    new Date().toLocaleDateString('ms-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  , [])
+
+  useEffect(() => {
+    setMounted(true)
   }, [])
 
   // Fetch live prayer times
@@ -286,7 +280,6 @@ export function HomeTab() {
       }
     })
     setActivityData(data)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const prayerProgress = countdown.hours * 60 + countdown.minutes > 0

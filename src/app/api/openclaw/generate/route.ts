@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const GATEWAY_PORT = 3030
+const GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || 'http://localhost:3030'
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,29 +9,30 @@ export async function POST(req: NextRequest) {
 
     if (!type || !prompt) {
       return NextResponse.json(
-        { error: 'Missing required fields: type, prompt' },
+        { error: 'Field diperlukan: type, prompt' },
         { status: 400 }
       )
     }
 
     if (!['image', 'video', 'music'].includes(type)) {
       return NextResponse.json(
-        { error: 'Invalid type. Must be: image, video, or music' },
+        { error: 'Type tidak sah. Mesti: image, video, atau music' },
         { status: 400 }
       )
     }
 
-    const response = await fetch(`/api/generate?XTransformPort=${GATEWAY_PORT}`, {
+    const response = await fetch(`${GATEWAY_URL}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, prompt, model }),
+      signal: AbortSignal.timeout(30000),
     })
 
     const data = await response.json()
     return NextResponse.json(data, { status: response.status })
   } catch (error: any) {
     return NextResponse.json(
-      { error: 'Generation failed', message: error.message },
+      { error: 'Penjanaan gagal', message: error.message },
       { status: 500 }
     )
   }
