@@ -188,6 +188,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               transition={{
                 duration: 3,
                 repeat: Infinity,
+                type: 'tween',
                 ease: 'easeInOut',
               }}
             />
@@ -208,6 +209,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               transition={{
                 duration: 2.5,
                 repeat: Infinity,
+                type: 'tween',
                 ease: 'easeInOut',
                 delay: 0.5,
               }}
@@ -223,6 +225,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             transition={{
               duration: 2,
               repeat: Infinity,
+              type: 'tween',
               ease: 'easeInOut',
             }}
           >
@@ -335,6 +338,7 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
                   duration: 1.5,
                   repeat: Infinity,
                   delay: i * 0.2,
+                  type: 'tween',
                   ease: 'easeInOut',
                 }}
               />

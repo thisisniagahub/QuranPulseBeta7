@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Home, BookOpen, Bot, Moon, GraduationCap, MessageCircle, Sparkles } from 'lucide-react'
 import { useQuranPulseStore, type ActiveTab } from '@/stores/quranpulse-store'
@@ -11,6 +11,12 @@ import { IbadahTab } from '@/components/quranpulse/tabs/IbadahTab'
 import { IqraTab } from '@/components/quranpulse/tabs/IqraTab'
 import { useSupabaseSync } from '@/lib/supabase/useSupabaseSync'
 import { getDailyVerse } from '@/lib/quran-data'
+
+// ─── Client-only mount detection (no setState-in-effect) ──────
+const emptySubscribe = () => () => {}
+function useIsClient(): boolean {
+  return useSyncExternalStore(emptySubscribe, () => true, () => false)
+}
 
 interface TabConfig {
   key: ActiveTab
@@ -35,7 +41,9 @@ function seededRandom(seed: number): number {
 }
 
 // ─── Floating Particles Component ────────────────────────────
+// Only renders on client to avoid hydration mismatch from CSS number serialization
 function FloatingParticles() {
+  const isClient = useIsClient()
   const [particles] = useState(() =>
     Array.from({ length: 12 }).map((_, i) => ({
       id: i,
@@ -47,6 +55,8 @@ function FloatingParticles() {
     }))
   )
 
+  if (!isClient) return <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }} />
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
       {particles.map(p => (
@@ -54,8 +64,8 @@ function FloatingParticles() {
           key={p.id}
           className="absolute rounded-full"
           style={{
-            width: p.size,
-            height: p.size,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
             left: `${p.x}%`,
             top: `${p.y}%`,
             background: 'rgba(74,74,166,0.15)',
@@ -68,6 +78,7 @@ function FloatingParticles() {
             duration: p.duration,
             delay: p.delay,
             repeat: Infinity,
+            type: 'tween',
             ease: 'easeInOut',
           }}
         />
@@ -77,7 +88,9 @@ function FloatingParticles() {
 }
 
 // ─── Bismillah Golden Particles ──────────────────────────────
+// Only renders on client to avoid hydration mismatch from CSS number serialization
 function BismillahGoldenParticles() {
+  const isClient = useIsClient()
   const [goldParticles] = useState(() =>
     Array.from({ length: 20 }).map((_, i) => ({
       id: i,
@@ -91,6 +104,8 @@ function BismillahGoldenParticles() {
     }))
   )
 
+  if (!isClient) return <div className="absolute inset-0 overflow-hidden pointer-events-none" />
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       {goldParticles.map(p => (
@@ -98,8 +113,8 @@ function BismillahGoldenParticles() {
           key={p.id}
           className="absolute rounded-full"
           style={{
-            width: p.size,
-            height: p.size,
+            width: `${p.size}px`,
+            height: `${p.size}px`,
             left: `${p.x}%`,
             top: `${p.y}%`,
             background: '#d4af37',
@@ -114,6 +129,7 @@ function BismillahGoldenParticles() {
           transition={{
             duration: p.duration,
             delay: p.delay,
+            type: 'tween',
             ease: 'easeOut',
           }}
         />
@@ -186,7 +202,7 @@ export function AppShell() {
                 borderRadius: '50%',
               }}
               animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ duration: 2.5, repeat: Infinity, type: 'tween', ease: 'easeInOut' }}
             />
             <motion.div
               className="text-center relative z-10"
@@ -225,7 +241,7 @@ export function AppShell() {
                     className="h-1.5 w-1.5 rounded-full"
                     style={{ background: '#d4af37' }}
                     animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 0.8, delay: i * 0.2, repeat: Infinity }}
+                    transition={{ duration: 0.8, delay: i * 0.2, repeat: Infinity, type: 'tween', ease: 'easeInOut' }}
                   />
                 ))}
               </motion.div>
@@ -349,7 +365,7 @@ export function AppShell() {
                         className="absolute inset-0 rounded-full"
                         style={{ border: '2px solid rgba(74,74,166,0.3)' }}
                         animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        transition={{ duration: 2, repeat: Infinity, type: 'tween', ease: 'easeInOut' }}
                       />
                     )}
                   </motion.div>
@@ -391,7 +407,7 @@ export function AppShell() {
                       className="absolute inset-0 rounded-xl"
                       style={{ border: '1.5px solid rgba(74,74,166,0.3)' }}
                       animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0, 0.6] }}
-                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{ duration: 2.5, repeat: Infinity, type: 'tween', ease: 'easeInOut' }}
                     />
                   )}
                   {/* Notification badge — gold with pulse */}
@@ -401,7 +417,7 @@ export function AppShell() {
                       style={{ background: '#d4af37', boxShadow: '0 0 8px rgba(212,175,55,0.5)' }}
                       initial={{ scale: 0 }}
                       animate={{ scale: [1, 1.15, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      transition={{ duration: 2, repeat: Infinity, type: 'tween', ease: 'easeInOut' }}
                     >
                       <span className="text-[8px] font-bold" style={{ color: '#1a1a4a' }}>{tab.badge}</span>
                     </motion.div>

@@ -484,7 +484,7 @@ export function IqraTab() {
                   className="text-sm"
                   style={{ color: '#d4af37' }}
                   animate={{ opacity: [0.4, 1, 0.4], scale: [0.9, 1.1, 0.9] }}
-                  transition={{ duration: 1.2, repeat: Infinity }}
+                  transition={{ type: 'tween', duration: 1.2, repeat: Infinity }}
                 >♪</motion.span>
               )}
               <span className="px-1.5 py-0.5 rounded text-[7px] font-bold" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.25)' }}>JAKIM</span>
@@ -673,7 +673,7 @@ export function IqraTab() {
                         className="h-2 w-2 rounded-full"
                         style={{ background: '#4a4aa6' }}
                         animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                        transition={{ type: 'tween', duration: 1, repeat: Infinity, delay: i * 0.2 }}
                       />
                     ))}
                   </div>
@@ -982,7 +982,7 @@ export function IqraTab() {
                   scale: 1,
                   ...(playingAudio === `letter-grid-${letter.id}` ? { scale: [1, 1.05, 1] } : {}),
                 }}
-                transition={{ delay: i * 0.015, ...(playingAudio === `letter-grid-${letter.id}` ? { repeat: Infinity, duration: 1 } : {}) }}
+                transition={{ delay: i * 0.015, ...(playingAudio === `letter-grid-${letter.id}` ? { type: 'tween' as const, repeat: Infinity, duration: 1 } : {}) }}
                 onClick={() => { setShowLetterDetail(i); playAudio(letter.name, `letter-grid-${letter.id}`) }}
               >
                 <span className={`${learningMode === 'kids' ? 'text-3xl' : 'text-lg'}`} style={{ color: '#ffffff' }}>{letter.letter}</span>

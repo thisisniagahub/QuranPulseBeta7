@@ -429,7 +429,7 @@ export function UstazAITab() {
                   '0 0 10px rgba(74,74,166,0.2)',
                 ],
               }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{ type: 'tween', duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             >
               <Bot className="h-5 w-5" style={{ color: '#4a4aa6' }} />
             </motion.div>
@@ -446,7 +446,7 @@ export function UstazAITab() {
                       background: isOnline ? '#22c55e' : '#ef4444',
                     }}
                     animate={isOnline ? { scale: [1, 1.3, 1] } : {}}
-                    transition={{ duration: 2, repeat: Infinity }}
+                    transition={{ type: 'tween', duration: 2, repeat: Infinity }}
                   />
                   <span className="text-[8px] font-medium" style={{ color: isOnline ? '#22c55e' : '#ef4444' }}>
                     {isOnline ? 'ONLINE' : 'OFFLINE'}
@@ -724,7 +724,7 @@ export function UstazAITab() {
                 border: '1px solid rgba(74,74,166,0.2)',
               }}
               animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
+              transition={{ type: 'tween', duration: 2, repeat: Infinity }}
             >
               <Sparkles className="h-8 w-8" style={{ color: '#4a4aa6' }} />
             </motion.div>
@@ -827,7 +827,7 @@ export function UstazAITab() {
                     className="flex items-center gap-1.5 mb-1 px-2 py-1 rounded-lg"
                     style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.15)' }}
                     animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    transition={{ type: 'tween', duration: 1.5, repeat: Infinity }}
                   >
                     <Globe className="h-3 w-3" style={{ color: '#22c55e' }} />
                     <span className="text-[9px]" style={{ color: '#22c55e' }}>Searching the web...</span>
@@ -961,7 +961,7 @@ export function UstazAITab() {
                     className="h-2 w-2 rounded-full"
                     style={{ background: '#4a4aa6' }}
                     animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
-                    transition={{ duration: 1, delay: i * 0.2, repeat: Infinity }}
+                    transition={{ type: 'tween', duration: 1, delay: i * 0.2, repeat: Infinity }}
                   />
                 ))}
                 {chatMode === 'openclaw' && isOnline && (
@@ -1041,7 +1041,7 @@ export function UstazAITab() {
             {isRecording ? (
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
+                transition={{ type: 'tween', duration: 0.5, repeat: Infinity }}
               >
                 <MicOff className="h-4 w-4" style={{ color: '#ef4444' }} />
               </motion.div>

@@ -518,7 +518,7 @@ function QiblaView() {
           className="absolute"
           style={{ transform: `rotate(${effectiveAngle}deg)` }}
           animate={!orientationSupported ? { rotate: [effectiveAngle - 2, effectiveAngle + 2, effectiveAngle - 2] } : {}}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ type: 'tween', duration: 4, repeat: Infinity, ease: 'easeInOut' }}
         >
           <div className="h-24 w-0.5 mx-auto" style={{ background: 'linear-gradient(to top, transparent, #4a4aa6)' }} />
           <div
@@ -1004,12 +1004,12 @@ function TasbihView() {
               className="text-center"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: [0.5, 1.3, 1], opacity: 1 }}
-              transition={{ duration: 0.5 }}
+              transition={{ type: 'tween', duration: 0.5 }}
             >
               <motion.div
                 className="text-5xl mb-2"
                 animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
-                transition={{ duration: 0.6, repeat: 2 }}
+                transition={{ type: 'tween', duration: 0.6, repeat: 2 }}
               >
                 🎉
               </motion.div>

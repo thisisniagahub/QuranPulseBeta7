@@ -850,3 +850,29 @@ Stage Summary:
 - IQRA section significantly improved with kids/adult modes and live TTS
 - Lint: 0 errors, 0 warnings
 - Dev server: serving pages successfully (GET / 200)
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix hydration mismatch and Framer Motion 3-keyframe errors in QuranPulse
+
+Work Log:
+- Identified root causes of hydration mismatch: CSS number serialization (width/height as numbers) differs between SSR and client
+- Added `useIsClient()` hook using `useSyncExternalStore` (avoids lint error from setState-in-effect)
+- Applied client-only rendering to BismillahGoldenParticles and FloatingParticles components
+- Converted CSS number values to explicit string values (e.g., `width: p.size` → `width: \`${p.size}px\``)
+- Added `type: 'tween'` to all 3-keyframe Framer Motion animations across entire codebase (16 fixes total):
+  - AppShell.tsx: 5 fixes (radial glow, loading dots, glow ring, badge pulse, center pulse)
+  - SplashScreen.tsx: 4 fixes (decorative circles, icon pulse, pulse dots)
+  - IqraTab.tsx: 3 fixes
+  - QuranTab.tsx: 2 fixes
+  - HomeTab.tsx: 2 fixes
+  - IbadahTab.tsx: 3 fixes
+  - UstazAITab.tsx: 6 fixes
+- HomeTab greeting already had `mounted` guard from previous session — confirmed working
+- GeometricPattern in SplashScreen already precomputed with toFixed(4) — no additional fix needed
+- Lint passes with 0 errors, 0 warnings
+
+Stage Summary:
+- All hydration mismatches resolved via client-only rendering pattern
+- All Framer Motion spring/3-keyframe errors resolved via explicit `type: 'tween'`
+- No lint errors remain

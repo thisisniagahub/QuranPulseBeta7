@@ -326,12 +326,12 @@ export function HomeTab() {
               className="text-center"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: [0.5, 1.2, 1], opacity: 1 }}
-              transition={{ duration: 0.5 }}
+              transition={{ type: 'tween', duration: 0.5 }}
             >
               <motion.div
                 className="text-6xl mb-4"
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.5, repeat: 3 }}
+                transition={{ type: 'tween', duration: 0.5, repeat: 3 }}
               >
                 🎉
               </motion.div>

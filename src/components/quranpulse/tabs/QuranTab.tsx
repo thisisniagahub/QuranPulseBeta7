@@ -1348,7 +1348,7 @@ export function QuranTab() {
                                   fontWeight: wi === currentWordIndex ? 700 : 400,
                                 }}
                                 animate={wi === currentWordIndex ? { scale: [1, 1.08, 1] } : {}}
-                                transition={{ duration: 0.3 }}
+                                transition={{ type: 'tween', duration: 0.3 }}
                               >
                                 {word}{' '}
                               </motion.span>
@@ -2006,7 +2006,7 @@ export function QuranTab() {
               onClick={isRecording ? undefined : startRecording}
               whileTap={!isRecording ? { scale: 0.95 } : undefined}
               animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
-              transition={isRecording ? { duration: 1, repeat: Infinity } : {}}
+              transition={isRecording ? { type: 'tween', duration: 1, repeat: Infinity } : {}}
             >
               <div className="flex h-20 w-20 items-center justify-center rounded-full" style={{ background: '#1a1a4a' }}>
                 {isRecording ? (
