@@ -22,6 +22,39 @@ const IQRA_BOOKS = [
   { id: 5, title: 'Iqra 5', desc: 'Waqaf & Ibtida', icon: '🛑', color: '#3a3a8a', pages: 28, letters: 0 },
   { id: 6, title: 'Iqra 6', desc: 'Bacaan Al-Quran', icon: '📖', color: '#2a2a6a', pages: 28, letters: 0 },
 ]
+
+const WRITING_TIPS: Record<string, string> = {
+  'Alif': 'Lukis garis lurus tegak dari atas ke bawah',
+  'Ba': 'Bentuk perut ikan (cekung ke bawah), kemudian satu titik di bawah',
+  'Ta': 'Seperti Ba tapi tiga titik di atas — ingat "Ta ada Tiga"',
+  'Tsa': 'Seperti Ba tapi tiga titik di atas — sama bentuk dengan Ta',
+  'Jim': 'Lukis huruf bengkok dengan titik di dalam — seperti tekuk siku',
+  'Ha': 'Bentuk mata — bulatan kecil tanpa titik',
+  'Kho': 'Seperti Ha tapi satu titik di atas',
+  'Dal': 'Seperti sudut kanan — garis tegak dan bengkok ke kiri',
+  'Dzal': 'Seperti Dal tapi satu titik di atas',
+  'Ra': 'Lukis bengkok ke bawah — seperti cangkuk kecil',
+  'Zai': 'Seperti Ra tapi satu titik di atas',
+  'Sin': 'Tiga gigi seperti sisir — ulang tiga lengkung kecil',
+  'Syin': 'Tiga gigi dengan tiga titik di atas — "Syin tiga Syarat"',
+  'Shod': 'Seperti Sin tapi rata/squarish — bukan melengkung',
+  'Dhod': 'Seperti Shod tapi satu titik di atas — huruf khas Arab',
+  'Tho': 'Seperti Shod tapi satu titik di atas — bunyi tebal',
+  'Zho': 'Seperti Tho tapi satu titik di tengah',
+  'Ain': 'Bentuk segitiga/kapak — huruf tekuk 2 tingkat',
+  'Ghoin': 'Seperti Ain tapi satu titik di atas',
+  'Fa': 'Bentuk cincin dengan satu titik di atas — "Fa satu Fitrah"',
+  'Qof': 'Bentuk gelung dengan dua titik di atas — "Qof dua Qiblat"',
+  'Kaf': 'Seperti huruf panjang dengan lurus di atas — huruf bersandar',
+  'Lam': 'Garis tegak panjang dengan kail di bawah',
+  'Mim': 'Bentuk bulatan dengan ekor ke bawah — seperti huruf O dengan kaki',
+  'Nun': 'Bentuk cangkuk/mangkuk dengan titik di atas — "Nun satu Nabi"',
+  'Ha2': 'Bentuk gelombang kecil — seperti huruf angka 8 separuh',
+  'Wau': 'Bentuk cerutu dengan kepala — garis tegak dengan bulatan atas',
+  'Ya': 'Bentuk cangkuk dengan dua titik di bawah — "Ya dua Yakin"',
+  'Hamzah': 'Lukis seperti huruf eja — dua titik serong seperti zap',
+}
+
 const ENHANCED_LETTERS = HIJAIYAH_LETTERS.map(l => ({
   ...l,
   forms: { isolated: l.letter, initial: l.letter, medial: l.letter, final: l.letter },
@@ -30,8 +63,10 @@ const ENHANCED_LETTERS = HIJAIYAH_LETTERS.map(l => ({
     fathah: `${l.letter}َ`,
     kasrah: `${l.letter}ِ`,
     dhammah: `${l.letter}ُ`,
+    sukun: `${l.letter}ْ`,
+    shaddah: `${l.letter}ّ`,
   },
-  writingTip: `Mulakan dari kanan ke kiri untuk huruf ${l.name}`,
+  writingTip: WRITING_TIPS[l.name] || `Mulakan dari kanan ke kiri untuk huruf ${l.name}`,
 }))
 const HARAKAT_DATA = [
   { id: 'fathah', name: 'Fathah', nameAr: 'فَتْحَة', symbol: 'َ', desc: 'Baris atas — bunyi "a"', example: 'بَ (ba)' },
@@ -161,6 +196,9 @@ export function IqraTab() {
   const [writingFeedback, setWritingFeedback] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isDrawing, setIsDrawing] = useState(false)
+  const [audioSpeed, setAudioSpeed] = useState<number>(1.0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false)
+  const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const currentBook = IQRA_BOOKS.find(b => b.id === iqraBook) || IQRA_BOOKS[0]
   const pageKey = `${iqraBook}-${iqraPage}`
   const totalPagesCompleted = completedPages.size
@@ -250,10 +288,10 @@ export function IqraTab() {
       const res = await fetch('/api/ustaz-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: `Nilai tulisan huruf ${letter.name} (${letter.letter}). Beri nasihat singkat dalam Bahasa Melayu.`, persona: 'iqra-teacher', history: [] }),
+        body: JSON.stringify({ message: `Nilai tulisan huruf ${letter.name} (${letter.letter}). Beri nasihat singkat dalam Bahasa Melayu.`, persona: 'ustazah', history: [] }),
       })
       const data = await res.json()
-      setWritingFeedback(data.reply || 'Cuba lagi! Latihan menjadikan sempurna.')
+      setWritingFeedback(data.response || 'Cuba lagi! Latihan menjadikan sempurna.')
     } catch { setWritingFeedback('Cuba lagi! Teruskan berlatih menulis.') }
     addXp(10)
   }, [writingLetter, addXp])
@@ -288,6 +326,25 @@ export function IqraTab() {
   }, [isDrawing])
   const stopDraw = useCallback(() => setIsDrawing(false), [])
 
+  // === Auto-play letters sequentially ===
+  const startAutoPlay = useCallback(() => {
+    if (isAutoPlaying) {
+      setIsAutoPlaying(false)
+      if (autoPlayRef.current) clearTimeout(autoPlayRef.current)
+      return
+    }
+    setIsAutoPlaying(true)
+    let idx = 0
+    const playNext = () => {
+      if (idx >= filteredLetters.length) { setIsAutoPlaying(false); return }
+      const letter = filteredLetters[idx]
+      playAudio(letter.name, `auto-${letter.id}`)
+      idx++
+      autoPlayRef.current = setTimeout(playNext, 2500)
+    }
+    playNext()
+  }, [isAutoPlaying, filteredLetters, playAudio])
+
   // === NEW: Daily challenge handlers ===
   const handleHarakatChallenge = useCallback((choice: string) => {
     const correct = dailyItem
@@ -305,22 +362,22 @@ export function IqraTab() {
     const newPage = Math.max(1, Math.min(currentBook.pages, iqraPage + delta))
     setIqraPage(newPage)
   }
-  const playAudio = async (text: string, id: string) => {
+  const playAudio = async (text: string, id: string, speed?: number) => {
     if (playingAudio === id) return
     setPlayingAudio(id)
     try {
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voice: 'alloy' }),
+        body: JSON.stringify({ text, voice: 'tongtong', speed: speed || audioSpeed }),
       })
       if (res.ok) {
-        const data = await res.json()
-        if (data.audioUrl) {
-          const audio = new Audio(data.audioUrl)
-          audio.onended = () => setPlayingAudio(null)
-          audio.play().catch(() => setPlayingAudio(null))
-        } else { setPlayingAudio(null) }
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        audio.onended = () => { URL.revokeObjectURL(url); setPlayingAudio(null) }
+        audio.onerror = () => { URL.revokeObjectURL(url); setPlayingAudio(null) }
+        await audio.play()
       } else { setPlayingAudio(null) }
     } catch { setPlayingAudio(null) }
   }
@@ -334,10 +391,10 @@ export function IqraTab() {
       const res = await fetch('/api/ustaz-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, persona: 'iqra-teacher', history: aiMessages.slice(-6) }),
+        body: JSON.stringify({ message: `[Guru Iqra] ${msg}`, persona: 'ustazah', history: aiMessages.slice(-6) }),
       })
       const data = await res.json()
-      setAiMessages(prev => [...prev, { role: 'ai', text: data.reply || 'Maaf, saya tidak dapat menjawab soalan itu sekarang.' }])
+      setAiMessages(prev => [...prev, { role: 'ai', text: data.response || 'Maaf, saya tidak dapat menjawab soalan itu sekarang.' }])
     } catch {
       setAiMessages(prev => [...prev, { role: 'ai', text: 'Maaf, guru AI tidak tersedia sekarang. Sila cuba lagi.' }])
     }
@@ -372,10 +429,12 @@ export function IqraTab() {
     { key: 'tajwid', label: 'Tajwid', icon: <Target className="h-4 w-4" /> },
     { key: 'hafazan', label: 'Hafazan', icon: <GraduationCap className="h-4 w-4" /> },
   ]
-  const filteredLetters = ENHANCED_LETTERS.filter(l => {
-    if (letterFilter === 'all' || letterFilter === 'hijaiyah') return true
-    return false
-  })
+  const filteredLetters = letterFilter === 'harakat' || letterFilter === 'tanwin' || letterFilter === 'mad'
+    ? [] // harakat/tanwin/mad use separate data, not letter grid
+    : ENHANCED_LETTERS.filter(l => {
+        if (letterFilter === 'all' || letterFilter === 'hijaiyah') return true
+        return false
+      })
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
@@ -397,6 +456,27 @@ export function IqraTab() {
               <Zap className="h-3 w-3" style={{ color: '#4a4aa6' }} />
               <span className="text-[10px] font-bold" style={{ color: '#4a4aa6' }}>{xp}</span>
             </div>
+          </div>
+          {/* Audio Speed Control */}
+          <div className="flex items-center gap-1 mt-1.5">
+            <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Kelajuan:</span>
+            {[
+              { label: '🐢', speed: 0.6, tip: 'Perlahan (kanak-kanak)' },
+              { label: '🔄', speed: 1.0, tip: 'Biasa' },
+              { label: '🚀', speed: 1.3, tip: 'Pantas' },
+            ].map(s => (
+              <button
+                key={s.speed}
+                className="px-1.5 py-0.5 rounded text-[10px]"
+                style={{
+                  background: Math.abs(audioSpeed - s.speed) < 0.01 ? 'rgba(212,175,55,0.15)' : 'transparent',
+                  border: Math.abs(audioSpeed - s.speed) < 0.01 ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent',
+                  color: Math.abs(audioSpeed - s.speed) < 0.01 ? '#d4af37' : 'rgba(204,204,204,0.4)',
+                }}
+                onClick={() => setAudioSpeed(s.speed)}
+                title={s.tip}
+              >{s.label}</button>
+            ))}
           </div>
         </div>
 
@@ -595,19 +675,23 @@ export function IqraTab() {
                     <div className="text-sm font-bold" style={{ color: '#ffffff' }}>{l.name}</div>
                     <div className="text-[10px] mb-3" style={{ color: 'rgba(204,204,204,0.5)' }}>{l.nameEn}</div>
 
-                    {/* Harakat Examples */}
-                    <div className="grid grid-cols-3 gap-2 mb-3">
-                      {Object.entries(l.harakat).map(([key, val]) => (
-                        <div
-                          key={key}
-                          className="rounded-xl p-2 text-center cursor-pointer"
-                          style={{ background: 'rgba(74,74,166,0.08)', border: '1px solid rgba(74,74,166,0.12)' }}
-                          onClick={() => playAudio(val, `${l.id}-${key}`)}
-                        >
-                          <div className="text-2xl font-arabic" style={{ color: '#ffffff' }}>{val}</div>
-                          <div className="text-[9px] capitalize" style={{ color: 'rgba(204,204,204,0.5)' }}>{key}</div>
-                        </div>
-                      ))}
+                    {/* Harakat Examples — 5 baris for kids */}
+                    <div className="mb-1">
+                      <div className="text-[9px] font-semibold mb-1.5" style={{ color: '#4a4aa6' }}>Baris (Harakat) — Ketik untuk dengar</div>
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {Object.entries(l.harakat).map(([key, val]) => (
+                          <motion.div
+                            key={key}
+                            className="rounded-lg p-1.5 text-center cursor-pointer"
+                            style={{ background: key === 'shaddah' ? 'rgba(212,175,55,0.08)' : key === 'sukun' ? 'rgba(106,106,182,0.08)' : 'rgba(74,74,166,0.08)', border: `1px solid ${key === 'shaddah' ? 'rgba(212,175,55,0.15)' : key === 'sukun' ? 'rgba(106,106,182,0.15)' : 'rgba(74,74,166,0.12)'}` }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={() => playAudio(val, `${l.id}-${key}`)}
+                          >
+                            <div className="text-xl font-arabic" style={{ color: '#ffffff' }}>{val}</div>
+                            <div className="text-[7px] capitalize" style={{ color: 'rgba(204,204,204,0.5)' }}>{key}</div>
+                          </motion.div>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Writing Tip */}
@@ -715,9 +799,25 @@ export function IqraTab() {
                   border: `1px solid ${letterFilter === f ? 'rgba(74,74,166,0.3)' : 'transparent'}`,
                 }}
                 onClick={() => setLetterFilter(f)}
-              >{f === 'all' ? 'Semua' : f}</button>
+              >{f === 'all' ? 'Semua' : f === 'hijaiyah' ? 'Huruf' : f === 'harakat' ? 'Baris' : f === 'tanwin' ? 'Tanwin' : 'Mad'}</button>
             ))}
+            {/* Auto-play button */}
+            {(letterFilter === 'all' || letterFilter === 'hijaiyah') && filteredLetters.length > 0 && (
+              <button
+                className="px-2.5 py-1 rounded-full text-[10px] whitespace-nowrap flex items-center gap-1"
+                style={{
+                  background: isAutoPlaying ? 'rgba(212,175,55,0.15)' : 'rgba(42,42,106,0.4)',
+                  border: `1px solid ${isAutoPlaying ? 'rgba(212,175,55,0.3)' : 'transparent'}`,
+                  color: isAutoPlaying ? '#d4af37' : 'rgba(204,204,204,0.5)',
+                }}
+                onClick={startAutoPlay}
+              >
+                {isAutoPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                {isAutoPlaying ? 'Henti' : 'Auto'}
+              </button>
+            )}
           </div>
+          {(letterFilter === 'all' || letterFilter === 'hijaiyah') && (
           <div className="grid grid-cols-5 gap-2">
             {filteredLetters.map((letter, i) => (
               <motion.button
@@ -727,13 +827,79 @@ export function IqraTab() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.015 }}
-                onClick={() => setShowLetterDetail(i)}
+                onClick={() => { setShowLetterDetail(i); playAudio(letter.name, `letter-grid-${letter.id}`) }}
               >
                 <span className="text-lg" style={{ color: '#ffffff' }}>{letter.letter}</span>
                 <span className="text-[7px] mt-0.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
               </motion.button>
             ))}
           </div>
+          )}
+          {letterFilter === 'harakat' && (
+            <div className="grid grid-cols-2 gap-2.5">
+              {[...HARAKAT_DATA,
+                { id: 'sukun', name: 'Sukun', nameAr: 'سُكُون', symbol: 'ْ', desc: 'Tanpa baris — huruf mati', example: 'بْ (b)' },
+                { id: 'shaddah', name: 'Syaddah', nameAr: 'شَدَّة', symbol: 'ّ', desc: 'Gandaan — bunyi berulang', example: 'بّ (bb)' },
+              ].map(h => (
+                <motion.button
+                  key={h.id}
+                  className="rounded-xl p-4 text-center"
+                  style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.12)' }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => playAudio(h.example.replace(/[()]/g, '').trim(), `harakat-${h.id}`, 0.7)}
+                >
+                  <div className="text-4xl font-arabic mb-1" style={{ color: '#d4af37' }}>{h.symbol}</div>
+                  <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{h.name}</div>
+                  <div className="text-2xl font-arabic my-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{h.nameAr}</div>
+                  <div className="text-[9px] mb-1.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{h.desc}</div>
+                  <div className="text-lg font-arabic" style={{ color: '#4a4aa6' }}>{h.example}</div>
+                  <Volume2 className="h-3 w-3 mx-auto mt-1.5" style={{ color: 'rgba(74,74,166,0.4)' }} />
+                </motion.button>
+              ))}
+            </div>
+          )}
+          {letterFilter === 'tanwin' && (
+            <div className="grid grid-cols-2 gap-2.5">
+              {TANWIN_MAD_DATA.filter(t => t.id.startsWith('tanwin')).map(t => (
+                <motion.button
+                  key={t.id}
+                  className="rounded-xl p-4 text-center"
+                  style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.12)' }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => playAudio(t.example.replace(/[()]/g, '').trim(), `tanwin-${t.id}`, 0.7)}
+                >
+                  <div className="text-4xl font-arabic mb-1" style={{ color: '#d4af37' }}>{t.symbol}</div>
+                  <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{t.name}</div>
+                  <div className="text-2xl font-arabic my-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{t.nameAr}</div>
+                  <div className="text-[9px] mb-1.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{t.desc}</div>
+                  <div className="text-lg font-arabic" style={{ color: '#4a4aa6' }}>{t.example}</div>
+                  <Volume2 className="h-3 w-3 mx-auto mt-1.5" style={{ color: 'rgba(74,74,166,0.4)' }} />
+                </motion.button>
+              ))}
+            </div>
+          )}
+          {letterFilter === 'mad' && (
+            <div className="grid grid-cols-1 gap-2.5">
+              {TANWIN_MAD_DATA.filter(t => t.id.startsWith('mad')).map(t => (
+                <motion.button
+                  key={t.id}
+                  className="rounded-xl p-4 text-center"
+                  style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.12)' }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => playAudio(t.example.replace(/[()]/g, '').trim(), `mad-${t.id}`, 0.7)}
+                >
+                  <div className="text-[11px] font-semibold mb-1" style={{ color: '#d4af37' }}>{t.name}</div>
+                  <div className="text-3xl font-arabic my-1" style={{ color: '#ffffff' }}>{t.nameAr}</div>
+                  <div className="text-[10px] mb-2" style={{ color: 'rgba(204,204,204,0.5)' }}>{t.desc}</div>
+                  <div className="text-xl font-arabic" style={{ color: '#4a4aa6' }}>{t.example}</div>
+                  <Volume2 className="h-3 w-3 mx-auto mt-2" style={{ color: 'rgba(74,74,166,0.4)' }} />
+                </motion.button>
+              ))}
+            </div>
+          )}
         </div>
       )
     }
