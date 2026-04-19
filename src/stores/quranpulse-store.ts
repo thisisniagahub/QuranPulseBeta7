@@ -118,6 +118,20 @@ interface QuranPulseState {
   bookmarkedIds: string[]
   setLastRead: (surahId: number, verseNumber: number) => void
   setFontSize: (size: 'small' | 'medium' | 'large') => void
+
+  // QuranTab 2026 features
+  khatamPages: number[] // pages read (1-604)
+  markPageRead: (page: number) => void
+  isPageRead: (page: number) => boolean
+  nightReadingMode: boolean
+  setNightReadingMode: (v: boolean) => void
+  arabicFontSize: 'small' | 'medium' | 'large' | 'x-large'
+  setArabicFontSize: (size: 'small' | 'medium' | 'large' | 'x-large') => void
+  recentSearches: string[]
+  addRecentSearch: (query: string) => void
+  clearRecentSearches: () => void
+  audioSleepTimer: number // minutes, 0 = off
+  setAudioSleepTimer: (minutes: number) => void
 }
 
 // Spaced repetition intervals in milliseconds
@@ -340,6 +354,31 @@ export const useQuranPulseStore = create<QuranPulseState>()(
       setFontSize: (size) => {
         set({ fontSize: size })
       },
+
+      // QuranTab 2026 features
+      khatamPages: [] as number[],
+      markPageRead: (page) => {
+        const { khatamPages } = get()
+        if (!khatamPages.includes(page)) {
+          set({ khatamPages: [...khatamPages, page] })
+        }
+      },
+      isPageRead: (page) => {
+        return get().khatamPages.includes(page)
+      },
+      nightReadingMode: false,
+      setNightReadingMode: (v) => set({ nightReadingMode: v }),
+      arabicFontSize: 'medium' as 'small' | 'medium' | 'large' | 'x-large',
+      setArabicFontSize: (size) => set({ arabicFontSize: size }),
+      recentSearches: [] as string[],
+      addRecentSearch: (query) => {
+        const { recentSearches } = get()
+        const filtered = recentSearches.filter(s => s !== query).slice(0, 9)
+        set({ recentSearches: [query, ...filtered] })
+      },
+      clearRecentSearches: () => set({ recentSearches: [] }),
+      audioSleepTimer: 0,
+      setAudioSleepTimer: (minutes) => set({ audioSleepTimer: minutes }),
     }),
     {
       name: 'quranpulse-storage',
@@ -378,6 +417,11 @@ export const useQuranPulseStore = create<QuranPulseState>()(
         selectedZone: state.selectedZone,
         prayerZone: state.prayerZone,
         hafazanProgress: state.hafazanProgress,
+        khatamPages: state.khatamPages,
+        nightReadingMode: state.nightReadingMode,
+        arabicFontSize: state.arabicFontSize,
+        recentSearches: state.recentSearches,
+        audioSleepTimer: state.audioSleepTimer,
       }),
     }
   )

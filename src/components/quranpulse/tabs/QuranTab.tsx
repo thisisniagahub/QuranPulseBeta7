@@ -8,7 +8,8 @@ import {
   BookMarked, Loader2, Clock, Star, Trophy,
   Repeat, List, Grid3X3, Brain,
   MessageCircle, Sparkles, MicOff, CheckCircle2, AlertCircle,
-  Zap, Target, BarChart3, RefreshCw, Volume2, VolumeX, SkipForward
+  Zap, Target, BarChart3, RefreshCw, Volume2, VolumeX, SkipForward,
+  Type, Sun, Moon, Copy, ExternalLink, Settings2, SkipBack, Gauge, Timer
 } from 'lucide-react'
 import { useQuranPulseStore, type HafazanLevel } from '@/stores/quranpulse-store'
 import { SURAH_LIST, getSurahVerses, getSurahName, type SurahInfo } from '@/lib/quran-data'
@@ -178,6 +179,13 @@ export function QuranTab() {
 
   // Reading stats
   const [pagesReadToday, setPagesReadToday] = useState(0)
+
+  // 2026 Features
+  const [arabicFontSize, setArabicFontSize] = useState<'small' | 'medium' | 'large' | 'xlarge'>('medium')
+  const [readingTheme, setReadingTheme] = useState<'dark' | 'bright'>('dark')
+  const [showVerseActions, setShowVerseActions] = useState<number | null>(null)
+  const [showReaderSettings, setShowReaderSettings] = useState(false)
+  const [khatamMarkedVerses, setKhatamMarkedVerses] = useState<Set<string>>(new Set())
 
   // API verse fetching with cache
   const [apiVerses, setApiVerses] = useState<VerseData[]>([])
@@ -599,6 +607,23 @@ export function QuranTab() {
     if (selectedJuz === null) return null
     return SURAH_LIST.filter(s => s.juz.includes(selectedJuz))
   }, [selectedJuz])
+
+  // ─── 2026: Font Size Map ──────────────────────────────────────
+  const FONT_SIZE_MAP = { small: 'text-xl', medium: 'text-2xl', large: 'text-3xl', xlarge: 'text-4xl' }
+
+  // ─── 2026: Khatam Progress ──────────────────────────────────────
+  const khatamProgress = useMemo(() => {
+    const totalMarked = khatamMarkedVerses.size
+    return Math.min(Math.round((totalMarked / totalQuranVerses) * 100), 100)
+  }, [khatamMarkedVerses, totalQuranVerses])
+
+  const markCurrentViewAsRead = useCallback(() => {
+    if (verses.length === 0) return
+    const newMarked = new Set(khatamMarkedVerses)
+    verses.forEach(v => newMarked.add(`${selectedSurah}-${v.verseNumber}`))
+    setKhatamMarkedVerses(newMarked)
+    store.addXp(verses.length * 2)
+  }, [verses, selectedSurah, khatamMarkedVerses, store])
 
   // ─── Reading Mode Tabs ──────────────────────────────────────
   const modeTabs: { key: ReadingMode; label: string; icon: React.ReactNode }[] = [

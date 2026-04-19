@@ -6,9 +6,18 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
+  // Gracefully handle missing Supabase credentials
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey || supabaseUrl === 'your-supabase-url') {
+    // Supabase not configured — skip session refresh
+    return supabaseResponse
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -29,15 +38,12 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Protected routes - redirect to home if not authenticated
-  // For now, QuranPulse is publicly accessible, so no protected routes
+  // Refresh session if user exists
+  try {
+    await supabase.auth.getUser()
+  } catch {
+    // Session refresh failed — continue without auth
+  }
 
   return supabaseResponse
 }
