@@ -217,6 +217,38 @@ export function QuranTab() {
   }, [view, selectedSurah])
 
   // ─── Recite Mode ────────────────────────────────────────────
+  // compareRecitation must be declared before startRecording (temporal dead zone fix)
+  const compareRecitation = useCallback((transcribed: string) => {
+    if (verses.length === 0) return
+    const verse = verses[reciteVerseIdx]
+    if (!verse) return
+
+    const expectedWords = verse.arabic.split(/\s+/).filter(Boolean)
+    const transcribedWords = transcribed.split(/\s+/).filter(Boolean)
+
+    const matchedWords = expectedWords.map((expected, i) => {
+      if (i < transcribedWords.length) {
+        const tWord = transcribedWords[i] || ''
+        return expected.includes(tWord) || tWord.includes(expected) || tWord.length > 0
+      }
+      return false
+    })
+
+    const correctCount = matchedWords.filter(Boolean).length
+    const accuracy = expectedWords.length > 0 ? Math.round((correctCount / expectedWords.length) * 100) : 0
+    const xpEarned = Math.floor(accuracy / 10) * 5
+    if (xpEarned > 0) store.addXp(xpEarned)
+    store.updateHafazanVerse(selectedSurah, verse.verseNumber, accuracy >= 70)
+
+    setReciteResult({
+      accuracy,
+      expectedWords,
+      transcribedWords,
+      matchedWords,
+      xpEarned,
+    })
+  }, [verses, reciteVerseIdx, selectedSurah, store])
+
   const startRecording = useCallback(() => {
     setIsRecording(true)
     setReciteResult(null)
@@ -258,37 +290,6 @@ export function QuranTab() {
       setIsRecording(false)
     })
   }, [selectedSurah, reciteVerseIdx, verses, compareRecitation])
-
-  const compareRecitation = useCallback((transcribed: string) => {
-    if (verses.length === 0) return
-    const verse = verses[reciteVerseIdx]
-    if (!verse) return
-
-    const expectedWords = verse.arabic.split(/\s+/).filter(Boolean)
-    const transcribedWords = transcribed.split(/\s+/).filter(Boolean)
-
-    const matchedWords = expectedWords.map((expected, i) => {
-      if (i < transcribedWords.length) {
-        const tWord = transcribedWords[i] || ''
-        return expected.includes(tWord) || tWord.includes(expected) || tWord.length > 0
-      }
-      return false
-    })
-
-    const correctCount = matchedWords.filter(Boolean).length
-    const accuracy = expectedWords.length > 0 ? Math.round((correctCount / expectedWords.length) * 100) : 0
-    const xpEarned = Math.floor(accuracy / 10) * 5
-    if (xpEarned > 0) store.addXp(xpEarned)
-    store.updateHafazanVerse(selectedSurah, verse.verseNumber, accuracy >= 70)
-
-    setReciteResult({
-      accuracy,
-      expectedWords,
-      transcribedWords,
-      matchedWords,
-      xpEarned,
-    })
-  }, [verses, reciteVerseIdx, selectedSurah, store])
 
   // ─── Render: Juz View ───────────────────────────────────────
   const renderJuzView = () => {
