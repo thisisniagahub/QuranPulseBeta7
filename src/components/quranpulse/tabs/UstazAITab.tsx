@@ -448,7 +448,7 @@ export function UstazAITab() {
                     animate={isOnline ? { scale: [1, 1.3, 1] } : {}}
                     transition={{ type: 'tween', duration: 2, repeat: Infinity }}
                   />
-                  <span className="text-[8px] font-medium" style={{ color: isOnline ? '#22c55e' : '#ef4444' }}>
+                  <span className="text-[10px] font-medium" style={{ color: isOnline ? '#22c55e' : '#ef4444' }}>
                     {isOnline ? 'ONLINE' : 'OFFLINE'}
                   </span>
                 </div>
@@ -534,7 +534,7 @@ export function UstazAITab() {
               }}>
                 {p.label}
               </div>
-              <div className="text-[8px]" style={{
+              <div className="text-[10px]" style={{
                 color: activePersona === p.id ? '#4a4aa6' : 'rgba(204,204,204,0.3)'
               }}>
                 {p.desc}
@@ -565,7 +565,7 @@ export function UstazAITab() {
                   <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>
                     OpenClaw Skills ({skills.length > 0 ? skills.length : 5})
                   </span>
-                  <span className="text-[8px]" style={{ color: isGatewayReachable ? '#22c55e' : '#ef4444' }}>
+                  <span className="text-[10px]" style={{ color: isGatewayReachable ? '#22c55e' : '#ef4444' }}>
                     {isGatewayReachable ? '● Gateway Connected' : '● Gateway Offline'}
                   </span>
                 </div>
@@ -639,7 +639,7 @@ export function UstazAITab() {
                       }}
                     >
                       <tool.icon className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
-                      <span className="text-[8px] text-center font-medium" style={{ color: 'rgba(204,204,204,0.6)' }}>
+                      <span className="text-[10px] text-center font-medium" style={{ color: 'rgba(204,204,204,0.6)' }}>
                         {tool.name}
                       </span>
                     </div>
@@ -705,7 +705,7 @@ export function UstazAITab() {
       <div className="px-4 py-1" style={{ background: 'rgba(212,175,55,0.05)' }}>
         <div className="flex items-center gap-1.5">
           <Shield className="h-2.5 w-2.5 flex-shrink-0" style={{ color: 'rgba(212,175,55,0.4)' }} />
-          <p className="text-[8px]" style={{ color: 'rgba(204,204,204,0.3)' }}>
+          <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.3)' }}>
             Jawapan AI adalah rujukan umum. Untuk hukum rasmi, sila rujuk mufti atau ulama bertauliah.
           </p>
         </div>
@@ -714,7 +714,7 @@ export function UstazAITab() {
       {/* ═══════════════════════════════════════════════════════════════════════
           MESSAGES
       ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 qp-scroll">
+      <div className="flex-1 overflow-y-auto min-h-0 scroll-smooth overscroll-y-contain px-4 py-3 space-y-3 qp-scroll">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center py-6">
             <motion.div
@@ -846,7 +846,7 @@ export function UstazAITab() {
                   {msg.isVoice && (
                     <div className="flex items-center gap-1 mb-1">
                       <Mic className="h-2.5 w-2.5" style={{ color: '#d4af37' }} />
-                      <span className="text-[8px]" style={{ color: '#d4af37' }}>Voice Input</span>
+                      <span className="text-[10px]" style={{ color: '#d4af37' }}>Voice Input</span>
                     </div>
                   )}
 
@@ -886,7 +886,7 @@ export function UstazAITab() {
                         {REACTION_EMOJIS.slice(0, 3).map(emoji => (
                           <button
                             key={emoji}
-                            className="p-0.5 rounded text-[10px] transition-transform hover:scale-125"
+                            className="py-1.5 px-0.5 rounded text-[10px] transition-transform hover:scale-125"
                             style={{ opacity: 0.5 }}
                             onClick={() => addReaction(msg.id, emoji)}
                           >
@@ -986,7 +986,7 @@ export function UstazAITab() {
             <AlertCircle className="h-4 w-4" style={{ color: '#ef4444' }} />
             <span className="text-[11px]" style={{ color: '#fca5a5' }}>{error}</span>
             <button
-              className="ml-auto text-[9px] font-medium px-2 py-0.5 rounded"
+              className="ml-auto text-[9px] font-medium px-2 py-1.5 rounded"
               style={{ background: 'rgba(220,38,38,0.2)', color: '#fca5a5' }}
               onClick={() => setError(null)}
             >
@@ -1097,7 +1097,7 @@ export function UstazAITab() {
             <div className="h-1.5 w-1.5 rounded-full" style={{
               background: isOnline ? '#22c55e' : '#ef4444'
             }} />
-            <span className="text-[8px]" style={{ color: isOnline ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.5)' }}>
+            <span className="text-[10px]" style={{ color: isOnline ? 'rgba(34,197,94,0.6)' : 'rgba(239,68,68,0.5)' }}>
               {isOnline ? 'OpenClaw Agent Connected' : 'OpenClaw Offline — Classic Chat Fallback'}
             </span>
           </div>

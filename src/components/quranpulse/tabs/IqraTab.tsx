@@ -491,13 +491,13 @@ export function IqraTab() {
                   transition={{ type: 'tween', duration: 1.2, repeat: Infinity }}
                 >♪</motion.span>
               )}
-              <span className="px-1.5 py-0.5 rounded text-[7px] font-bold" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.25)' }}>JAKIM</span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.25)' }}>JAKIM</span>
             </div>
             <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Belajar membaca Al-Quran</p>
             {/* Learning Mode Toggle */}
             <div className="flex gap-1 mt-1">
               <button
-                className="px-2.5 py-0.5 rounded-full text-[9px] font-medium transition-all"
+                className="px-2.5 py-1.5 rounded-full text-[9px] font-medium transition-all"
                 style={{
                   background: learningMode === 'kids' ? 'rgba(212,175,55,0.15)' : 'transparent',
                   color: learningMode === 'kids' ? '#d4af37' : 'rgba(204,204,204,0.4)',
@@ -506,7 +506,7 @@ export function IqraTab() {
                 onClick={() => setLearningMode('kids')}
               >🧒 Kanak-kanak</button>
               <button
-                className="px-2.5 py-0.5 rounded-full text-[9px] font-medium transition-all"
+                className="px-2.5 py-1.5 rounded-full text-[9px] font-medium transition-all"
                 style={{
                   background: learningMode === 'adult' ? 'rgba(212,175,55,0.15)' : 'transparent',
                   color: learningMode === 'adult' ? '#d4af37' : 'rgba(204,204,204,0.4)',
@@ -528,7 +528,7 @@ export function IqraTab() {
           </div>
           {/* Audio Speed Control */}
           <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Kelajuan:</span>
+            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Kelajuan:</span>
             {[
               { label: '🐢', speed: 0.6, tip: 'Perlahan (kanak-kanak)' },
               { label: '🔄', speed: 1.0, tip: 'Biasa' },
@@ -536,7 +536,7 @@ export function IqraTab() {
             ].map(s => (
               <button
                 key={s.speed}
-                className="px-1.5 py-0.5 rounded text-[10px]"
+                className="px-1.5 py-1.5 rounded text-[10px]"
                 style={{
                   background: Math.abs(audioSpeed - s.speed) < 0.01 ? 'rgba(212,175,55,0.15)' : 'transparent',
                   border: Math.abs(audioSpeed - s.speed) < 0.01 ? '1px solid rgba(212,175,55,0.3)' : '1px solid transparent',
@@ -609,7 +609,7 @@ export function IqraTab() {
           >
             <div className="absolute inset-0 bg-black/60" onClick={() => setShowAITutor(false)} />
             <motion.div
-              className="relative w-full max-w-[480px] rounded-t-2xl flex flex-col"
+              className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl rounded-t-2xl flex flex-col"
               style={{ background: '#1a1a4a', border: '1px solid rgba(74,74,166,0.2)', maxHeight: '70vh' }}
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
@@ -788,7 +788,7 @@ export function IqraTab() {
                             onClick={() => playAudio(val, `${l.id}-${key}`)}
                           >
                             <div className={`${learningMode === 'kids' ? 'text-2xl' : 'text-xl'} font-arabic`} style={{ color: '#ffffff' }}>{val}</div>
-                            <div className={`${learningMode === 'kids' ? 'text-[8px]' : 'text-[7px]'} capitalize`} style={{ color: 'rgba(204,204,204,0.5)' }}>{key}</div>
+                            <div className={`${learningMode === 'kids' ? 'text-[10px]' : 'text-[9px]'} capitalize`} style={{ color: 'rgba(204,204,204,0.5)' }}>{key}</div>
                           </motion.div>
                         ))}
                       </div>
@@ -824,7 +824,7 @@ export function IqraTab() {
                               onClick={() => playAudio(`${l.name} ${label.split(' ')[0].toLowerCase()}`, `form-${l.id}-${label}`)}
                             >
                               <div className="text-2xl font-arabic" style={{ color: '#ffffff' }}>{form}</div>
-                              <div className="text-[7px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{label}</div>
+                              <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{label}</div>
                             </motion.button>
                           ))}
                         </div>
@@ -990,7 +990,7 @@ export function IqraTab() {
                 onClick={() => { setShowLetterDetail(i); playAudio(letter.name, `letter-grid-${letter.id}`) }}
               >
                 <span className={`${learningMode === 'kids' ? 'text-3xl' : 'text-lg'}`} style={{ color: '#ffffff' }}>{letter.letter}</span>
-                <span className={`${learningMode === 'kids' ? 'text-[10px]' : 'text-[7px]'} mt-0.5`} style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
+                <span className={`${learningMode === 'kids' ? 'text-[10px]' : 'text-[9px]'} mt-0.5`} style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
                 {learningMode === 'kids' && (
                   <span className="absolute bottom-1 right-1 text-[10px]" style={{ color: 'rgba(212,175,55,0.5)' }}>🔊</span>
                 )}
@@ -1168,7 +1168,7 @@ export function IqraTab() {
                   >
                     {earned ? badge.icon : <Lock className="h-3.5 w-3.5" style={{ color: 'rgba(204,204,204,0.25)' }} />}
                   </div>
-                  <span className="text-[7px] text-center max-w-[50px]" style={{ color: earned ? '#d4af37' : 'rgba(204,204,204,0.3)' }}>{badge.name}</span>
+                  <span className="text-[9px] text-center max-w-[64px]" style={{ color: earned ? '#d4af37' : 'rgba(204,204,204,0.3)' }}>{badge.name}</span>
                 </motion.div>
               )
             })}
@@ -1201,8 +1201,8 @@ export function IqraTab() {
                   >
                     {isComplete ? '✓' : step.step}
                   </div>
-                  <span className="text-[7px] text-center leading-tight" style={{ color: unlocked ? '#ffffff' : 'rgba(204,204,204,0.3)' }}>{step.name}</span>
-                  <span className="text-[7px]" style={{ color: isComplete ? '#d4af37' : 'rgba(204,204,204,0.4)' }}>{prog}%</span>
+                  <span className="text-[9px] text-center leading-tight" style={{ color: unlocked ? '#ffffff' : 'rgba(204,204,204,0.3)' }}>{step.name}</span>
+                  <span className="text-[9px]" style={{ color: isComplete ? '#d4af37' : 'rgba(204,204,204,0.4)' }}>{prog}%</span>
                 </div>
               )
             })}
@@ -1214,7 +1214,7 @@ export function IqraTab() {
           <div className="flex items-center gap-1.5 mb-2">
             <Calendar className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
             <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>Cabaran Harian</span>
-            <span className="text-[8px] ml-auto px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37' }}>+20 XP</span>
+            <span className="text-[10px] ml-auto px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37' }}>+20 XP</span>
           </div>
           <div className="rounded-lg p-3 text-center" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.08)' }}>
             <div className="text-[10px] mb-2" style={{ color: 'rgba(204,204,204,0.6)' }}>{dailyChallenge.instruction}</div>
@@ -1260,7 +1260,7 @@ export function IqraTab() {
                   style={{ background: i === 6 ? '#d4af37' : 'rgba(74,74,166,0.4)', minHeight: 2 }}
                   animate={{ height: `${Math.max(4, (val / 100) * 48)}px` }}
                 />
-                <span className="text-[7px]" style={{ color: i === 6 ? '#d4af37' : 'rgba(204,204,204,0.35)' }}>{dayNames[i]}</span>
+                <span className="text-[9px]" style={{ color: i === 6 ? '#d4af37' : 'rgba(204,204,204,0.35)' }}>{dayNames[i]}</span>
               </div>
             ))}
           </div>
@@ -1268,7 +1268,7 @@ export function IqraTab() {
             <div className="rounded-lg p-2" style={{ background: 'rgba(74,74,166,0.06)', border: '1px solid rgba(74,74,166,0.08)' }}>
               <div className="flex items-center gap-1 mb-0.5">
                 <TrendingUp className="h-2.5 w-2.5" style={{ color: '#4a4aa6' }} />
-                <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Terkuat</span>
+                <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Terkuat</span>
               </div>
               <div className="text-[10px] font-medium" style={{ color: '#4a4aa6' }}>{strongest.name}</div>
               <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{strongest.score}%</div>
@@ -1276,7 +1276,7 @@ export function IqraTab() {
             <div className="rounded-lg p-2" style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.08)' }}>
               <div className="flex items-center gap-1 mb-0.5">
                 <Target className="h-2.5 w-2.5" style={{ color: '#d4af37' }} />
-                <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Perlu Latihan</span>
+                <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Perlu Latihan</span>
               </div>
               <div className="text-[10px] font-medium" style={{ color: '#d4af37' }}>{weakest.name}</div>
               <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{weakest.score}%</div>
@@ -1285,9 +1285,9 @@ export function IqraTab() {
           <div className="flex justify-between mt-2">
             <div className="flex items-center gap-1">
               <Clock className="h-2.5 w-2.5" style={{ color: 'rgba(204,204,204,0.3)' }} />
-              <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Masa belajar: ~{Math.max(1, Math.round(xp / 50))} jam</span>
+              <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Masa belajar: ~{Math.max(1, Math.round(xp / 50))} jam</span>
             </div>
-            <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Kadar: ~{Math.max(1, Math.round(hafazanVersesDone / Math.max(1, Math.round(xp / 50))))} ayat/jam</span>
+            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Kadar: ~{Math.max(1, Math.round(hafazanVersesDone / Math.max(1, Math.round(xp / 50))))} ayat/jam</span>
           </div>
         </div>
 
@@ -1320,15 +1320,15 @@ export function IqraTab() {
           <div className="flex justify-between mt-2">
             <div className="text-center">
               <div className="text-xs font-bold" style={{ color: '#4a4aa6' }}>{totalPagesCompleted}</div>
-              <div className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Halaman</div>
+              <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Halaman</div>
             </div>
             <div className="text-center">
               <div className="text-xs font-bold" style={{ color: '#d4af37' }}>{tajwidMastered.size}/{totalTajwidRules}</div>
-              <div className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Tajwid</div>
+              <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Tajwid</div>
             </div>
             <div className="text-center">
               <div className="text-xs font-bold" style={{ color: '#6a6ab6' }}>{hafazanVersesDone}/{totalHafazanVerses}</div>
-              <div className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Hafazan</div>
+              <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Hafazan</div>
             </div>
           </div>
         </div>
@@ -1397,7 +1397,7 @@ export function IqraTab() {
 
         {/* JAKIM Footer */}
         <div className="mt-3 text-center py-2" style={{ borderTop: '1px solid rgba(74,74,166,0.06)' }}>
-          <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.3)' }}>Sumber: Kementerian Pendidikan Malaysia & JAKIM</span>
+          <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.3)' }}>Sumber: Kementerian Pendidikan Malaysia & JAKIM</span>
         </div>
       </div>
     )
@@ -1471,7 +1471,7 @@ export function IqraTab() {
                   {Object.entries(letter.harakat).map(([k, v]) => (
                     <div key={k} className="rounded-lg p-1.5" style={{ background: 'rgba(74,74,166,0.08)' }}>
                       <div className="text-lg font-arabic" style={{ color: '#ffffff' }}>{v}</div>
-                      <div className="text-[8px] capitalize" style={{ color: 'rgba(204,204,204,0.4)' }}>{k}</div>
+                      <div className="text-[10px] capitalize" style={{ color: 'rgba(204,204,204,0.4)' }}>{k}</div>
                     </div>
                   ))}
                 </div>
@@ -1623,7 +1623,7 @@ export function IqraTab() {
             ref={canvasRef}
             width={400}
             height={300}
-            className="w-full touch-none"
+            className="max-w-full aspect-[4/3] touch-none"
             style={{ background: 'rgba(26,26,74,0.5)', cursor: 'crosshair' }}
             onMouseDown={startDraw}
             onMouseMove={draw}
@@ -1674,7 +1674,7 @@ export function IqraTab() {
         <div className="mb-3">
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-semibold" style={{ color: '#ffffff' }}>Hukum Tajwid</span>
-            <span className="px-1 py-0.5 rounded text-[7px]" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }}>Kurikulum JAKIM</span>
+            <span className="px-1 py-0.5 rounded text-[9px]" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }}>Kurikulum JAKIM</span>
           </div>
           <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{tajwidMastered.size}/{totalTajwidRules} dikuasai</div>
         </div>
@@ -1738,7 +1738,7 @@ export function IqraTab() {
                           </div>
                           {/* JAKIM Reference */}
                           {JAKIM_TAJWID_REFS[cat.id] && (
-                            <div className="text-[8px] mb-2 flex items-center gap-1" style={{ color: 'rgba(212,175,55,0.5)' }}>
+                            <div className="text-[10px] mb-2 flex items-center gap-1" style={{ color: 'rgba(212,175,55,0.5)' }}>
                               <Shield className="h-2.5 w-2.5" /> {JAKIM_TAJWID_REFS[cat.id]}
                             </div>
                           )}
@@ -1860,7 +1860,7 @@ export function IqraTab() {
         <div className="mb-3">
           <div className="flex items-center gap-1.5">
             <span className="text-sm font-semibold" style={{ color: '#ffffff' }}>Hafazan Surah Pendek</span>
-            <span className="px-1 py-0.5 rounded text-[7px]" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }}>Kaedah JAKIM</span>
+            <span className="px-1 py-0.5 rounded text-[9px]" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }}>Kaedah JAKIM</span>
           </div>
           <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Juz 30 · {HAFAZAN_SURAHS.length} surah</div>
         </div>
@@ -1983,7 +1983,7 @@ export function IqraTab() {
               <div key={item.id} className="rounded-xl p-2.5 text-center" style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.1)' }}>
                 <div className="text-xl font-arabic" style={{ color: '#ffffff' }}>{item.symbol}</div>
                 <div className="text-[9px] font-medium mt-1" style={{ color: '#d4af37' }}>{item.name}</div>
-                <div className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{item.desc}</div>
+                <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{item.desc}</div>
               </div>
             ))}
           </div>

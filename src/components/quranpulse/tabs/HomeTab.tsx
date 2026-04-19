@@ -515,7 +515,7 @@ export function HomeTab() {
                     : 'rgba(74,74,166,0.7)',
                 }}
               />
-              <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{day.day}</span>
+              <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{day.day}</span>
             </div>
           ))}
         </div>
@@ -558,8 +558,8 @@ export function HomeTab() {
               whileTap={{ scale: 0.92 }}
             >
               <span className="text-lg">{milestone.icon}</span>
-              <span className="text-[8px] text-center leading-tight" style={{ color: 'rgba(204,204,204,0.7)' }}>{milestone.label}</span>
-              <span className="text-[8px] font-semibold" style={{ color: '#d4af37' }}>+{milestone.xp}XP</span>
+              <span className="text-[10px] text-center leading-tight" style={{ color: 'rgba(204,204,204,0.7)' }}>{milestone.label}</span>
+              <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>+{milestone.xp}XP</span>
             </motion.button>
           ))}
         </div>
@@ -584,9 +584,9 @@ export function HomeTab() {
                   Solat Seterusnya
                 </span>
                 {/* JAKIM Verified Badge */}
-                <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.2)' }}>
+                <div className="flex items-center gap-0.5 px-1.5 py-1.5 rounded-full" style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.2)' }}>
                   <Shield className="h-2.5 w-2.5" style={{ color: '#4a4aa6' }} />
-                  <span className="text-[7px] font-semibold" style={{ color: '#4a4aa6' }}>JAKIM</span>
+                  <span className="text-[9px] font-semibold" style={{ color: '#4a4aa6' }}>JAKIM</span>
                 </div>
               </div>
               <div className="text-xl font-bold mt-1" style={{ color: '#ffffff' }}>
@@ -658,7 +658,7 @@ export function HomeTab() {
             <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#4a4aa6' }}>
               📖 Ayat Hari Ini
             </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}>
+            <span className="text-[10px] px-2 py-1.5 rounded-full" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}>
               {dailyVerse.reference}
             </span>
           </div>
@@ -744,7 +744,7 @@ export function HomeTab() {
                       style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}
                     >
                       <div className="font-arabic text-sm" style={{ color: '#ffffff', direction: 'rtl' }}>{word}</div>
-                      <div className="text-[8px] mt-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>perkataan {i + 1}</div>
+                      <div className="text-[10px] mt-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>perkataan {i + 1}</div>
                     </div>
                   ))}
                 </div>
@@ -958,14 +958,14 @@ export function HomeTab() {
           <Shield className="h-3 w-3" style={{ color: '#4a4aa6' }} />
           <span className="text-[10px] font-semibold" style={{ color: '#4a4aa6' }}>Disahkan Oleh JAKIM Malaysia</span>
         </div>
-        <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
+        <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
           Waktu solat berdasarkan data JAKIM e-Solat. Hukum fiqh mengikut mazhab Syafie. Rujuk mufti negeri untuk hukum rasmi.
         </p>
         <a
           href="https://www.islam.gov.my"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[8px] mt-1 hover:underline"
+          className="flex items-center gap-1 text-[10px] mt-1 hover:underline"
           style={{ color: 'rgba(74,74,166,0.5)' }}
         >
           <ExternalLink className="h-2 w-2" /> Rujuk islam.gov.my

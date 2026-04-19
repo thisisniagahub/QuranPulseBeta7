@@ -20,6 +20,15 @@ const amiri = Amiri({
   style: ["normal", "italic"],
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  themeColor: "#1a1a4a",
+}
+
 export const metadata: Metadata = {
   title: "QuranPulse - App Mengaji AI Pertama Malaysia",
   description: "Belajar baca Al-Quran dengan AI Ustaz. Iqra 1-6 lengkap, waktu solat JAKIM, dan 15+ tool ibadah. Percuma untuk mula.",

@@ -919,7 +919,7 @@ export function QuranTab() {
           </div>
           <div className="flex items-center gap-1">
             {([5, 10, 20, 30] as const).map(g => (
-              <button key={g} className="px-1.5 py-0.5 rounded text-[9px] font-medium transition-all"
+              <button key={g} className="px-1.5 py-1.5 rounded text-[9px] font-medium transition-all"
                 style={{
                   background: dailyGoal === g ? 'rgba(212,175,55,0.2)' : 'rgba(74,74,166,0.1)',
                   color: dailyGoal === g ? '#d4af37' : 'rgba(204,204,204,0.4)',
@@ -1060,7 +1060,7 @@ export function QuranTab() {
             <X className="h-3.5 w-3.5" style={{ color: 'rgba(204,204,204,0.4)' }} />
           </button>
         </div>
-        <div className="max-h-64 overflow-y-auto qp-scroll">
+        <div className="max-h-[70vh] overflow-y-auto qp-scroll">
           {isSearching ? (
             <div className="flex items-center justify-center py-6">
               <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#4a4aa6' }} />
@@ -1117,7 +1117,7 @@ export function QuranTab() {
               <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{surah.nameMs}</div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs" style={{ color: 'rgba(204,204,204,0.4)' }}>{surah.versesCount} ayat</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded" style={{
+                <span className="text-[10px] px-1.5 py-1.5 rounded" style={{
                   background: surah.revelationType === 'Meccan' ? 'rgba(212,175,55,0.15)' : 'rgba(106,106,182,0.15)',
                   color: surah.revelationType === 'Meccan' ? '#d4af37' : '#6a6ab6',
                 }}>
@@ -1307,7 +1307,7 @@ export function QuranTab() {
                       {isSajda && (
                         <div className="flex flex-col items-center" title={`Sajda ${sajdaType}`}>
                           <span className="text-sm">🕌</span>
-                          <span className="text-[8px]" style={{ color: sajdaType === 'wajib' ? '#ff4a4a' : '#4aff7a' }}>
+                          <span className="text-[10px]" style={{ color: sajdaType === 'wajib' ? '#ff4a4a' : '#4aff7a' }}>
                             {sajdaType === 'wajib' ? 'Wajib' : 'Sunnah'}
                           </span>
                         </div>
@@ -1425,7 +1425,7 @@ export function QuranTab() {
             >
               <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedWord(null)} />
               <motion.div
-                className="relative w-full max-w-[480px] rounded-t-2xl p-4"
+                className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl rounded-t-2xl p-4"
                 style={{ background: '#2a2a6a', border: '1px solid rgba(74,74,166,0.3)' }}
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
@@ -2209,7 +2209,7 @@ export function QuranTab() {
         >
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowAudioSettings(false)} />
           <motion.div
-            className="relative w-full max-w-[480px] rounded-t-2xl p-4"
+            className="relative w-full max-w-lg sm:max-w-xl md:max-w-2xl rounded-t-2xl p-4"
             style={{ background: '#2a2a6a' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -2385,10 +2385,10 @@ export function QuranTab() {
               )}
             </div>
             {isAudioLoading && (
-              <span className="text-[8px]" style={{ color: '#d4af37' }}>Memuatkan...</span>
+              <span className="text-[10px]" style={{ color: '#d4af37' }}>Memuatkan...</span>
             )}
             {audioError && (
-              <span className="text-[8px]" style={{ color: '#ff4a4a' }}>Ralat audio</span>
+              <span className="text-[10px]" style={{ color: '#ff4a4a' }}>Ralat audio</span>
             )}
           </div>
           <button className="p-1.5" onClick={() => setShowAudioSettings(true)}>

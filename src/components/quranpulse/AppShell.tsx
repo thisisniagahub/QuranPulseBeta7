@@ -177,7 +177,7 @@ export function AppShell() {
 
   return (
     <div
-      className="relative mx-auto flex min-h-screen max-w-[480px] flex-col"
+      className="relative mx-auto flex min-h-screen max-w-lg sm:max-w-xl md:max-w-2xl flex-col"
       style={{ background: '#1a1a4a' }}
     >
       {/* ═══ Bismillah Launch Animation with Golden Particles ═══ */}
@@ -196,8 +196,8 @@ export function AppShell() {
             <motion.div
               className="absolute"
               style={{
-                width: 280,
-                height: 280,
+                width: 'min(280px, 70vw)',
+                height: 'min(280px, 70vw)',
                 background: 'radial-gradient(circle, rgba(212,175,55,0.1) 0%, transparent 70%)',
                 borderRadius: '50%',
               }}
@@ -279,7 +279,7 @@ export function AppShell() {
             className="fixed z-30 flex items-center gap-1.5 px-4 py-2.5 rounded-full shadow-lg"
             style={{
               bottom: '90px',
-              right: 'max(calc((100vw - 480px) / 2 + 16px), 16px)',
+              right: 'max(calc((100vw - 512px) / 2 + 16px), 16px)',
               background: 'linear-gradient(135deg, #4a4aa6, #6a6ab6)',
               boxShadow: '0 4px 20px rgba(74,74,166,0.4)',
               maxWidth: '200px',
@@ -313,7 +313,7 @@ export function AppShell() {
           boxShadow: '0 -4px 30px rgba(0,0,0,0.15)',
         }}
       >
-        <div className="mx-auto flex max-w-[480px] items-center justify-around px-2 py-1" style={{ paddingBottom: 'max(4px, env(safe-area-inset-bottom))' }}>
+        <div className="mx-auto flex max-w-lg sm:max-w-xl md:max-w-2xl items-center justify-around px-2 py-1" style={{ paddingBottom: 'max(4px, env(safe-area-inset-bottom))' }}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key
 
@@ -370,7 +370,7 @@ export function AppShell() {
                     )}
                   </motion.div>
                   <span
-                    className="mt-0.5 text-[10px] font-medium"
+                    className="mt-0.5 text-[11px] font-medium"
                     style={{ color: isActive ? '#4a4aa6' : 'rgba(204,204,204,0.4)' }}
                   >
                     Ustaz AI
@@ -419,7 +419,7 @@ export function AppShell() {
                       animate={{ scale: [1, 1.15, 1] }}
                       transition={{ duration: 2, repeat: Infinity, type: 'tween', ease: 'easeInOut' }}
                     >
-                      <span className="text-[8px] font-bold" style={{ color: '#1a1a4a' }}>{tab.badge}</span>
+                      <span className="text-[9px] font-bold" style={{ color: '#1a1a4a' }}>{tab.badge}</span>
                     </motion.div>
                   )}
                 </motion.div>

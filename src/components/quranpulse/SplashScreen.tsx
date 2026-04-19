@@ -37,8 +37,8 @@ function GeometricPattern() {
       <motion.svg
         className="absolute"
         style={{
-          width: '300px',
-          height: '300px',
+          width: 'min(300px, 75vw)',
+          height: 'min(300px, 75vw)',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
@@ -114,8 +114,8 @@ function GeometricPattern() {
       <motion.svg
         className="absolute"
         style={{
-          width: '120px',
-          height: '120px',
+          width: 'min(120px, 30vw)',
+          height: 'min(120px, 30vw)',
           top: '10%',
           right: '-20px',
         }}
@@ -174,8 +174,8 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             <motion.div
               className="absolute rounded-full"
               style={{
-                width: '300px',
-                height: '300px',
+                width: 'min(300px, 75vw)',
+                height: 'min(300px, 75vw)',
                 background: 'radial-gradient(circle, rgba(74,74,166,0.15) 0%, transparent 70%)',
                 top: '20%',
                 left: '50%',
@@ -195,8 +195,8 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             <motion.div
               className="absolute rounded-full"
               style={{
-                width: '200px',
-                height: '200px',
+                width: 'min(200px, 50vw)',
+                height: 'min(200px, 50vw)',
                 background: 'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)',
                 top: '25%',
                 left: '50%',

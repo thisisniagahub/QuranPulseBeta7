@@ -349,10 +349,10 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
           <Shield className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
           <span className="text-[10px] font-semibold" style={{ color: '#4a4aa6' }}>✅ Data JAKIM e-Solat</span>
         </div>
-        <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
+        <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
           Waktu Solat Disahkan JAKIM Malaysia. Hukum fiqh mengikut mazhab Syafie. Rujuk mufti negeri untuk hukum rasmi.
         </p>
-        <a href="https://www.islam.gov.my" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] mt-1 hover:underline" style={{ color: 'rgba(74,74,166,0.5)' }}>
+        <a href="https://www.islam.gov.my" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] mt-1 hover:underline" style={{ color: 'rgba(74,74,166,0.5)' }}>
           <ExternalLink className="h-2 w-2" /> Rujuk islam.gov.my
         </a>
       </div>
@@ -365,7 +365,7 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
         </div>
         <div className="grid grid-cols-7 gap-1">
           {['S', 'I', 'Z', 'A', 'M', 'I', '✓'].map((label, i) => (
-            <div key={`header-${i}`} className="text-center text-[8px] font-medium py-1" style={{ color: 'rgba(204,204,204,0.3)' }}>
+            <div key={`header-${i}`} className="text-center text-[10px] font-medium py-1" style={{ color: 'rgba(204,204,204,0.3)' }}>
               {i < 6 ? ['Sub', 'Syu', 'Zoh', 'Asr', 'Mag', 'Isy'][i] : ''}
             </div>
           ))}
@@ -449,7 +449,7 @@ function QiblaView() {
 
   return (
     <motion.div
-      className="flex-1 flex flex-col items-center justify-center px-4 pb-6"
+      className="qp-scroll flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 pb-6"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
@@ -572,7 +572,7 @@ function QiblaView() {
           <Shield className="h-3 w-3" style={{ color: '#4a4aa6' }} />
           <span className="text-[9px] font-semibold" style={{ color: '#4a4aa6' }}>Ketepatan JAKIM</span>
         </div>
-        <p className="text-[8px]" style={{ color: 'rgba(204,204,204,0.35)' }}>
+        <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.35)' }}>
           * Arah kiblat adalah anggaran berdasarkan koordinat. Untuk ketepatan, rujuk kompas kiblat di masjid. Kaedah Syafie digunakan.
         </p>
       </div>
@@ -694,7 +694,7 @@ function TasbihView() {
 
   return (
     <motion.div
-      className="flex-1 flex flex-col items-center px-4 pb-6"
+      className="qp-scroll flex-1 overflow-y-auto flex flex-col items-center px-4 pb-6"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
@@ -1223,7 +1223,7 @@ function KalendarView() {
             </div>
           </div>
         )}
-        <p className="text-[8px] mt-1.5 text-center" style={{ color: 'rgba(204,204,204,0.3)' }}>Penukaran anggaran. Rujuk takwim rasmi untuk ketepatan.</p>
+        <p className="text-[10px] mt-1.5 text-center" style={{ color: 'rgba(204,204,204,0.3)' }}>Penukaran anggaran. Rujuk takwim rasmi untuk ketepatan.</p>
       </div>
 
       {/* Month Quick Select */}
@@ -1604,10 +1604,10 @@ Mudah-mudahan kita semua mendapat keberkatan dan rahmat dari Allah SWT. Amin.
           <Shield className="h-3 w-3" style={{ color: '#4a4aa6' }} />
           <span className="text-[9px] font-semibold" style={{ color: '#4a4aa6' }}>Waktu Solat Disahkan JAKIM</span>
         </div>
-        <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
+        <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
           Khutbah daripada portal e-Khutbah JAKIM. Hukum fiqh mengikut mazhab Syafie. Rujuk mufti negeri untuk hukum rasmi.
         </p>
-        <a href="https://www.islam.gov.my" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] mt-1 hover:underline" style={{ color: 'rgba(74,74,166,0.5)' }}>
+        <a href="https://www.islam.gov.my" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] mt-1 hover:underline" style={{ color: 'rgba(74,74,166,0.5)' }}>
           <ExternalLink className="h-2 w-2" /> Rujuk islam.gov.my untuk khutbah rasmi
         </a>
       </div>
