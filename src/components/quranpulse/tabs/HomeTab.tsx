@@ -228,18 +228,26 @@ export function HomeTab() {
     { icon: <Compass className="h-5 w-5" />, label: 'Kiblat', tab: 'ibadah' as ActiveTab, color: '#e0c060' },
   ]
 
-  // Weekly activity heatmap (simulated)
-  const weekDays = ['Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab', 'Ahd']
-  const activityData = Array.from({ length: 7 }).map((_, i) => {
+  // Weekly activity heatmap (deterministic — no Math.random in render)
+  const [activityData, setActivityData] = useState<Array<{ day: string; level: number; active: boolean }>>([])
+
+  useEffect(() => {
+    const weekDays = ['Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab', 'Ahd']
     const dayOfWeek = new Date().getDay()
-    const adjustedIdx = (i + 1) % 7
-    const isActive = adjustedIdx <= dayOfWeek || adjustedIdx === 0
-    return {
-      day: weekDays[i],
-      level: isActive ? Math.floor(Math.random() * 4) + 1 : 0,
-      active: isActive,
-    }
-  })
+    // Seeded pseudo-random based on date for consistent values per day
+    const seed = new Date().getDate()
+    const seededRand = (i: number) => ((seed * (i + 1) * 7 + 13) % 4) + 1
+    const data = Array.from({ length: 7 }).map((_, i) => {
+      const adjustedIdx = (i + 1) % 7
+      const isActive = adjustedIdx <= dayOfWeek || adjustedIdx === 0
+      return {
+        day: weekDays[i],
+        level: isActive ? seededRand(i) : 0,
+        active: isActive,
+      }
+    })
+    setActivityData(data)
+  }, [])
 
   const prayerProgress = countdown.hours * 60 + countdown.minutes > 0
     ? Math.max(0, 100 - ((countdown.hours * 60 + countdown.minutes) / 180) * 100)

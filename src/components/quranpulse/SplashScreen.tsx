@@ -1,6 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 
 interface SplashScreenProps {
   isVisible: boolean
@@ -12,11 +13,27 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
       {isVisible && (
         <motion.div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-          style={{ background: '#1a1a4a' }}
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6, ease: 'easeInOut' }}
         >
+          {/* Splash background image */}
+          <div className="absolute inset-0">
+            <Image
+              src="/icons/splash-bg.png"
+              alt="Splash background"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+
+          {/* Dark overlay for better text readability */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'rgba(26, 26, 74, 0.3)' }}
+          />
+
           {/* Decorative background circles */}
           <div className="absolute inset-0 overflow-hidden">
             <motion.div
@@ -62,16 +79,9 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
             />
           </div>
 
-          {/* Logo icon */}
+          {/* App Icon from generated image */}
           <motion.div
-            className="relative z-10 flex items-center justify-center"
-            style={{
-              width: '80px',
-              height: '80px',
-              background: 'rgba(74, 74, 166, 0.1)',
-              borderRadius: '1.25rem',
-              border: '1px solid rgba(74, 74, 166, 0.3)',
-            }}
+            className="relative z-10"
             animate={{
               scale: [1, 1.05, 1],
             }}
@@ -81,21 +91,18 @@ export function SplashScreen({ isVisible }: SplashScreenProps) {
               ease: 'easeInOut',
             }}
           >
-            {/* Islamic geometric star pattern */}
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 40 40"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M20 4L24 14H34L26 20L29 30L20 24L11 30L14 20L6 14H16L20 4Z"
-                fill="#4a4aa6"
-                opacity="0.9"
-              />
-              <circle cx="20" cy="20" r="6" fill="#d4af37" opacity="0.8" />
-            </svg>
+            <Image
+              src="/icons/icon-512.png"
+              alt="QuranPulse"
+              width={100}
+              height={100}
+              className="rounded-2xl"
+              style={{
+                border: '1px solid rgba(74, 74, 166, 0.3)',
+                boxShadow: '0 0 30px rgba(74, 74, 166, 0.2), 0 0 60px rgba(212, 175, 55, 0.1)',
+              }}
+              priority
+            />
           </motion.div>
 
           {/* Logo text */}

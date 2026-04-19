@@ -8,7 +8,7 @@ import {
   BookMarked, Loader2, Clock, Star, Trophy,
   Repeat, List, Grid3X3, Brain,
   MessageCircle, Sparkles, MicOff, CheckCircle2, AlertCircle,
-  Zap, Target, BarChart3, RefreshCw
+  Zap, Target, BarChart3, RefreshCw, Volume2, VolumeX, SkipForward
 } from 'lucide-react'
 import { useQuranPulseStore, type HafazanLevel } from '@/stores/quranpulse-store'
 import { SURAH_LIST, getSurahVerses, getSurahName, type SurahInfo } from '@/lib/quran-data'
@@ -115,6 +115,15 @@ const TRANSLIT_MAP: Record<string, string> = {
   'وَلَمْ': 'Wa Lam', 'يَكُن': 'Yakun', 'لَّهُۥ': 'Lahu', 'كُفُوًا': 'Kufuwan', 'أَحَدٌ': 'Ahad',
 }
 
+// ─── Helper: Compute absolute ayah number (1-6236) ────────────
+function getAbsoluteAyahNumber(surahId: number, ayahInSurah: number): number {
+  let total = 0
+  for (let i = 0; i < surahId - 1 && i < SURAH_LIST.length; i++) {
+    total += SURAH_LIST[i].versesCount
+  }
+  return total + ayahInSurah
+}
+
 // ─── Main Component ───────────────────────────────────────────
 export function QuranTab() {
   // Core state
@@ -141,10 +150,12 @@ export function QuranTab() {
   // Audio state
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentPlayingAyah, setCurrentPlayingAyah] = useState<number | null>(null)
-  const [reciter] = useState<Reciter>('ar.alafasy')
+  const [reciter, setReciter] = useState<Reciter>('ar.alafasy')
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none')
   const [showAudioSettings, setShowAudioSettings] = useState(false)
+  const [isAudioLoading, setIsAudioLoading] = useState(false)
+  const [audioError, setAudioError] = useState<string | null>(null)
 
   // Search state
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
@@ -177,6 +188,7 @@ export function QuranTab() {
   // Refs
   const ayahRefs = useRef<Record<number, HTMLDivElement | null>>({})
   const readerScrollRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const store = useQuranPulseStore()
 
@@ -279,9 +291,17 @@ export function QuranTab() {
   }, [store])
 
   const goBack = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.removeAttribute('src')
+      audioRef.current.load()
+      audioRef.current = null
+    }
     setView('list')
     setIsPlaying(false)
     setCurrentPlayingAyah(null)
+    setIsAudioLoading(false)
+    setAudioError(null)
     setReciteResult(null)
   }, [])
 
@@ -297,13 +317,100 @@ export function QuranTab() {
     }
   }, [selectedSurah, store])
 
-  const togglePlay = useCallback((ayah?: number) => {
-    if (isPlaying) {
+  // ─── Real Audio Playback ────────────────────────────────────
+  const playAyahAudio = useCallback((surahId: number, ayahNum: number) => {
+    // Stop any existing audio
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.removeAttribute('src')
+      audioRef.current.load()
+    }
+
+    const absoluteAyah = getAbsoluteAyahNumber(surahId, ayahNum)
+    const url = `https://cdn.islamic.network/quran/audio/128/${reciter}/${absoluteAyah}.mp3`
+
+    setAudioError(null)
+    setIsAudioLoading(true)
+
+    const audio = new Audio(url)
+    audio.playbackRate = playbackSpeed
+    audioRef.current = audio
+
+    audio.oncanplaythrough = () => {
+      setIsAudioLoading(false)
+      audio.play().catch(() => {
+        setAudioError('Gagal memainkan audio')
+        setIsPlaying(false)
+        setCurrentPlayingAyah(null)
+        setIsAudioLoading(false)
+      })
+    }
+
+    audio.onended = () => {
+      // Handle repeat modes
+      const surah = SURAH_LIST.find(s => s.id === surahId)
+      if (!surah) return
+
+      if (repeatMode === 'single') {
+        // Replay same ayah
+        audio.currentTime = 0
+        audio.play().catch(() => {
+          setIsPlaying(false)
+          setCurrentPlayingAyah(null)
+        })
+      } else if (ayahNum < surah.versesCount) {
+        // Advance to next ayah
+        setCurrentPlayingAyah(ayahNum + 1)
+      } else if (repeatMode === 'surah') {
+        // Restart surah
+        setCurrentPlayingAyah(1)
+      } else if (repeatMode === 'continuous') {
+        // Move to next surah
+        if (surahId < 114) {
+          setSelectedSurah(surahId + 1)
+          store.setLastRead(surahId + 1, 1)
+          setCurrentPlayingAyah(1)
+        } else {
+          setIsPlaying(false)
+          setCurrentPlayingAyah(null)
+        }
+      } else {
+        // No repeat — stop
+        setIsPlaying(false)
+        setCurrentPlayingAyah(null)
+      }
+    }
+
+    audio.onerror = () => {
+      setAudioError('Gagal memuatkan audio')
+      setIsAudioLoading(false)
       setIsPlaying(false)
       setCurrentPlayingAyah(null)
+    }
+
+    // Start loading
+    audio.load()
+  }, [reciter, playbackSpeed, repeatMode, store])
+
+  const togglePlay = useCallback((ayah?: number) => {
+    if (isPlaying) {
+      // Pause/stop
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.removeAttribute('src')
+        audioRef.current.load()
+        audioRef.current = null
+      }
+      setIsPlaying(false)
+      setCurrentPlayingAyah(null)
+      setIsAudioLoading(false)
+      setAudioError(null)
     } else {
+      // Start playing
+      const startAyah = ayah || 1
       setIsPlaying(true)
-      setCurrentPlayingAyah(ayah || 1)
+      setCurrentPlayingAyah(startAyah)
+      setAudioError(null)
       store.addXp(2)
     }
   }, [isPlaying, store])
@@ -317,6 +424,10 @@ export function QuranTab() {
     } else if (repeatMode === 'surah' || repeatMode === 'continuous') {
       setCurrentPlayingAyah(1)
     } else {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
       setIsPlaying(false)
       setCurrentPlayingAyah(null)
     }
@@ -332,12 +443,29 @@ export function QuranTab() {
     }
   }, [currentPlayingAyah])
 
-  // Simulate audio advancement
+  // Play audio when currentPlayingAyah changes (and isPlaying is true)
   useEffect(() => {
-    if (!isPlaying || !currentPlayingAyah) return
-    const timer = setTimeout(nextAyah, 4000 / playbackSpeed)
-    return () => clearTimeout(timer)
-  }, [isPlaying, currentPlayingAyah, playbackSpeed, nextAyah])
+    if (isPlaying && currentPlayingAyah) {
+      playAyahAudio(selectedSurah, currentPlayingAyah)
+    }
+  }, [isPlaying, currentPlayingAyah, selectedSurah, playAyahAudio])
+
+  // Update playback speed on existing audio element
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = playbackSpeed
+    }
+  }, [playbackSpeed])
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
 
   // Search handler
   const handleSearch = useCallback(async () => {
@@ -886,8 +1014,8 @@ export function QuranTab() {
                   <div className="flex justify-between items-center mt-2">
                     <div className="flex gap-1">
                       <button className="p-1.5 rounded-lg text-xs flex items-center gap-1" style={{ background: 'rgba(74,74,166,0.1)' }} onClick={() => togglePlay(verse.verseNumber)}>
-                        {isPlayingAyah ? <Pause className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} /> : <Play className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />}
-                        <span className="text-[10px]" style={{ color: '#4a4aa6' }}>Dengar</span>
+                        {isPlayingAyah && isAudioLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: '#4a4aa6' }} /> : isPlayingAyah ? <Pause className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} /> : <Play className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />}
+                        <span className="text-[10px]" style={{ color: '#4a4aa6' }}>{isPlayingAyah && isAudioLoading ? 'Memuat...' : 'Dengar'}</span>
                       </button>
                       <button className="p-1.5 rounded-lg text-xs" style={{ background: 'rgba(212,175,55,0.1)' }} onClick={() => setTafsirVerse(verse.verseNumber)}>
                         <MessageCircle className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
@@ -1610,18 +1738,23 @@ export function QuranTab() {
             <div className="space-y-3">
               <div>
                 <div className="text-xs mb-1" style={{ color: 'rgba(204,204,204,0.5)' }}>Qari</div>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {RECITERS.map(r => (
                     <button
                       key={r.id}
-                      className="flex-1 py-2 rounded-lg text-xs"
+                      className="py-2 px-3 rounded-lg text-xs text-left flex items-center gap-2"
                       style={{
                         background: reciter === r.id ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
                         color: reciter === r.id ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
                         border: `1px solid ${reciter === r.id ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
                       }}
+                      onClick={() => setReciter(r.id)}
                     >
-                      {r.nameMs}
+                      <Volume2 className="h-3.5 w-3.5 flex-shrink-0" style={{ color: reciter === r.id ? '#4a4aa6' : 'rgba(204,204,204,0.3)' }} />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{r.nameMs}</span>
+                        <span className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{r.name}</span>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -1750,15 +1883,32 @@ export function QuranTab() {
           <button className="p-1.5" onClick={() => {/* prev */}}>
             <ChevronLeft className="h-4 w-4" style={{ color: '#4a4aa6' }} />
           </button>
-          <button className="p-2 rounded-full" style={{ background: 'rgba(74,74,166,0.2)' }} onClick={() => togglePlay()}>
-            {isPlaying ? <Pause className="h-5 w-5" style={{ color: '#4a4aa6' }} /> : <Play className="h-5 w-5" style={{ color: '#4a4aa6' }} />}
+          <button className="p-2 rounded-full relative" style={{ background: 'rgba(74,74,166,0.2)' }} onClick={() => togglePlay()}>
+            {isAudioLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" style={{ color: '#4a4aa6' }} />
+            ) : isPlaying ? (
+              <Pause className="h-5 w-5" style={{ color: '#4a4aa6' }} />
+            ) : (
+              <Play className="h-5 w-5" style={{ color: '#4a4aa6' }} />
+            )}
           </button>
           <button className="p-1.5" onClick={nextAyah}>
-            <ChevronRight className="h-4 w-4" style={{ color: '#4a4aa6' }} />
+            <SkipForward className="h-4 w-4" style={{ color: '#4a4aa6' }} />
           </button>
-          <div className="flex items-center gap-1">
-            <Repeat className="h-3.5 w-3.5" style={{ color: repeatMode !== 'none' ? '#d4af37' : 'rgba(204,204,204,0.3)' }} />
-            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{currentPlayingAyah}/{surahInfo?.versesCount || '?'}</span>
+          <div className="flex flex-col items-center gap-0.5">
+            <div className="flex items-center gap-1">
+              <Volume2 className="h-3 w-3" style={{ color: isAudioLoading ? '#d4af37' : audioError ? '#ff4a4a' : 'rgba(204,204,204,0.4)' }} />
+              <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{currentPlayingAyah}/{surahInfo?.versesCount || '?'}</span>
+              {repeatMode !== 'none' && (
+                <Repeat className="h-3 w-3" style={{ color: '#d4af37' }} />
+              )}
+            </div>
+            {isAudioLoading && (
+              <span className="text-[8px]" style={{ color: '#d4af37' }}>Memuatkan...</span>
+            )}
+            {audioError && (
+              <span className="text-[8px]" style={{ color: '#ff4a4a' }}>Ralat audio</span>
+            )}
           </div>
           <button className="p-1.5" onClick={() => setShowAudioSettings(true)}>
             <BarChart3 className="h-3.5 w-3.5" style={{ color: 'rgba(204,204,204,0.4)' }} />
