@@ -7,6 +7,29 @@ interface SplashScreenProps {
   isVisible: boolean
 }
 
+// ─── Precomputed geometry (rounded to avoid floating-point hydration mismatch)
+const R = (n: number) => n.toFixed(4)
+const STAR_LINES = [0, 45, 90, 135, 180, 225, 270, 315].map((angle) => ({
+  x2: R(100 + 80 * Math.cos((angle * Math.PI) / 180)),
+  y2: R(100 + 80 * Math.sin((angle * Math.PI) / 180)),
+}))
+const INNER_OCT = [0, 45, 90, 135, 180, 225, 270, 315]
+  .map((a) => `${R(100 + 40 * Math.cos((a * Math.PI) / 180))},${R(100 + 40 * Math.sin((a * Math.PI) / 180))}`)
+  .join(' ')
+const OUTER_OCT = [0, 45, 90, 135, 180, 225, 270, 315]
+  .map((a) => `${R(100 + 70 * Math.cos((a * Math.PI) / 180))},${R(100 + 70 * Math.sin((a * Math.PI) / 180))}`)
+  .join(' ')
+const CROSS_LINES = [0, 90, 180, 270].map((angle) => ({
+  x1: R(100 + 40 * Math.cos((angle * Math.PI) / 180)),
+  y1: R(100 + 40 * Math.sin((angle * Math.PI) / 180)),
+  x2: R(100 + 70 * Math.cos((angle * Math.PI) / 180)),
+  y2: R(100 + 70 * Math.sin((angle * Math.PI) / 180)),
+}))
+const CORNER_LINES = [0, 60, 120, 180, 240, 300].map((angle) => ({
+  x2: R(50 + 45 * Math.cos((angle * Math.PI) / 180)),
+  y2: R(50 + 45 * Math.sin((angle * Math.PI) / 180)),
+}))
+
 // ─── Islamic Geometric Pattern ───────────────────────────────
 function GeometricPattern() {
   return (
@@ -26,13 +49,13 @@ function GeometricPattern() {
         transition={{ duration: 4, ease: 'easeInOut' }}
       >
         {/* 8-pointed star pattern */}
-        {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+        {STAR_LINES.map((l, i) => (
           <motion.line
             key={i}
             x1="100"
             y1="100"
-            x2={100 + 80 * Math.cos((angle * Math.PI) / 180)}
-            y2={100 + 80 * Math.sin((angle * Math.PI) / 180)}
+            x2={l.x2}
+            y2={l.y2}
             stroke="rgba(212,175,55,0.4)"
             strokeWidth="0.5"
             initial={{ pathLength: 0 }}
@@ -42,13 +65,7 @@ function GeometricPattern() {
         ))}
         {/* Inner octagon */}
         <motion.polygon
-          points={[0, 45, 90, 135, 180, 225, 270, 315]
-            .map((angle) => {
-              const x = 100 + 40 * Math.cos((angle * Math.PI) / 180)
-              const y = 100 + 40 * Math.sin((angle * Math.PI) / 180)
-              return `${x},${y}`
-            })
-            .join(' ')}
+          points={INNER_OCT}
           fill="none"
           stroke="rgba(212,175,55,0.3)"
           strokeWidth="0.5"
@@ -58,13 +75,7 @@ function GeometricPattern() {
         />
         {/* Outer octagon */}
         <motion.polygon
-          points={[0, 45, 90, 135, 180, 225, 270, 315]
-            .map((angle) => {
-              const x = 100 + 70 * Math.cos((angle * Math.PI) / 180)
-              const y = 100 + 70 * Math.sin((angle * Math.PI) / 180)
-              return `${x},${y}`
-            })
-            .join(' ')}
+          points={OUTER_OCT}
           fill="none"
           stroke="rgba(212,175,55,0.2)"
           strokeWidth="0.5"
@@ -73,13 +84,13 @@ function GeometricPattern() {
           transition={{ duration: 1.5, delay: 1.3 }}
         />
         {/* Connecting cross lines */}
-        {[0, 90, 180, 270].map((angle, i) => (
+        {CROSS_LINES.map((l, i) => (
           <motion.line
             key={`cross-${i}`}
-            x1={100 + 40 * Math.cos((angle * Math.PI) / 180)}
-            y1={100 + 40 * Math.sin((angle * Math.PI) / 180)}
-            x2={100 + 70 * Math.cos((angle * Math.PI) / 180)}
-            y2={100 + 70 * Math.sin((angle * Math.PI) / 180)}
+            x1={l.x1}
+            y1={l.y1}
+            x2={l.x2}
+            y2={l.y2}
             stroke="rgba(212,175,55,0.15)"
             strokeWidth="0.3"
             initial={{ opacity: 0 }}
@@ -112,13 +123,13 @@ function GeometricPattern() {
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
       >
-        {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+        {CORNER_LINES.map((l, i) => (
           <line
             key={i}
             x1="50"
             y1="50"
-            x2={50 + 45 * Math.cos((angle * Math.PI) / 180)}
-            y2={50 + 45 * Math.sin((angle * Math.PI) / 180)}
+            x2={l.x2}
+            y2={l.y2}
             stroke="rgba(74,74,166,0.15)"
             strokeWidth="0.3"
           />
