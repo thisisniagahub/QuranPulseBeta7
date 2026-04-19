@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Moon, Compass, CircleDot, RotateCcw, Check, Navigation, MapPin, Clock } from 'lucide-react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import { PRAYER_TIMES_KL, getCurrentPrayerIndex } from '@/lib/quran-data'
+import type { PrayerTimes } from '@/lib/jakim-service'
 
 type IbadahView = 'prayer' | 'qibla' | 'tasbih'
 
@@ -61,6 +62,39 @@ export function IbadahTab() {
 }
 
 function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
+  // Fetch live JAKIM prayer times
+  const [livePrayers, setLivePrayers] = useState<PrayerTimes | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchPrayers() {
+      try {
+        const res = await fetch('/api/jakim/solat?zone=WPKL01')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.success && data.data) {
+            setLivePrayers(data.data)
+          }
+        }
+      } catch {
+        // Fallback to static data
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPrayers()
+  }, [])
+
+  // Build prayer list from live or static data
+  const prayerList = livePrayers ? [
+    { name: 'Subuh', nameMs: 'Subuh', time: livePrayers.fajr },
+    { name: 'Syuruk', nameMs: 'Syuruk', time: livePrayers.syuruk },
+    { name: 'Zohor', nameMs: 'Zohor', time: livePrayers.dhuhr },
+    { name: 'Asar', nameMs: 'Asar', time: livePrayers.asr },
+    { name: 'Maghrib', nameMs: 'Maghrib', time: livePrayers.maghrib },
+    { name: 'Isyak', nameMs: 'Isyak', time: livePrayers.isha },
+  ] : PRAYER_TIMES_KL
+
   const prayerGradients = [
     'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05))',
     'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))',
@@ -87,7 +121,7 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
       </div>
 
       {/* Current/Next Prayer Highlight */}
-      {PRAYER_TIMES_KL[currentPrayerIdx] && (
+      {prayerList[currentPrayerIdx] && (
         <motion.div
           className="rounded-xl p-5 mb-4 relative overflow-hidden"
           style={{
@@ -104,20 +138,25 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
             Solat Seterusnya
           </div>
           <div className="text-2xl font-bold" style={{ color: '#ffffff' }}>
-            {PRAYER_TIMES_KL[currentPrayerIdx].nameMs}
+            {prayerList[currentPrayerIdx].nameMs}
           </div>
           <div className="text-3xl font-bold mt-1" style={{ color: '#4a4aa6' }}>
-            {PRAYER_TIMES_KL[currentPrayerIdx].time}
+            {prayerList[currentPrayerIdx].time}
           </div>
           <div className="text-xs mt-2" style={{ color: 'rgba(204,204,204,0.6)' }}>
             {currentPrayerIdx === 0 ? 'Segera' : 'Dalam masa terdekat'}
           </div>
+          {livePrayers?.hijriDate && (
+            <div className="text-[10px] mt-1" style={{ color: 'rgba(212,175,55,0.6)' }}>
+              📅 {livePrayers.hijriDate}
+            </div>
+          )}
         </motion.div>
       )}
 
       {/* All Prayer Times */}
       <div className="space-y-2">
-        {PRAYER_TIMES_KL.map((prayer, idx) => {
+        {prayerList.map((prayer, idx) => {
           const isCurrent = idx === currentPrayerIdx
           return (
             <motion.div
@@ -144,7 +183,7 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold" style={{ color: isCurrent ? '#4a4aa6' : '#ffffff' }}>
-                  {prayer.time}
+                  {loading ? '...' : prayer.time}
                 </div>
                 {isCurrent && (
                   <div className="text-[9px] px-1.5 py-0.5 rounded-full inline-block" style={{ background: 'rgba(74,74,166,0.2)', color: '#4a4aa6' }}>
@@ -160,7 +199,7 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
       {/* Prayer logging hint */}
       <div className="mt-4 text-center">
         <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.25)' }}>
-          Waktu solat berdasarkan zon JAKIM WPKL · Kemas kini automatik
+          Waktu solat berdasarkan zon JAKIM · Data dari e-solat.gov.my · Kemas kini automatik
         </p>
       </div>
     </motion.div>

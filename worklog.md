@@ -340,3 +340,159 @@ Stage Summary:
 - Media generation, web search, prayer scheduling all operational
 - Gateway v2 bridges Next.js → OpenClaw Gateway (port 18789)
 - Graceful fallback: all features work in classic mode when Gateway offline
+
+---
+Task ID: 3-a
+Agent: quran-data-service-builder
+Task: Create comprehensive Quran Data Service + JAKIM Service + API Routes
+
+Work Log:
+- Created /src/lib/quran-service.ts - Comprehensive Quran data service
+  - Full 114 surah data with Arabic name, English name, Malay name, ayah count, revelation type, juz numbers
+  - 30 Juz mapping with start/end surah and ayah positions
+  - 60 Hizb mapping with start surah and ayah
+  - 7 Manzil mapping
+  - 14 Sajda ayah positions (9 recommended, 4 obligatory) with type classification
+  - 10 Tajwid rules with Malay descriptions and Quran examples (Nun Sakinah, Mim Sakinah, Qalqalah, Madd, Idgham, Ikhfa, Waqaf & Ibtida, Tafkhim & Tarqiq, Izhar, Iqlab)
+  - 12 Reciters list (Mishary Alafasy, Abdul Basit, Al-Sudais, Al-Ghamdi, Al-Hudhaify, Al-Minshawi, Al-Husary, Maher Al Muaiqly, Ahmed Al-Ajamy, Abdullah Basfar, Ayman Suwayd, Fares Abbad)
+  - QuranService class with full API integration:
+    - getSurahList(): Fetch from alquran.cloud API with local fallback
+    - getSurah(): Fetch complete surah with Arabic text + Malay (ms.basmeih) + English (en.sahih) translations + audio URLs
+    - getAyah() / getAyahByNumber(): Fetch single ayah with translations
+    - searchQuran(): Search via alquran.cloud search API (supports ar/ms/en)
+    - getJuzList() / getJuz(): 30 juz data with ayah fetching
+    - getHizbList() / getManzilList(): Structural divisions
+    - getPageList() / getPage(): 604-page Mushaf format
+    - getSajdaAyahs(): 14 sajda positions
+    - getTajwidRules(): 10 tajwid rules reference
+    - getReciterList() / getAudioUrl(): Audio recitation URLs
+    - getTafsir(): Tafsir from al-Muyassar edition
+  - In-memory cache with 1-hour TTL
+  - Graceful fallback to local data when API unavailable
+  - Exported as singleton: quranService
+
+- Created /src/lib/jakim-service.ts - JAKIM Malaysia data service
+  - 52 JAKIM prayer time zones across all Malaysian states:
+    WPKL01 (KL), WPS01 (Putrajaya), WPL01 (Labuan),
+    JHR01-04 (Johor), KDH01-07 (Kedah), KTN01-02 (Kelantan),
+    MLK01 (Melaka), NSN01-02 (Negeri Sembilan), PHS01-02 (Pahang),
+    PNG01 (Pulau Pinang), PRK01-07 (Perak), SBH01-07 (Sabah),
+    SWK01-09 (Sarawak), SGR01-04 (Selangor), TRG01-02 (Terengganu),
+    PLS01 (Perlis)
+  - JakimService class with full API integration:
+    - getPrayerTimes(): Fetch from waktusolat.app API with fallback
+    - getZones(): All 52 Malaysian prayer time zones
+    - checkHalal(): JAKIM halal certification lookup
+    - getKhutbah(): JAKIM Friday/Eid khutbah
+    - getIslamicCalendar(): Hijri calendar with notable Islamic days
+    - gregorianToHijri() / hijriToGregorian(): Date conversion
+  - Hijri month names in Arabic and Malay
+  - Notable Islamic days per month (Awal Muharram, Asyura, Maulidur Rasul, Israk Mikraj, Nisfu Syaban, Ramadan, Lailatulqadar, Aidilfitri, Hari Arafah, Aidiladha)
+  - Exported as singleton: jakimService
+
+- Created API Routes:
+  - /api/quran/surah (GET): Fetch surah list or complete surah with ayahs
+    - Query params: number (1-114), edition (optional)
+    - Returns: Surah info + all ayahs with Arabic + Malay + English + audio
+  - /api/quran/search (GET): Search Quran text
+    - Query params: q (search query), language (ar/ms/en)
+    - Returns: Matching ayahs with count
+  - /api/quran/juz (GET): Fetch juz list or specific juz
+    - Query params: number (1-30)
+    - Returns: Juz info with surahs and ayahs
+  - /api/quran/tafsir (GET): Get tafsir for an ayah
+    - Query params: surah (1-114), ayah
+    - Returns: Tafsir text with source attribution
+  - /api/jakim/solat (GET): JAKIM prayer times
+    - Query params: zone (JAKIM zone code), date (optional YYYY-MM-DD)
+    - Returns: Full prayer times (Subuh, Syuruk, Zohor, Asar, Maghrib, Isyak)
+  - /api/jakim/zones (GET): List all JAKIM zones
+    - Returns: All 52 zones grouped by state
+
+- All API routes tested and returning 200:
+  - /api/quran/surah → 114 surahs from alquran.cloud API ✅
+  - /api/quran/surah?number=1 → Full Al-Fatihah with translations ✅
+  - /api/quran/juz?number=30 → Juz 30 with 37 surahs ✅
+  - /api/quran/tafsir?surah=1&ayah=1 → Tafsir from Al-Muyassar ✅
+  - /api/jakim/zones → 52 zones grouped by state ✅
+  - /api/jakim/solat?zone=WPKL01 → Prayer times with fallback ✅
+
+- All new files pass ESLint with zero errors
+
+Stage Summary:
+- 8 new files created (2 service modules + 6 API routes)
+- Complete Quran data service with all 114 surahs, 30 juz, 60 hizb, 7 manzil, 14 sajda, 10 tajwid rules, 12 reciters
+- Complete JAKIM service with 52 Malaysian zones, prayer times, halal lookup, khutbah, Islamic calendar
+- All API routes functional with proper error handling, caching, and graceful fallback
+- Deep integration with alquran.cloud API (surah, ayah, search, tafsir) and waktusolat.app API (prayer times)
+- Malay language content throughout (translations, zone names, tajwid descriptions, notable days)
+
+---
+Task ID: 3-c
+Agent: iqra-tab-builder
+Task: Build Advanced IqraTab Component with AI-powered Learning
+
+Work Log:
+- Read worklog and existing project files (quranpulse-store.ts, quran-data.ts, AppShell.tsx, API routes)
+- Completely rewrote /src/components/quranpulse/tabs/IqraTab.tsx (1200 lines)
+- Implemented 6-Book Iqra System:
+  - Iqra 1: Hijaiyah Letters (29 letters with per-page display)
+  - Iqra 2: Harakat (Fathah, Kasrah, Dhammah letter combinations)
+  - Iqra 3: Tanwin & Mad (6 rules with symbols and examples)
+  - Iqra 4: Tajwid Lanjutan (advanced tajwid practice)
+  - Iqra 5: Waqaf & Ibtida (stopping/starting rules)
+  - Iqra 6: Bacaan Al-Quran (complete surah reading)
+- Implemented AI-Powered Learning:
+  - "Tanya Cikgu" FAB button → bottom sheet AI tutor chat
+  - Voice input via /api/tts integration
+  - AI tutor via /api/ustaz-ai (iqra-teacher persona)
+  - Suggestion chips for quick questions (Idgham, Mad Wajib, Tanwin)
+  - Typing indicator animation
+- Implemented Enhanced Hijaiyah Letters Reference:
+  - 29 letters with ENHANCED_LETTERS data (forms, harakat, writing tips)
+  - Letter detail modal with: Arabic form, name (Arabic + English), harakat examples (fathah/kasrah/dhammah), writing tip, audio button
+  - Filter by: All, Hijaiyah, Harakat, Tanwin, Mad
+- Implemented Tajwid Rules Reference:
+  - 5 categories: Nun Mati/Tanwin, Mim Mati, Hukum Mad, Qalqalah, Waqaf & Ibtida
+  - 14 total rules with: name (Arabic + Malay), description in Malay, Quran examples, Quran references
+  - Expandable rule cards with audio button and "Tandai Dikuasai" (mark mastered) button
+  - Per-category mastery tracking
+- Implemented Interactive Practice (3 modes):
+  - Flashcard: flip cards with letter front, name + harakat back, shuffle, navigation
+  - Quiz: "Which letter is this?" with 4-option multiple choice, scoring, audio hint
+  - Matching: 6 Arabic letter → name pairs in grid, click-to-match, score tracking, trophy on completion
+- Implemented Hafazan Integration:
+  - 20 short surahs (Al-Fatihah through Al-'Alaq, Juz 30)
+  - Per-surah detail view with progress tracking (increment/decrement)
+  - Audio playback button ("Dengar Bacaan")
+  - AI check button ("Semak dengan AI")
+  - Trophy animation on completion (+100 XP)
+  - Overall hafazan progress bar
+- Implemented Progress Dashboard:
+  - Overall progress across all 6 Iqra books (pages/halaman)
+  - Per-book progress with completion indicators
+  - Tajwid mastery tracking (X/14 rules)
+  - Hafazan verse tracking (X/total ayat)
+  - Streak and XP display in header
+  - Quick action buttons (Huruf, Latihan, Tanya Cikgu)
+- UI/UX:
+  - Deep Blue theme (#1a1a4a bg, #2a2a6a cards, #4a4aa6 primary, #d4af37 gold)
+  - 4-tab sub-navigation: Belajar, Latihan, Tajwid, Hafazan
+  - Framer Motion animations throughout (tab transitions, card entrance, flashcard flip)
+  - Mobile-first max-w-[480px]
+  - XP rewards on page completion (+25), quiz correct (+10), flashcard navigation (+5), matching (+15), hafazan completion (+100)
+- Technical:
+  - 'use client' component
+  - Uses useQuranPulseStore for iqraBook, iqraPage, xp, streak, addXp
+  - Uses HIJAIYAH_LETTERS from @/lib/quran-data
+  - Fetch to /api/tts, /api/ustaz-ai for AI features
+  - All text in Bahasa Melayu
+  - Component compiles and serves successfully (GET / 200)
+
+Stage Summary:
+- Complete IqraTab rewrite with 7 major feature categories
+- 1200 lines, comprehensive Iqra learning system
+- AI tutor chat, 3 practice modes, tajwid rules reference, hafazan tracking
+- Deep Blue theme with Framer Motion animations
+- Gamification: XP, streak, per-skill mastery tracking
+- All API integrations (TTS, Ustaz AI) with graceful error handling
