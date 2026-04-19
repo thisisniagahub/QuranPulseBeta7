@@ -496,3 +496,133 @@ Stage Summary:
 - Deep Blue theme with Framer Motion animations
 - Gamification: XP, streak, per-skill mastery tracking
 - All API integrations (TTS, Ustaz AI) with graceful error handling
+
+---
+Task ID: 6-7
+Agent: Main Agent
+Task: UPGRADE IBADAHTAB and HOMETAB with enhanced features
+
+Work Log:
+
+IBADAHTAB UPGRADES:
+
+A. JAKIM Zone Selector (PrayerTimesView)
+  - Added zone dropdown selector with all 52 JAKIM zones grouped by state
+  - Zone selection persisted in Zustand store (prayerZone + setPrayerZone)
+  - Fetches live prayer times from /api/jakim/solat?zone={selectedZone}
+  - Collapsible dropdown with state headers and zone codes
+  - Shows current zone name and state in the selector button
+
+B. Hijri Calendar View (Kalendar sub-tab)
+  - New 4th sub-tab "Kalendar" with calendar icon
+  - Shows current Hijri date prominently using jakimService.gregorianToHijri()
+  - Monthly Hijri calendar grid with 30-day layout
+  - Highlights important Islamic dates (Ramadan, Eid, Asyura, Maulidur Rasul, Israk Mikraj, etc.)
+  - Notable days section with gold-highlighted cards
+  - Month navigation (prev/next) and quick-select grid for all 12 Hijri months
+  - Day headers in Malay (Ahd, Isn, Sel, Rab, Kha, Jum, Sab)
+  - Uses jakimService.getIslamicCalendar() with fallback data
+
+C. Hadith of the Day (Hadith sub-tab)
+  - New 5th sub-tab "Hadis" with book icon
+  - 35 authentic hadiths in Bahasa Malaysia from Bukhari, Muslim, At-Tirmidzi, Abu Daud, etc.
+  - Each hadith includes: text (Malay), source reference, narrator name
+  - Rotates daily based on day of year
+  - Navigation: previous/next buttons, random button
+  - Full scrollable list of all 35 hadiths for browsing
+  - Beautiful card design with gold left border and Islamic calligraphy watermark
+
+D. e-Khutbah Reader (Khutbah sub-tab)
+  - New 6th sub-tab "Khutbah" with mosque icon
+  - Fetches JAKIM khutbah from /api/jakim/khutbah endpoint
+  - Created /api/jakim/khutbah route.ts using jakimService.getKhutbah()
+  - List view with khutbah titles, type badges (Jumaat/Hari Raya/Ramadan), dates
+  - Detail view with full khutbah text (Bismillah, introduction, body)
+  - Back navigation from detail to list
+  - External link to JAKIM website for full khutbah
+  - Skeleton loading states for list view
+
+E. Enhanced Qibla (QiblaView)
+  - Device orientation API support via window.addEventListener('deviceorientation')
+  - iOS 13+ permission request (DeviceOrientationEvent.requestPermission)
+  - Compass rotates based on actual device heading
+  - Smooth 0.1s ease-out transition for real-time compass rotation
+  - "Kompas Aktif" indicator when orientation is supported
+  - Shows device heading in degrees below qibla angle
+  - Tick marks around compass (36 marks, major every 90°)
+  - Hardcoded 292.5° fallback when device orientation unavailable
+  - Gentle sway animation on compass when no device orientation
+
+F. Enhanced Tasbih (TasbihView)
+  - 4 Dhikr categories: Azkar Pagi, Azkar Petang, Selepas Solat, Umum
+  - Category-specific dhikr items with Arabic text, Malay transliteration, meaning
+  - Automatic target setting from dhikr items (1x, 3x, 33x, 100x)
+  - Vibration pattern options: Singkat (10ms), Sederhana (30ms), Panjang (60ms)
+  - Sound feedback toggle using AudioContext API (800Hz tap, 523Hz completion)
+  - Settings panel with vibration pattern selector
+  - History panel showing today's tasbih sessions
+  - Stats row: Jumlah (total), Hari Ini (today), Sesi (session count)
+  - Toggle buttons for Vibration and Sound
+  - Session tracking with dhikr name, count, target, timestamp
+  - Custom target selector (1x, 3x, 33x, 99x, 100x, 500x, 1000x)
+
+HOMETAB UPGRADES:
+
+A. Animated Stats Dashboard
+  - Glass morphism effect on streak/XP cards (backdrop-blur, semi-transparent backgrounds)
+  - AnimatedNumber component with eased cubic transitions when XP/streak changes
+  - Weekly activity heatmap (7-bar chart like GitHub contributions)
+  - "Level Up" animation overlay when user gains a level
+    - Full-screen overlay with confetti emoji
+    - Spring animation scale effect
+    - Auto-dismiss after 3 seconds
+
+B. Smart Prayer Countdown
+  - Live countdown timer to next prayer (HH:MM:SS format)
+  - Auto-updates every second
+  - Circular progress ring (SVG-based) showing prayer time progress
+  - Uses live JAKIM prayer times from /api/jakim/solat
+  - "Solat Seterusnya" label with prayer name
+  - Link to full prayer times view
+
+C. Quick Actions Grid Enhancement
+  - Haptic feedback on tap (5ms vibration via navigator.vibrate)
+  - Animated icons with whileTap scale + rotate effect
+  - +2 XP on each quick action tap
+  - "Continue where you left off" card showing last read surah/ayah
+  - "Daily Challenge" card with random Islamic challenge (+XP reward)
+  - 10 daily challenges rotating by day of year
+
+D. Daily Verse Enhancement
+  - Audio playback button (TTS via /api/tts endpoint)
+  - Playing state indicator ("Bermain...")
+  - Word-by-word breakdown toggle
+  - Per-word display with Arabic text and word index
+  - "Hafaz Ayat Ini" button (+10 XP reward)
+
+E. Hadith of the Day Section
+  - 15 hadiths in Malay with source references
+  - Rotates daily based on day of year
+  - Gold-themed card with left border accent
+  - Link to full hadith collection in Ibadah tab
+
+STORE UPGRADES (quranpulse-store.ts):
+  - Added prayerZone: string (default 'WPKL01') + setPrayerZone action
+  - Added tasbihVibration: boolean + setTasbihVibration action
+  - Added tasbihSound: boolean + setTasbihSound action
+  - Added tasbihVibrationPattern: 'short'|'medium'|'long' + setTasbihVibrationPattern
+  - Added tasbihSessions: TasbihSession[] + addTasbihSession action
+  - TasbihSession interface: id, dhikr, count, target, timestamp, category
+  - Auto-session creation on target completion in incrementTasbih
+
+NEW API ROUTES:
+  - /api/jakim/khutbah (GET): Fetch JAKIM Friday/Eid khutbah entries
+
+TECHNICAL:
+  - All components use 'use client'
+  - Hydration fix pattern (useState + useEffect for time-dependent values)
+  - Deep Blue theme maintained: #1a1a4a bg, #2a2a6a cards, #4a4aa6 primary, #d4af37 gold
+  - Framer Motion animations throughout
+  - All text in Bahasa Malaysia
+  - ESLint passes with zero errors in src/ files
+  - App compiles and serves successfully at localhost:3000

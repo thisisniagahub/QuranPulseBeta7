@@ -4,7 +4,7 @@ const GATEWAY_PORT = 3030
 
 export async function GET() {
   try {
-    const res = await fetch(`/health?XTransformPort=${GATEWAY_PORT}`, {
+    const res = await fetch(`http://localhost:${GATEWAY_PORT}/health`, {
       signal: AbortSignal.timeout(5000),
     })
     const data = await res.json()

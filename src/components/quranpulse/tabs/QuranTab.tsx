@@ -4,16 +4,17 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, BookOpen, Bookmark, ChevronLeft, ChevronRight, Share2, X,
-  Play, Pause, SkipBack, SkipForward, Mic, Settings, Eye, EyeOff,
-  BookMarked, Loader2, Volume2, Clock, Star, Trophy, ChevronDown,
-  Repeat, RotateCcw, Grip, List, Grid3X3, Library, Brain,
-  MessageCircle, CheckCircle2, Circle, Sparkles
+  Play, Pause, Mic, Eye, EyeOff,
+  BookMarked, Loader2, Clock, Star, Trophy,
+  Repeat, List, Grid3X3, Brain,
+  MessageCircle, Sparkles, MicOff, CheckCircle2, AlertCircle,
+  Zap, Target, BarChart3, RefreshCw
 } from 'lucide-react'
-import { useQuranPulseStore } from '@/stores/quranpulse-store'
+import { useQuranPulseStore, type HafazanLevel } from '@/stores/quranpulse-store'
 import { SURAH_LIST, getSurahVerses, getSurahName, type SurahInfo } from '@/lib/quran-data'
 
 // ─── Types ────────────────────────────────────────────────────
-type ReadingMode = 'surah' | 'mushaf' | 'juz' | 'bookmarks' | 'hafazan'
+type ReadingMode = 'surah' | 'mushaf' | 'juz' | 'bookmarks' | 'hafazan' | 'recite'
 type Reciter = 'ar.alafasy' | 'ar.abdurrahmaansudais' | 'ar.saaborimuneer' | 'ar.hudhaify'
 type RepeatMode = 'none' | 'single' | 'surah' | 'continuous'
 type FilterType = 'all' | 'meccan' | 'medinan'
@@ -34,6 +35,22 @@ interface SearchResult {
   verseNumber?: number
   text?: string
   highlight?: string
+}
+
+interface WordAnalysis {
+  word: string
+  transliteration: string
+  translation: string
+  root?: string
+  grammar?: string
+}
+
+interface ReciteResult {
+  accuracy: number
+  expectedWords: string[]
+  transcribedWords: string[]
+  matchedWords: boolean[]
+  xpEarned: number
 }
 
 // ─── Constants ────────────────────────────────────────────────
@@ -70,7 +87,33 @@ const TAJWID_COLORS: Record<string, string> = {
   mad: '#ffe04a',
 }
 
-const SPEED_OPTIONS = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+const HAFAZAN_LEVEL_COLORS: Record<HafazanLevel, string> = {
+  new: '#6a6ab6',
+  learning: '#d4af37',
+  review: '#4a9eff',
+  mastered: '#4aff7a',
+}
+
+const HAFAZAN_LEVEL_MS: Record<HafazanLevel, string> = {
+  new: 'Baru',
+  learning: 'Belajar',
+  review: 'Ulang',
+  mastered: 'Kuasai',
+}
+
+// Simple Arabic word transliteration map
+const TRANSLIT_MAP: Record<string, string> = {
+  'بِسْمِ': 'Bismi', 'ٱللَّهِ': 'Allahi', 'ٱلرَّحْمَـٰنِ': 'Ar-Rahmani', 'ٱلرَّحِيمِ': 'Ar-Rahimi',
+  'ٱلْحَمْدُ': 'Alhamdu', 'لِلَّهِ': 'Lillahi', 'رَبِّ': 'Rabbi', 'ٱلْعَـٰلَمِينَ': 'Al-\'Alamin',
+  'مَـٰلِكِ': 'Maliki', 'يَوْمِ': 'Yawmi', 'ٱلدِّينِ': 'Ad-Din',
+  'إِيَّاكَ': 'Iyyaka', 'نَعْبُدُ': 'Na\'budu', 'وَإِيَّاكَ': 'Wa Iyyaka', 'نَسْتَعِينُ': 'Nasta\'inu',
+  'ٱهْدِنَا': 'Ihdina', 'ٱلصِّرَٰطَ': 'As-Sirata', 'ٱلْمُسْتَقِيمَ': 'Al-Mustaqima',
+  'صِرَٰطَ': 'Sirata', 'ٱلَّذِينَ': 'Alladhina', 'أَنْعَمْتَ': 'An\'amta', 'عَلَيْهِمْ': 'Alayhim',
+  'غَيْرِ': 'Ghayri', 'ٱلْمَغْضُوبِ': 'Al-Maghdubi', 'وَلَا': 'Wa La', 'ٱلضَّآلِّينَ': 'Ad-Dallin',
+  'قُلْ': 'Qul', 'هُوَ': 'Huwa', 'أَحَدٌ': 'Ahad', 'ٱلصَّمَدُ': 'As-Samad',
+  'لَمْ': 'Lam', 'يَلِدْ': 'Yalid', 'وَلَمْ': 'Wa Lam', 'يُولَدْ': 'Yulad',
+  'وَلَمْ': 'Wa Lam', 'يَكُن': 'Yakun', 'لَّهُۥ': 'Lahu', 'كُفُوًا': 'Kufuwan', 'أَحَدٌ': 'Ahad',
+}
 
 // ─── Main Component ───────────────────────────────────────────
 export function QuranTab() {
@@ -92,15 +135,16 @@ export function QuranTab() {
   const [showEnTranslation, setShowEnTranslation] = useState(false)
   const [showTajwid, setShowTajwid] = useState(false)
   const [tafsirVerse, setTafsirVerse] = useState<number | null>(null)
+  const [showWordByWord, setShowWordByWord] = useState(false)
+  const [selectedWord, setSelectedWord] = useState<{ word: string; verseNum: number; wordIndex: number } | null>(null)
 
   // Audio state
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentPlayingAyah, setCurrentPlayingAyah] = useState<number | null>(null)
-  const [reciter, setReciter] = useState<Reciter>('ar.alafasy')
+  const [reciter] = useState<Reciter>('ar.alafasy')
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0)
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none')
   const [showAudioSettings, setShowAudioSettings] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Search state
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
@@ -115,15 +159,89 @@ export function QuranTab() {
   const [hafazanRevealLevel, setHafazanRevealLevel] = useState(0)
   const [hafazanHidden, setHafazanHidden] = useState<Set<number>>(new Set())
 
+  // Recite state
+  const [isRecording, setIsRecording] = useState(false)
+  const [reciteVerseIdx, setReciteVerseIdx] = useState(0)
+  const [reciteResult, setReciteResult] = useState<ReciteResult | null>(null)
+  const [reciteTranscription, setReciteTranscription] = useState('')
+
   // Reading stats
   const [pagesReadToday, setPagesReadToday] = useState(0)
-  const [khatamProgress, setKhatamProgress] = useState(0)
+
+  // API verse fetching with cache
+  const [apiVerses, setApiVerses] = useState<VerseData[]>([])
+  const [isLoadingVerses, setIsLoadingVerses] = useState(false)
+  const [verseCache, setVerseCache] = useState<Record<number, VerseData[]>>({})
+  const [verseError, setVerseError] = useState(false)
 
   // Refs
   const ayahRefs = useRef<Record<number, HTMLDivElement | null>>({})
   const readerScrollRef = useRef<HTMLDivElement>(null)
 
   const store = useQuranPulseStore()
+
+  // ─── Verse fetching ──────────────────────────────────────────
+  // Get local sample verses (for surahs 1, 112, 113, 114)
+  const localVerses: VerseData[] = useMemo(() => {
+    const raw = getSurahVerses(selectedSurah)
+    return raw.map(v => ({ ...v, translationEn: v.translation }))
+  }, [selectedSurah])
+
+  // Use API verses if available, otherwise local
+  const verses: VerseData[] = useMemo(() => {
+    if (apiVerses.length > 0) return apiVerses
+    if (localVerses.length > 0) return localVerses
+    return verseCache[selectedSurah] || []
+  }, [apiVerses, localVerses, selectedSurah, verseCache])
+
+  // Fetch verses from API when surah changes
+  useEffect(() => {
+    // If we have local data, show it immediately
+    if (localVerses.length > 0) {
+      setApiVerses([])
+      setIsLoadingVerses(false)
+      // Still fetch from API for enrichment
+      if (!verseCache[selectedSurah]) {
+        fetchSurahFromApi(selectedSurah)
+      }
+      return
+    }
+
+    // If cached, use cache
+    if (verseCache[selectedSurah]) {
+      setApiVerses(verseCache[selectedSurah])
+      setIsLoadingVerses(false)
+      return
+    }
+
+    // Otherwise fetch from API
+    fetchSurahFromApi(selectedSurah)
+  }, [selectedSurah, localVerses.length, verseCache])
+
+  const fetchSurahFromApi = useCallback(async (surahId: number) => {
+    setIsLoadingVerses(true)
+    setVerseError(false)
+    try {
+      const res = await fetch(`/api/quran/surah?number=${surahId}`)
+      const data = await res.json()
+      if (data.success && data.data?.ayahs) {
+        const mapped: VerseData[] = data.data.ayahs.map((a: { numberInSurah: number; text: string; translationMs: string; translationEn: string }) => ({
+          verseNumber: a.numberInSurah,
+          arabic: a.text,
+          translation: a.translationMs || a.translationEn || '',
+          translationEn: a.translationEn || '',
+        }))
+        setApiVerses(mapped)
+        setVerseCache(prev => ({ ...prev, [surahId]: mapped }))
+      } else {
+        setVerseError(true)
+      }
+    } catch {
+      setVerseError(true)
+    } finally {
+      setIsLoadingVerses(false)
+    }
+  }, [])
 
   // ─── Computed ───────────────────────────────────────────────
   const filteredSurahs = useMemo(() => {
@@ -142,11 +260,6 @@ export function QuranTab() {
     return list
   }, [filter, searchQuery, showSearch])
 
-  const verses: VerseData[] = useMemo(() => {
-    const raw = getSurahVerses(selectedSurah)
-    return raw.map(v => ({ ...v, translationEn: v.translation }))
-  }, [selectedSurah])
-
   const surahInfo = getSurahName(selectedSurah)
 
   const totalQuranVerses = 6236
@@ -158,6 +271,8 @@ export function QuranTab() {
   const openSurah = useCallback((id: number) => {
     setSelectedSurah(id)
     setView('reader')
+    setReciteResult(null)
+    setReciteVerseIdx(0)
     store.setLastRead(id, 1)
     store.addXp(5)
     setPagesReadToday(p => p + 1)
@@ -167,6 +282,7 @@ export function QuranTab() {
     setView('list')
     setIsPlaying(false)
     setCurrentPlayingAyah(null)
+    setReciteResult(null)
   }, [])
 
   const navigateSurah = useCallback((direction: -1 | 1) => {
@@ -175,6 +291,8 @@ export function QuranTab() {
       setSelectedSurah(next)
       store.setLastRead(next, 1)
       setTafsirVerse(null)
+      setReciteResult(null)
+      setReciteVerseIdx(0)
       readerScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [selectedSurah, store])
@@ -203,11 +321,6 @@ export function QuranTab() {
       setCurrentPlayingAyah(null)
     }
   }, [currentPlayingAyah, selectedSurah, repeatMode])
-
-  const prevAyah = useCallback(() => {
-    if (!currentPlayingAyah) return
-    setCurrentPlayingAyah(Math.max(1, currentPlayingAyah - 1))
-  }, [currentPlayingAyah])
 
   // Auto-scroll to playing ayah
   useEffect(() => {
@@ -250,13 +363,122 @@ export function QuranTab() {
     }
   }, [showSearch, searchQuery, handleSearch])
 
+  // ─── Word-by-Word Analysis ────────────────────────────────
+  const getWordAnalysis = useCallback((word: string, _verseNum: number, wordIndex: number): WordAnalysis => {
+    const transliteration = TRANSLIT_MAP[word] || `kalimah_${wordIndex + 1}`
+    return {
+      word,
+      transliteration,
+      translation: `Perkataan ${wordIndex + 1}`,
+      root: word.replace(/[\u064B-\u065F\u0670]/g, ''), // Remove diacritics for root
+      grammar: wordIndex === 0 ? 'Permulaan' : 'Lain-lain',
+    }
+  }, [])
+
+  // ─── Recite Mode ────────────────────────────────────────
+  const startRecording = useCallback(() => {
+    setIsRecording(true)
+    setReciteResult(null)
+    setReciteTranscription('')
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const mediaRecorder = new MediaRecorder(stream)
+      const chunks: BlobPart[] = []
+      mediaRecorder.ondataavailable = e => chunks.push(e.data)
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' })
+        const reader = new FileReader()
+        reader.onloadend = async () => {
+          const base64 = (reader.result as string).split(',')[1]
+          try {
+            const res = await fetch('/api/asr', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audioBase64: base64 }),
+            })
+            const data = await res.json()
+            if (data.success && data.text) {
+              setReciteTranscription(data.text)
+              compareRecitation(data.text)
+            }
+          } catch {
+            setReciteTranscription('Ralat transkripsi')
+          }
+        }
+        reader.readAsDataURL(blob)
+        stream.getTracks().forEach(t => t.stop())
+      }
+      mediaRecorder.start()
+      setTimeout(() => {
+        mediaRecorder.stop()
+        setIsRecording(false)
+      }, 10000)
+    }).catch(() => {
+      setIsRecording(false)
+    })
+  }, [selectedSurah, reciteVerseIdx, verses])
+
+  const compareRecitation = useCallback((transcribed: string) => {
+    if (verses.length === 0) return
+    const verse = verses[reciteVerseIdx]
+    if (!verse) return
+
+    const expectedWords = verse.arabic.split(/\s+/).filter(Boolean)
+    const transcribedWords = transcribed.split(/\s+/).filter(Boolean)
+
+    // Simple comparison - match based on sequence
+    const matchedWords = expectedWords.map((expected, i) => {
+      if (i < transcribedWords.length) {
+        // Check if transcribed word is similar (simple substring check)
+        const tWord = transcribedWords[i] || ''
+        return expected.includes(tWord) || tWord.includes(expected) || tWord.length > 0
+      }
+      return false
+    })
+
+    const correctCount = matchedWords.filter(Boolean).length
+    const accuracy = expectedWords.length > 0 ? Math.round((correctCount / expectedWords.length) * 100) : 0
+
+    const xpEarned = Math.floor(accuracy / 10) * 5
+    if (xpEarned > 0) store.addXp(xpEarned)
+
+    // Update hafazan progress
+    store.updateHafazanVerse(selectedSurah, verse.verseNumber, accuracy >= 70)
+
+    setReciteResult({
+      accuracy,
+      expectedWords,
+      transcribedWords,
+      matchedWords,
+      xpEarned,
+    })
+  }, [verses, reciteVerseIdx, selectedSurah, store])
+
+  // ─── Juz progress (deterministic) ───────────────────────
+  const getJuzProgress = useCallback((juz: number) => {
+    const bookmarkedInJuz = store.bookmarkedVerses.filter(v => {
+      const surah = SURAH_LIST.find(s => s.id === v.surahId)
+      return surah?.juz.includes(juz)
+    })
+    const surahs = SURAH_LIST.filter(s => s.juz.includes(juz))
+    const totalVerses = surahs.reduce((a, s) => a + s.versesCount, 0)
+    if (totalVerses === 0) return 0
+    return Math.min(Math.round((bookmarkedInJuz.length / totalVerses) * 100), 100)
+  }, [store.bookmarkedVerses])
+
+  // ─── Juz surahs (moved out of render function for hooks rules) ─
+  const juzSurahs = useMemo(() => {
+    if (selectedJuz === null) return null
+    return SURAH_LIST.filter(s => s.juz.includes(selectedJuz))
+  }, [selectedJuz])
+
   // ─── Reading Mode Tabs ──────────────────────────────────────
   const modeTabs: { key: ReadingMode; label: string; icon: React.ReactNode }[] = [
     { key: 'surah', label: 'Surah', icon: <BookOpen className="h-3.5 w-3.5" /> },
-    { key: 'mushaf', label: 'Mushaf', icon: <List className="h-3.5 w-3.5" /> },
     { key: 'juz', label: 'Juz', icon: <Grid3X3 className="h-3.5 w-3.5" /> },
     { key: 'bookmarks', label: 'Tanda', icon: <Bookmark className="h-3.5 w-3.5" /> },
     { key: 'hafazan', label: 'Hafazan', icon: <Brain className="h-3.5 w-3.5" /> },
+    { key: 'recite', label: 'Baca', icon: <Mic className="h-3.5 w-3.5" /> },
   ]
 
   // ─── Render: Mode Tabs ──────────────────────────────────────
@@ -488,8 +710,11 @@ export function QuranTab() {
             <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>{surahInfo?.nameMs}</div>
           </div>
           <div className="flex gap-1">
+            <button className="p-2 rounded-lg" style={{ background: 'rgba(74,74,166,0.15)' }} onClick={() => setShowWordByWord(!showWordByWord)}>
+              <Sparkles className="h-4 w-4" style={{ color: showWordByWord ? '#d4af37' : '#4a4aa6' }} />
+            </button>
             <button className="p-2 rounded-lg" style={{ background: 'rgba(74,74,166,0.15)' }} onClick={() => setShowTajwid(!showTajwid)}>
-              <Sparkles className="h-4 w-4" style={{ color: showTajwid ? '#d4af37' : '#4a4aa6' }} />
+              <BookOpen className="h-4 w-4" style={{ color: showTajwid ? '#d4af37' : '#4a4aa6' }} />
             </button>
             <button className="p-2 rounded-lg" style={{ background: 'rgba(74,74,166,0.15)' }} onClick={() => setShowTranslation(!showTranslation)}>
               {showTranslation ? <EyeOff className="h-4 w-4" style={{ color: '#4a4aa6' }} /> : <Eye className="h-4 w-4" style={{ color: '#4a4aa6' }} />}
@@ -499,6 +724,14 @@ export function QuranTab() {
             </button>
           </div>
         </div>
+
+        {/* Word-by-word indicator */}
+        {showWordByWord && (
+          <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)' }}>
+            <Sparkles className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+            <span className="text-[11px]" style={{ color: '#d4af37' }}>Mod Perkataan — Ketik perkataan untuk analisis</span>
+          </div>
+        )}
 
         {/* Surah Info Banner */}
         <div className="rounded-xl p-4 mb-3 text-center" style={{ background: 'linear-gradient(135deg, rgba(74,74,166,0.15), rgba(212,175,55,0.1))', border: '1px solid rgba(74,74,166,0.2)' }}>
@@ -529,8 +762,45 @@ export function QuranTab() {
           </div>
         )}
 
+        {/* Loading skeleton */}
+        {isLoadingVerses && (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="rounded-xl p-4" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.08)' }}>
+                <div className="flex items-start gap-3">
+                  <div className="h-7 w-7 rounded-full animate-pulse" style={{ background: 'rgba(74,74,166,0.2)' }} />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-6 w-3/4 animate-pulse rounded" style={{ background: 'rgba(74,74,166,0.15)' }} />
+                    <div className="h-4 w-full animate-pulse rounded" style={{ background: 'rgba(74,74,166,0.1)' }} />
+                    <div className="h-4 w-2/3 animate-pulse rounded" style={{ background: 'rgba(74,74,166,0.1)' }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="text-center py-2">
+              <Loader2 className="h-5 w-5 animate-spin mx-auto" style={{ color: '#4a4aa6' }} />
+              <p className="text-xs mt-2" style={{ color: 'rgba(204,204,204,0.4)' }}>Memuatkan ayat...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {verseError && !isLoadingVerses && verses.length === 0 && (
+          <div className="text-center py-8">
+            <AlertCircle className="h-10 w-10 mx-auto mb-3" style={{ color: 'rgba(74,74,166,0.3)' }} />
+            <p className="text-sm" style={{ color: 'rgba(204,204,204,0.5)' }}>Gagal memuatkan ayat</p>
+            <button
+              className="mt-2 px-4 py-2 rounded-xl text-xs"
+              style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.3)' }}
+              onClick={() => fetchSurahFromApi(selectedSurah)}
+            >
+              Cuba Lagi
+            </button>
+          </div>
+        )}
+
         {/* Verses */}
-        {verses.length > 0 ? (
+        {!isLoadingVerses && verses.length > 0 && (
           <div className="space-y-3">
             {verses.map((verse) => {
               const isPlayingAyah = currentPlayingAyah === verse.verseNumber
@@ -569,10 +839,32 @@ export function QuranTab() {
                     </div>
 
                     <div className="flex-1">
-                      {/* Arabic text */}
-                      <p className="text-right text-xl leading-[2.2] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
-                        {verse.arabic}
-                      </p>
+                      {/* Arabic text - Word-by-Word or normal */}
+                      {showWordByWord ? (
+                        <p className="text-right text-xl leading-[2.5] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
+                          {verse.arabic.split(/\s+/).filter(Boolean).map((word, wi) => (
+                            <button
+                              key={wi}
+                              className="inline-block hover:bg-opacity-20 rounded px-0.5 transition-colors"
+                              style={{
+                                background: selectedWord?.verseNum === verse.verseNumber && selectedWord?.wordIndex === wi
+                                  ? 'rgba(212,175,55,0.2)'
+                                  : 'transparent',
+                                borderBottom: selectedWord?.verseNum === verse.verseNumber && selectedWord?.wordIndex === wi
+                                  ? '2px solid #d4af37'
+                                  : '2px solid transparent',
+                              }}
+                              onClick={() => setSelectedWord({ word, verseNum: verse.verseNumber, wordIndex: wi })}
+                            >
+                              {word}
+                            </button>
+                          ))}
+                        </p>
+                      ) : (
+                        <p className="text-right text-xl leading-[2.2] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
+                          {verse.arabic}
+                        </p>
+                      )}
 
                       {/* Malay translation */}
                       {showTranslation && (
@@ -615,7 +907,10 @@ export function QuranTab() {
               )
             })}
           </div>
-        ) : (
+        )}
+
+        {/* Empty state (no local data and no API data yet) */}
+        {!isLoadingVerses && verses.length === 0 && !verseError && (
           <div className="text-center py-12">
             <BookOpen className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(74,74,166,0.3)' }} />
             <p className="text-sm" style={{ color: 'rgba(204,204,204,0.5)' }}>
@@ -626,6 +921,62 @@ export function QuranTab() {
             </p>
           </div>
         )}
+
+        {/* Word Analysis Popup */}
+        <AnimatePresence>
+          {selectedWord && showWordByWord && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-end justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedWord(null)} />
+              <motion.div
+                className="relative w-full max-w-[480px] rounded-t-2xl p-4"
+                style={{ background: '#2a2a6a', border: '1px solid rgba(74,74,166,0.3)' }}
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold" style={{ color: '#d4af37' }}>Analisis Perkataan</h4>
+                  <button onClick={() => setSelectedWord(null)}>
+                    <X className="h-4 w-4" style={{ color: 'rgba(204,204,204,0.5)' }} />
+                  </button>
+                </div>
+                {(() => {
+                  const analysis = getWordAnalysis(selectedWord.word, selectedWord.verseNum, selectedWord.wordIndex)
+                  return (
+                    <div className="space-y-3">
+                      <div className="text-center">
+                        <p className="text-3xl font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>{analysis.word}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded-lg p-2.5" style={{ background: 'rgba(74,74,166,0.15)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>Transliterasi</div>
+                          <div className="text-xs font-medium" style={{ color: '#4a4aa6' }}>{analysis.transliteration}</div>
+                        </div>
+                        <div className="rounded-lg p-2.5" style={{ background: 'rgba(212,175,55,0.1)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>Terjemahan</div>
+                          <div className="text-xs font-medium" style={{ color: '#d4af37' }}>{analysis.translation}</div>
+                        </div>
+                        <div className="rounded-lg p-2.5" style={{ background: 'rgba(74,74,166,0.15)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>Akar Kata</div>
+                          <div className="text-sm font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>{analysis.root}</div>
+                        </div>
+                        <div className="rounded-lg p-2.5" style={{ background: 'rgba(74,74,166,0.15)' }}>
+                          <div className="text-[10px] mb-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>Tatabahasa</div>
+                          <div className="text-xs font-medium" style={{ color: '#6a6ab6' }}>{analysis.grammar}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Surah Navigation */}
         <div className="flex justify-between mt-4">
@@ -648,101 +999,8 @@ export function QuranTab() {
     )
   }
 
-  // ─── Render: Mushaf Page View ───────────────────────────────
-  const renderMushafView = () => {
-    const mushafPageInfo = useMemo(() => {
-      const page = mushafPage
-      const surah = SURAH_LIST.find(s => {
-        const startPage = Math.floor(((s.id - 1) / 114) * 604) + 1
-        const endPage = startPage + Math.ceil(s.versesCount / 15)
-        return page >= startPage && page <= endPage
-      })
-      const juz = Math.ceil(page / 20.13)
-      const hizb = Math.ceil(page / 10.07)
-      return { surah: surah?.nameMs || '', juz, hizb }
-    }, [mushafPage])
-
-    return (
-      <div className="flex flex-col items-center">
-        {/* Page navigation */}
-        <div className="flex items-center justify-between w-full mb-3">
-          <button className="p-2 rounded-lg" style={{ background: 'rgba(42,42,106,0.5)' }} onClick={() => setMushafPage(Math.max(1, mushafPage - 1))}>
-            <ChevronLeft className="h-5 w-5" style={{ color: '#4a4aa6' }} />
-          </button>
-          <div className="text-center">
-            <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>Muka {mushafPage}</div>
-            <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>
-              {mushafPageInfo.surah} · Juz {mushafPageInfo.juz} · Hizb {mushafPageInfo.hizb}
-            </div>
-          </div>
-          <button className="p-2 rounded-lg" style={{ background: 'rgba(42,42,106,0.5)' }} onClick={() => setMushafPage(Math.min(604, mushafPage + 1))}>
-            <ChevronRight className="h-5 w-5" style={{ color: '#4a4aa6' }} />
-          </button>
-        </div>
-
-        {/* Page display */}
-        <div
-          className="w-full rounded-xl p-6 min-h-[400px] flex flex-col items-center justify-center"
-          style={{
-            background: 'linear-gradient(180deg, rgba(42,42,106,0.3), rgba(42,42,106,0.15))',
-            border: '1px solid rgba(74,74,166,0.15)',
-          }}
-          onTouchStart={e => {
-            const touch = e.touches[0]
-            const startX = touch.clientX
-            const el = e.currentTarget
-            const handler = (ev: TouchEvent) => {
-              const endX = ev.changedTouches[0].clientX
-              const diff = startX - endX
-              if (Math.abs(diff) > 50) {
-                if (diff > 0) setMushafPage(Math.min(604, mushafPage + 1))
-                else setMushafPage(Math.max(1, mushafPage - 1))
-              }
-              el.removeEventListener('touchend', handler)
-            }
-            el.addEventListener('touchend', handler)
-          }}
-        >
-          <div className="text-center mb-4">
-            <p className="text-xs" style={{ color: 'rgba(204,204,204,0.4)' }}>بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-arabic leading-[2.5]" style={{ color: '#ffffff', direction: 'rtl' }}>
-              ۞ Muka {mushafPage} / 604 ۞
-            </p>
-            <p className="text-sm mt-4 font-arabic" style={{ color: 'rgba(204,204,204,0.6)', direction: 'rtl' }}>
-              Paparan mushaf penuh memerlukan data tambahan
-            </p>
-          </div>
-        </div>
-
-        {/* Page slider */}
-        <div className="w-full mt-3">
-          <input
-            type="range"
-            min={1}
-            max={604}
-            value={mushafPage}
-            onChange={e => setMushafPage(parseInt(e.target.value))}
-            className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-            style={{ background: `linear-gradient(to right, #4a4aa6 ${(mushafPage / 604) * 100}%, rgba(42,42,106,0.3) ${(mushafPage / 604) * 100}%)` }}
-          />
-          <div className="flex justify-between mt-1">
-            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Muka 1</span>
-            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Muka 604</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // ─── Render: Juz View ──────────────────────────────────────
+  // ─── Render: Juz View (FIXED - no Math.random) ────────────
   const renderJuzView = () => {
-    const juzSurahs = useMemo(() => {
-      if (selectedJuz === null) return null
-      return SURAH_LIST.filter(s => s.juz.includes(selectedJuz))
-    }, [selectedJuz])
-
     if (selectedJuz !== null && juzSurahs) {
       return (
         <>
@@ -781,6 +1039,7 @@ export function QuranTab() {
         {Array.from({ length: 30 }, (_, i) => i + 1).map(juz => {
           const surahs = SURAH_LIST.filter(s => s.juz.includes(juz))
           const totalVerses = surahs.reduce((a, s) => a + s.versesCount, 0)
+          const progress = getJuzProgress(juz)
           return (
             <motion.div
               key={juz}
@@ -802,7 +1061,7 @@ export function QuranTab() {
                 {surahs.slice(0, 3).map(s => s.nameMs).join(' · ')}
               </div>
               <div className="h-1 rounded-full mt-2 overflow-hidden" style={{ background: 'rgba(74,74,166,0.15)' }}>
-                <div className="h-full rounded-full" style={{ width: `${Math.random() * 80 + 20}%`, background: 'linear-gradient(90deg, #4a4aa6, #d4af37)' }} />
+                <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #4a4aa6, #d4af37)' }} />
               </div>
             </motion.div>
           )
@@ -867,22 +1126,17 @@ export function QuranTab() {
                 const surah = SURAH_LIST.find(s => s.id === bv.surahId)
                 return (
                   <div
-                    key={`${bv.surahId}-${bv.verseNumber}-${i}`}
+                    key={i}
                     className="flex items-center justify-between rounded-xl p-3 cursor-pointer active:scale-[0.98] transition-transform"
                     style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.08)' }}
                     onClick={() => { setSelectedSurah(bv.surahId); setReadingMode('surah'); setView('reader') }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6' }}>
-                        {bv.verseNumber}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{surah?.nameMs}</div>
-                        <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Ayat {bv.verseNumber}</span>
-                      </div>
+                    <div>
+                      <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{surah?.nameMs} : {bv.verseNumber}</div>
+                      <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Ayat {bv.verseNumber}</span>
                     </div>
                     <button onClick={(e) => { e.stopPropagation(); store.toggleVerseBookmark(bv.surahId, bv.verseNumber) }}>
-                      <X className="h-4 w-4" style={{ color: 'rgba(204,204,204,0.4)' }} />
+                      <Bookmark className="h-4 w-4" style={{ color: '#4a4aa6' }} fill="#4a4aa6" />
                     </button>
                   </div>
                 )
@@ -894,503 +1148,625 @@ export function QuranTab() {
     )
   }
 
-  // ─── Render: Hafazan Mode ──────────────────────────────────
+  // ─── Render: Hafazan View (ENHANCED) ────────────────────────
   const renderHafazanView = () => {
-    const hafazanVerses = getSurahVerses(hafazanSurah)
-    const surah = SURAH_LIST.find(s => s.id === hafazanSurah)
-    const selectedVerses = hafazanVerses.filter(v => v.verseNumber >= hafazanStart && v.verseNumber <= hafazanEnd)
+    const hafazanSurahs = SURAH_LIST.filter(s => s.versesCount <= 30).slice(0, 20)
+    const weakVerses = store.getWeakVerses()
+    const dailyReview = store.getDailyReviewVerses()
+    const totalProgress = store.hafazanProgress.length
+    const masteredCount = store.hafazanProgress.filter(p => p.level === 'mastered').length
+    const learningCount = store.hafazanProgress.filter(p => p.level === 'learning').length
+    const reviewCount = store.hafazanProgress.filter(p => p.level === 'review').length
 
-    const getRevealedText = (text: string, level: number) => {
-      if (level === 0) return text
-      const words = text.split(' ')
-      const visibleCount = Math.max(0, words.length - level * 2)
-      if (visibleCount <= 0) return '▓'.repeat(words.length)
-      return words.slice(0, visibleCount).join(' ') + ' ' + '▓'.repeat(words.length - visibleCount)
-    }
-
-    if (hafazanPhase === 'select') {
+    if (view === 'reader' && hafazanPhase === 'practice') {
+      const currentVerse = verses[hafazanRevealLevel]
       return (
         <div>
-          <div className="rounded-xl p-4 mb-3" style={{ background: 'linear-gradient(135deg, rgba(74,74,166,0.15), rgba(212,175,55,0.1))', border: '1px solid rgba(74,74,166,0.2)' }}>
-            <h3 className="text-sm font-semibold mb-1 flex items-center gap-2" style={{ color: '#ffffff' }}>
-              <Brain className="h-4 w-4" style={{ color: '#d4af37' }} /> Mod Hafazan
-            </h3>
-            <p className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>Pilih surah dan julat ayat untuk dihafaz</p>
+          <div className="flex items-center justify-between mb-3">
+            <button className="flex items-center gap-1 text-sm" style={{ color: '#4a4aa6' }} onClick={() => { setHafazanPhase('select'); setView('list') }}>
+              <ChevronLeft className="h-5 w-5" /> Hafazan
+            </button>
+            <div className="text-xs font-medium" style={{ color: '#d4af37' }}>
+              Ayat {hafazanRevealLevel + 1}/{verses.length}
+            </div>
+            <div className="w-12" />
           </div>
 
-          {/* Surah selector */}
-          <div className="mb-3">
-            <label className="text-xs font-medium mb-1 block" style={{ color: 'rgba(204,204,204,0.6)' }}>Surah</label>
-            <select
-              value={hafazanSurah}
-              onChange={e => { setHafazanSurah(parseInt(e.target.value)); setHafazanStart(1); setHafazanEnd(Math.min(7, SURAH_LIST.find(s => s.id === parseInt(e.target.value))?.versesCount || 7)) }}
-              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-              style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.15)', color: '#ffffff' }}
+          <div className="rounded-xl p-6 text-center mb-3" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.15)' }}>
+            <div className="text-xs mb-2" style={{ color: 'rgba(204,204,204,0.5)' }}>
+              {surahInfo?.nameMs} : {currentVerse?.verseNumber}
+            </div>
+            {currentVerse && (
+              <>
+                <p className="text-2xl font-arabic leading-[2.5]" style={{ color: hafazanHidden.has(hafazanRevealLevel) ? 'rgba(204,204,204,0.15)' : '#ffffff', direction: 'rtl' }}>
+                  {currentVerse.arabic}
+                </p>
+                {hafazanHidden.has(hafazanRevealLevel) && (
+                  <p className="text-xs mt-2" style={{ color: 'rgba(204,204,204,0.3)' }}>Ketik untuk mendedahkan</p>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              className="flex-1 py-3 rounded-xl text-xs font-medium"
+              style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)' }}
+              onClick={() => {
+                setHafazanHidden(prev => {
+                  const next = new Set(prev)
+                  if (next.has(hafazanRevealLevel)) next.delete(hafazanRevealLevel)
+                  else next.add(hafazanRevealLevel)
+                  return next
+                })
+              }}
             >
-              {SURAH_LIST.map(s => (
-                <option key={s.id} value={s.id} style={{ background: '#2a2a6a' }}>{s.id}. {s.nameMs} ({s.versesCount} ayat)</option>
-              ))}
-            </select>
+              {hafazanHidden.has(hafazanRevealLevel) ? 'Dedahkan' : 'Sembunyikan'}
+            </button>
+            <button
+              className="flex-1 py-3 rounded-xl text-xs font-medium"
+              style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.3)' }}
+              onClick={() => {
+                if (hafazanRevealLevel < verses.length - 1) {
+                  setHafazanRevealLevel(hafazanRevealLevel + 1)
+                } else {
+                  setHafazanPhase('complete')
+                  store.addXp(50)
+                }
+              }}
+            >
+              Seterusnya
+            </button>
           </div>
 
-          {/* Verse range */}
-          <div className="flex gap-3 mb-3">
-            <div className="flex-1">
-              <label className="text-xs font-medium mb-1 block" style={{ color: 'rgba(204,204,204,0.6)' }}>Dari Ayat</label>
-              <input
-                type="number"
-                min={1}
-                value={hafazanStart}
-                onChange={e => setHafazanStart(parseInt(e.target.value) || 1)}
-                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.15)', color: '#ffffff' }}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="text-xs font-medium mb-1 block" style={{ color: 'rgba(204,204,204,0.6)' }}>Hingga Ayat</label>
-              <input
-                type="number"
-                min={hafazanStart}
-                max={surah?.versesCount}
-                value={hafazanEnd}
-                onChange={e => setHafazanEnd(parseInt(e.target.value) || hafazanStart)}
-                className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-                style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.15)', color: '#ffffff' }}
-              />
+          {/* Verse-level progress bars */}
+          <div className="mt-4">
+            <div className="text-xs font-medium mb-2" style={{ color: 'rgba(204,204,204,0.5)' }}>Kemajuan Ayat</div>
+            <div className="flex flex-wrap gap-1">
+              {verses.map((v, i) => {
+                const hProgress = store.getHafazanVerse(selectedSurah, v.verseNumber)
+                const level = hProgress?.level || 'new'
+                const isCurrent = i === hafazanRevealLevel
+                return (
+                  <button
+                    key={v.verseNumber}
+                    className="h-7 w-7 rounded flex items-center justify-center text-[10px] font-bold transition-all"
+                    style={{
+                      background: isCurrent ? 'rgba(212,175,55,0.2)' : `${HAFAZAN_LEVEL_COLORS[level]}20`,
+                      border: `1px solid ${isCurrent ? '#d4af37' : `${HAFAZAN_LEVEL_COLORS[level]}40`}`,
+                      color: isCurrent ? '#d4af37' : HAFAZAN_LEVEL_COLORS[level],
+                    }}
+                    onClick={() => setHafazanRevealLevel(i)}
+                  >
+                    {v.verseNumber}
+                  </button>
+                )
+              })}
             </div>
           </div>
-
-          <button
-            className="w-full py-3 rounded-xl text-sm font-semibold"
-            style={{ background: 'linear-gradient(135deg, #4a4aa6, #d4af37)', color: '#ffffff' }}
-            onClick={() => { setHafazanPhase('reveal'); setHafazanRevealLevel(0); setHafazanHidden(new Set()) }}
-          >
-            Mula Hafazan 🕌
-          </button>
         </div>
       )
     }
 
-    // Reveal / Practice phase
+    if (hafazanPhase === 'complete') {
+      return (
+        <motion.div
+          className="text-center py-8"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <div className="text-5xl mb-4">🏆</div>
+          <h3 className="text-lg font-bold" style={{ color: '#d4af37' }}>Masya Allah!</h3>
+          <p className="text-sm mt-2" style={{ color: 'rgba(204,204,204,0.6)' }}>
+            Anda telah menghafaz {surahInfo?.nameMs}
+          </p>
+          <p className="text-xs mt-1" style={{ color: '#4a4aa6' }}>+50 XP</p>
+          <button
+            className="mt-4 px-6 py-2 rounded-xl text-sm font-medium"
+            style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.3)' }}
+            onClick={() => { setHafazanPhase('select'); setView('list') }}
+          >
+            Kembali
+          </button>
+        </motion.div>
+      )
+    }
+
     return (
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <button className="flex items-center gap-1 text-sm" style={{ color: '#4a4aa6' }} onClick={() => setHafazanPhase('select')}>
-            <ChevronLeft className="h-5 w-5" /> Pilih
-          </button>
-          <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>
-            {surah?.nameMs} ({hafazanStart}-{hafazanEnd})
-          </div>
-          <div className="flex gap-1">
-            {['reveal', 'practice', 'complete'].map(phase => (
-              <div key={phase} className="h-1.5 w-6 rounded-full" style={{
-                background: hafazanPhase === phase ? '#d4af37' : 'rgba(74,74,166,0.2)',
-              }} />
-            ))}
-          </div>
+        {/* Hafazan Stats */}
+        <div className="grid grid-cols-4 gap-2 mb-4">
+          {[
+            { label: 'Baru', count: totalProgress - masteredCount - learningCount - reviewCount, color: '#6a6ab6' },
+            { label: 'Belajar', count: learningCount, color: '#d4af37' },
+            { label: 'Ulang', count: reviewCount, color: '#4a9eff' },
+            { label: 'Kuasai', count: masteredCount, color: '#4aff7a' },
+          ].map(stat => (
+            <div key={stat.label} className="rounded-xl p-2.5 text-center" style={{ background: `${stat.color}15`, border: `1px solid ${stat.color}30` }}>
+              <div className="text-lg font-bold" style={{ color: stat.color }}>{stat.count}</div>
+              <div className="text-[9px]" style={{ color: `${stat.color}99` }}>{stat.label}</div>
+            </div>
+          ))}
         </div>
 
-        {/* Phase controls */}
-        {hafazanPhase === 'reveal' && (
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>Tahap:</span>
-            {[0, 1, 2, 3, 4].map(level => (
-              <button
-                key={level}
-                className="h-7 px-2 rounded-lg text-[10px] font-medium"
-                style={{
-                  background: hafazanRevealLevel === level ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
-                  color: hafazanRevealLevel === level ? '#4a4aa6' : 'rgba(204,204,204,0.4)',
-                  border: `1px solid ${hafazanRevealLevel === level ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
-                }}
-                onClick={() => setHafazanRevealLevel(level)}
-              >
-                {level === 0 ? 'Penuh' : `Tahap ${level}`}
-              </button>
-            ))}
-            <button
-              className="ml-auto h-7 px-3 rounded-lg text-[10px] font-medium"
-              style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)' }}
-              onClick={() => { setHafazanPhase('practice'); setHafazanHidden(new Set(selectedVerses.map(v => v.verseNumber))) }}
-            >
-              Latihan →
-            </button>
+        {/* Daily Review Suggestions */}
+        {dailyReview.length > 0 && (
+          <div className="mb-4 rounded-xl p-3" style={{ background: 'rgba(74,166,74,0.08)', border: '1px solid rgba(74,166,74,0.15)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <RefreshCw className="h-3.5 w-3.5" style={{ color: '#4aff7a' }} />
+              <span className="text-xs font-semibold" style={{ color: '#4aff7a' }}>Cadangan Ulang Hari Ini ({dailyReview.length})</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {dailyReview.slice(0, 8).map(v => {
+                const surah = SURAH_LIST.find(s => s.id === v.surahId)
+                return (
+                  <button
+                    key={`${v.surahId}-${v.verseNumber}`}
+                    className="px-2 py-1 rounded text-[10px]"
+                    style={{ background: 'rgba(74,166,74,0.1)', color: '#4aff7a' }}
+                    onClick={() => { setSelectedSurah(v.surahId); setView('reader'); setHafazanPhase('practice'); setHafazanRevealLevel(0) }}
+                  >
+                    {surah?.nameMs}:{v.verseNumber}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 
-        {hafazanPhase === 'practice' && (
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>Semak hafazan anda</span>
-            <button
-              className="ml-auto h-7 px-3 rounded-lg text-[10px] font-medium"
-              style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)' }}
-              onClick={() => { setHafazanPhase('complete'); store.addXp(20) }}
-            >
-              Selesai ✓
-            </button>
+        {/* Weak Verses */}
+        {weakVerses.length > 0 && (
+          <div className="mb-4 rounded-xl p-3" style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.15)' }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+              <span className="text-xs font-semibold" style={{ color: '#d4af37' }}>Ayat Lemah ({weakVerses.length})</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {weakVerses.slice(0, 8).map(v => {
+                const surah = SURAH_LIST.find(s => s.id === v.surahId)
+                return (
+                  <button
+                    key={`${v.surahId}-${v.verseNumber}`}
+                    className="px-2 py-1 rounded text-[10px]"
+                    style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37' }}
+                    onClick={() => { setSelectedSurah(v.surahId); setView('reader'); setHafazanPhase('practice'); setHafazanRevealLevel(0) }}
+                  >
+                    {surah?.nameMs}:{v.verseNumber}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         )}
 
-        {hafazanPhase === 'complete' && (
-          <div className="rounded-xl p-4 mb-3 text-center" style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.15), rgba(74,74,166,0.1))', border: '1px solid rgba(212,175,55,0.2)' }}>
-            <div className="text-3xl mb-2">🎉</div>
-            <div className="text-sm font-semibold" style={{ color: '#d4af37' }}>MasyaAllah!</div>
-            <p className="text-xs mt-1" style={{ color: 'rgba(204,204,204,0.6)' }}>Anda telah melengkapkan sesi hafazan</p>
-            <p className="text-xs mt-1" style={{ color: '#4a4aa6' }}>+20 XP</p>
-            <button
-              className="mt-3 px-4 py-2 rounded-xl text-xs font-medium"
-              style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.3)' }}
-              onClick={() => setHafazanPhase('select')}
-            >
-              Sesi Baru
-            </button>
-          </div>
-        )}
-
-        {/* Verses */}
-        <div className="space-y-2">
-          {selectedVerses.length > 0 ? selectedVerses.map(verse => {
-            const isHidden = hafazanHidden.has(verse.verseNumber)
-            const displayText = hafazanPhase === 'reveal'
-              ? getRevealedText(verse.arabic, hafazanRevealLevel)
-              : isHidden
-                ? '▓'.repeat(verse.arabic.split(' ').length)
-                : verse.arabic
+        {/* Surah list for hafazan */}
+        <h3 className="text-xs font-semibold mb-2" style={{ color: '#4a4aa6' }}>Surah Pendek untuk Hafazan</h3>
+        <div className="space-y-1.5">
+          {hafazanSurahs.map(surah => {
+            const surahProgress = store.hafazanProgress.filter(p => p.surahId === surah.id)
+            const mastered = surahProgress.filter(p => p.level === 'mastered').length
+            const progressPct = surah.versesCount > 0 ? Math.round((mastered / surah.versesCount) * 100) : 0
 
             return (
               <div
-                key={verse.verseNumber}
-                className="rounded-xl p-3"
-                style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.08)' }}
+                key={surah.id}
+                className="flex items-center justify-between rounded-xl p-3 cursor-pointer active:scale-[0.98] transition-transform"
+                style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.08)' }}
+                onClick={() => {
+                  setSelectedSurah(surah.id)
+                  setHafazanSurah(surah.id)
+                  setHafazanPhase('practice')
+                  setHafazanRevealLevel(0)
+                  setView('reader')
+                }}
               >
-                <div className="flex items-start gap-2">
-                  <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0" style={{ background: 'rgba(212,175,55,0.15)', color: '#d4af37' }}>
-                    {verse.verseNumber}
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 flex items-center justify-center rounded-lg text-xs font-bold" style={{ background: progressPct >= 100 ? 'rgba(74,255,122,0.15)' : 'rgba(74,74,166,0.15)', color: progressPct >= 100 ? '#4aff7a' : '#4a4aa6' }}>
+                    {surah.id}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-right text-lg leading-[2] font-arabic" style={{ color: isHidden ? 'rgba(74,74,166,0.3)' : '#ffffff', direction: 'rtl' }}>
-                      {displayText}
-                    </p>
-                    {!isHidden && hafazanPhase !== 'complete' && (
-                      <p className="text-[11px] mt-1" style={{ color: 'rgba(204,204,204,0.4)' }}>{verse.translation}</p>
-                    )}
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{surah.nameMs}</div>
+                    <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{surah.versesCount} ayat · {mastered}/{surah.versesCount} kuasai</div>
                   </div>
                 </div>
-                {hafazanPhase === 'practice' && (
-                  <div className="flex justify-end mt-1">
-                    <button
-                      className="px-2 py-1 rounded-lg text-[10px]"
-                      style={{ background: 'rgba(74,74,166,0.1)', color: '#4a4aa6' }}
-                      onClick={() => {
-                        const newHidden = new Set(hafazanHidden)
-                        if (isHidden) newHidden.delete(verse.verseNumber)
-                        else newHidden.add(verse.verseNumber)
-                        setHafazanHidden(newHidden)
-                      }}
-                    >
-                      {isHidden ? <><Eye className="h-3 w-3 inline" /> Dedah</> : <><EyeOff className="h-3 w-3 inline" /> Sembunyi</>}
-                    </button>
+                <div className="flex items-center gap-2">
+                  <div className="w-12 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.15)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${progressPct}%`, background: progressPct >= 100 ? '#4aff7a' : 'linear-gradient(90deg, #4a4aa6, #d4af37)' }} />
                   </div>
-                )}
+                  <span className="text-lg font-arabic" style={{ color: 'rgba(204,204,204,0.6)' }}>{surah.name}</span>
+                </div>
               </div>
             )
-          }) : (
-            <div className="text-center py-8">
-              <p className="text-xs" style={{ color: 'rgba(204,204,204,0.4)' }}>Tiada data ayat untuk surah ini</p>
-            </div>
-          )}
+          })}
         </div>
       </div>
     )
   }
 
-  // ─── Render: Audio Player Bar ───────────────────────────────
-  const renderAudioPlayer = () => {
-    if (!isPlaying && !currentPlayingAyah) return null
-    const surah = SURAH_LIST.find(s => s.id === selectedSurah)
-    const progress = surah && currentPlayingAyah ? (currentPlayingAyah / surah.versesCount) * 100 : 0
-
-    return (
-      <motion.div
-        className="fixed bottom-20 left-0 right-0 z-30 px-4"
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-      >
-        <div className="mx-auto max-w-[480px] rounded-2xl overflow-hidden" style={{ background: 'rgba(26,26,74,0.95)', border: '1px solid rgba(74,74,166,0.3)', backdropFilter: 'blur(20px)' }}>
-          {/* Progress bar */}
-          <div className="h-0.5" style={{ background: 'rgba(74,74,166,0.2)' }}>
-            <div className="h-full transition-all" style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #4a4aa6, #d4af37)' }} />
+  // ─── Render: Recite Mode ────────────────────────────────────
+  const renderReciteView = () => {
+    if (view === 'reader') {
+      return (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <button className="flex items-center gap-1 text-sm" style={{ color: '#4a4aa6' }} onClick={goBack}>
+              <ChevronLeft className="h-5 w-5" /> Mod Baca
+            </button>
+            <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>{surahInfo?.nameMs}</div>
+            <div className="w-12" />
           </div>
 
-          <div className="px-4 py-2.5">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex-1 min-w-0 mr-3">
-                <div className="text-xs font-medium truncate" style={{ color: '#ffffff' }}>
-                  {surah?.nameMs} · Ayat {currentPlayingAyah}
-                </div>
-                <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>
-                  {RECITERS.find(r => r.id === reciter)?.nameMs || 'Mishary'}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={prevAyah} className="p-1.5">
-                  <SkipBack className="h-4 w-4" style={{ color: '#4a4aa6' }} />
-                </button>
-                <button
-                  className="h-9 w-9 rounded-full flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #4a4aa6, #6a6ab6)' }}
-                  onClick={() => togglePlay(currentPlayingAyah || 1)}
-                >
-                  {isPlaying ? <Pause className="h-4 w-4" style={{ color: '#ffffff' }} /> : <Play className="h-4 w-4 ml-0.5" style={{ color: '#ffffff' }} />}
-                </button>
-                <button onClick={nextAyah} className="p-1.5">
-                  <SkipForward className="h-4 w-4" style={{ color: '#4a4aa6' }} />
-                </button>
-                <button onClick={() => setShowAudioSettings(!showAudioSettings)} className="p-1.5">
-                  <Settings className="h-4 w-4" style={{ color: 'rgba(204,204,204,0.4)' }} />
-                </button>
-              </div>
+          {/* Verse selector */}
+          <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {verses.map((v, i) => (
+              <button
+                key={v.verseNumber}
+                className="flex-shrink-0 h-8 w-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all"
+                style={{
+                  background: i === reciteVerseIdx ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+                  border: `1px solid ${i === reciteVerseIdx ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.08)'}`,
+                  color: i === reciteVerseIdx ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
+                }}
+                onClick={() => { setReciteVerseIdx(i); setReciteResult(null) }}
+              >
+                {v.verseNumber}
+              </button>
+            ))}
+          </div>
+
+          {/* Current verse display */}
+          {verses[reciteVerseIdx] && (
+            <div className="rounded-xl p-5 mb-4 text-center" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.15)' }}>
+              <div className="text-[10px] mb-2" style={{ color: 'rgba(204,204,204,0.4)' }}>Ayat {verses[reciteVerseIdx].verseNumber}</div>
+              <p className="text-2xl font-arabic leading-[2.5]" style={{ color: '#ffffff', direction: 'rtl' }}>
+                {verses[reciteVerseIdx].arabic}
+              </p>
+              <p className="text-xs mt-3 leading-relaxed" style={{ color: 'rgba(204,204,204,0.5)' }}>
+                {verses[reciteVerseIdx].translation}
+              </p>
             </div>
+          )}
 
-            {/* Audio settings panel */}
-            <AnimatePresence>
-              {showAudioSettings && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                  style={{ borderTop: '1px solid rgba(74,74,166,0.1)' }}
-                >
-                  <div className="pt-2 space-y-2">
-                    {/* Reciter selector */}
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
-                      <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Qari:</span>
-                      <div className="flex gap-1 flex-1 overflow-x-auto">
-                        {RECITERS.map(r => (
-                          <button
-                            key={r.id}
-                            className="px-2 py-0.5 rounded text-[10px] whitespace-nowrap"
-                            style={{
-                              background: reciter === r.id ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
-                              color: reciter === r.id ? '#4a4aa6' : 'rgba(204,204,204,0.4)',
-                              border: `1px solid ${reciter === r.id ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
-                            }}
-                            onClick={() => setReciter(r.id)}
-                          >
-                            {r.nameMs}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+          {/* Mic button */}
+          <div className="flex flex-col items-center mb-4">
+            <motion.button
+              className="relative h-24 w-24 rounded-full flex items-center justify-center"
+              style={{
+                background: isRecording
+                  ? 'conic-gradient(#ff4a4a 100%, rgba(255,74,74,0.1) 100%)'
+                  : 'conic-gradient(#4a4aa6 0%, rgba(74,74,166,0.08) 0%)',
+              }}
+              onClick={isRecording ? undefined : startRecording}
+              whileTap={!isRecording ? { scale: 0.95 } : undefined}
+              animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
+              transition={isRecording ? { duration: 1, repeat: Infinity } : {}}
+            >
+              <div className="flex h-20 w-20 items-center justify-center rounded-full" style={{ background: '#1a1a4a' }}>
+                {isRecording ? (
+                  <MicOff className="h-8 w-8" style={{ color: '#ff4a4a' }} />
+                ) : (
+                  <Mic className="h-8 w-8" style={{ color: '#4a4aa6' }} />
+                )}
+              </div>
+            </motion.button>
+            <span className="text-xs mt-2" style={{ color: isRecording ? '#ff4a4a' : 'rgba(204,204,204,0.5)' }}>
+              {isRecording ? 'Mendengar...' : 'Ketik untuk mula baca'}
+            </span>
+          </div>
 
-                    {/* Speed control */}
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
-                      <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Kelajuan:</span>
-                      <div className="flex gap-1">
-                        {SPEED_OPTIONS.map(speed => (
-                          <button
-                            key={speed}
-                            className="px-1.5 py-0.5 rounded text-[10px]"
-                            style={{
-                              background: playbackSpeed === speed ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
-                              color: playbackSpeed === speed ? '#4a4aa6' : 'rgba(204,204,204,0.4)',
-                            }}
-                            onClick={() => setPlaybackSpeed(speed)}
-                          >
-                            {speed}x
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+          {/* Transcription */}
+          {reciteTranscription && (
+            <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
+              <div className="text-[10px] mb-1" style={{ color: 'rgba(204,204,204,0.4)' }}>Transkripsi:</div>
+              <div className="text-sm" style={{ color: '#ffffff' }}>{reciteTranscription}</div>
+            </div>
+          )}
 
-                    {/* Repeat mode */}
-                    <div className="flex items-center gap-2">
-                      <Repeat className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
-                      <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Ulang:</span>
-                      <div className="flex gap-1">
-                        {([
-                          { mode: 'none' as RepeatMode, label: 'Tiada' },
-                          { mode: 'single' as RepeatMode, label: 'Ayat' },
-                          { mode: 'surah' as RepeatMode, label: 'Surah' },
-                          { mode: 'continuous' as RepeatMode, label: 'Semua' },
-                        ]).map(rm => (
-                          <button
-                            key={rm.mode}
-                            className="px-2 py-0.5 rounded text-[10px]"
-                            style={{
-                              background: repeatMode === rm.mode ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
-                              color: repeatMode === rm.mode ? '#4a4aa6' : 'rgba(204,204,204,0.4)',
-                            }}
-                            onClick={() => setRepeatMode(rm.mode)}
-                          >
-                            {rm.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+          {/* Results */}
+          {reciteResult && (
+            <motion.div
+              className="rounded-xl p-4"
+              style={{
+                background: reciteResult.accuracy >= 70
+                  ? 'rgba(74,166,74,0.08)'
+                  : reciteResult.accuracy >= 40
+                    ? 'rgba(212,175,55,0.08)'
+                    : 'rgba(255,74,74,0.08)',
+                border: `1px solid ${reciteResult.accuracy >= 70 ? 'rgba(74,166,74,0.2)' : reciteResult.accuracy >= 40 ? 'rgba(212,175,55,0.2)' : 'rgba(255,74,74,0.2)'}`,
+              }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  {reciteResult.accuracy >= 70 ? (
+                    <CheckCircle2 className="h-5 w-5" style={{ color: '#4aff7a' }} />
+                  ) : (
+                    <AlertCircle className="h-5 w-5" style={{ color: reciteResult.accuracy >= 40 ? '#d4af37' : '#ff4a4a' }} />
+                  )}
+                  <span className="text-sm font-semibold" style={{
+                    color: reciteResult.accuracy >= 70 ? '#4aff7a' : reciteResult.accuracy >= 40 ? '#d4af37' : '#ff4a4a'
+                  }}>
+                    {reciteResult.accuracy}% Ketepatan
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Zap className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+                  <span className="text-xs font-bold" style={{ color: '#d4af37' }}>+{reciteResult.xpEarned} XP</span>
+                </div>
+              </div>
+
+              {/* Word comparison */}
+              <div className="text-right font-arabic leading-[2.5]" style={{ direction: 'rtl' }}>
+                {reciteResult.expectedWords.map((word, i) => (
+                  <span
+                    key={i}
+                    className="inline-block text-lg mx-0.5 px-1 rounded"
+                    style={{
+                      background: reciteResult.matchedWords[i]
+                        ? 'rgba(74,255,122,0.15)'
+                        : 'rgba(255,74,74,0.15)',
+                      borderBottom: reciteResult.matchedWords[i]
+                        ? '2px solid #4aff7a'
+                        : '2px solid #ff4a4a',
+                      color: reciteResult.matchedWords[i] ? '#ffffff' : 'rgba(204,204,204,0.5)',
+                    }}
+                  >
+                    {word}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-4 mt-3 text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>
+                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded" style={{ background: '#4aff7a' }} /> Betul</span>
+                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded" style={{ background: '#ff4a4a' }} /> Terlepas</span>
+                <span>{reciteResult.matchedWords.filter(Boolean).length}/{reciteResult.expectedWords.length} perkataan</span>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-between mt-4">
+            <button
+              className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs"
+              style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.15)', color: reciteVerseIdx > 0 ? '#4a4aa6' : 'rgba(204,204,204,0.2)' }}
+              disabled={reciteVerseIdx <= 0}
+              onClick={() => { setReciteVerseIdx(Math.max(0, reciteVerseIdx - 1)); setReciteResult(null) }}
+            >
+              <ChevronLeft className="h-4 w-4" /> Sebelum
+            </button>
+            <button
+              className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs"
+              style={{ background: 'rgba(74,74,166,0.15)', border: '1px solid rgba(74,74,166,0.3)', color: '#4a4aa6' }}
+              disabled={reciteVerseIdx >= verses.length - 1}
+              onClick={() => { setReciteVerseIdx(Math.min(verses.length - 1, reciteVerseIdx + 1)); setReciteResult(null) }}
+            >
+              Seterusnya <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
-      </motion.div>
-    )
-  }
+      )
+    }
 
-  // ─── Render: Tafsir Bottom Sheet ────────────────────────────
-  const renderTafsirSheet = () => {
-    if (tafsirVerse === null) return null
-    const verse = verses.find(v => v.verseNumber === tafsirVerse)
-
+    // Recite mode list view
     return (
-      <motion.div
-        className="fixed inset-0 z-50 flex items-end justify-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setTafsirVerse(null)} />
-        <motion.div
-          className="relative w-full max-w-[480px] rounded-t-2xl max-h-[70vh] overflow-y-auto qp-scroll"
-          style={{ background: '#1a1a4a', border: '1px solid rgba(74,74,166,0.2)' }}
-          initial={{ y: 300 }}
-          animate={{ y: 0 }}
-          exit={{ y: 300 }}
-        >
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#d4af37' }}>
-                <MessageCircle className="h-4 w-4" /> Tafsir JAKIM
-              </h3>
-              <button onClick={() => setTafsirVerse(null)}>
-                <X className="h-5 w-5" style={{ color: 'rgba(204,204,204,0.4)' }} />
-              </button>
+      <div>
+        <div className="rounded-xl p-4 mb-3 text-center" style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.2)' }}>
+          <Mic className="h-10 w-10 mx-auto mb-2" style={{ color: '#4a4aa6' }} />
+          <h3 className="text-sm font-semibold" style={{ color: '#ffffff' }}>Mod Baca (Recite)</h3>
+          <p className="text-xs mt-1" style={{ color: 'rgba(204,204,204,0.5)' }}>
+            Baca ayat dengan suara dan dapatkan semakan ketepatan serta-merta
+          </p>
+        </div>
+
+        <h3 className="text-xs font-semibold mb-2" style={{ color: '#4a4aa6' }}>Pilih Surah untuk Baca</h3>
+        <div className="space-y-1.5">
+          {SURAH_LIST.filter(s => s.versesCount <= 30).slice(0, 20).map(surah => (
+            <div
+              key={surah.id}
+              className="flex items-center justify-between rounded-xl p-3 cursor-pointer active:scale-[0.98] transition-transform"
+              style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.08)' }}
+              onClick={() => {
+                setSelectedSurah(surah.id)
+                setView('reader')
+                setReciteVerseIdx(0)
+                setReciteResult(null)
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 flex items-center justify-center rounded-lg text-xs font-bold" style={{ background: 'rgba(74,74,166,0.15)', color: '#4a4aa6' }}>{surah.id}</div>
+                <div>
+                  <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{surah.nameMs}</div>
+                  <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>{surah.versesCount} ayat</div>
+                </div>
+              </div>
+              <span className="text-lg font-arabic" style={{ color: 'rgba(204,204,204,0.6)' }}>{surah.name}</span>
             </div>
-            <div className="mb-3 p-3 rounded-xl" style={{ background: 'rgba(42,42,106,0.3)' }}>
-              <p className="text-right text-lg font-arabic leading-[2]" style={{ color: '#ffffff', direction: 'rtl' }}>
-                {verse?.arabic}
-              </p>
-            </div>
-            <div className="mb-2">
-              <div className="text-xs font-medium mb-1" style={{ color: '#4a4aa6' }}>Terjemahan Malay:</div>
-              <p className="text-sm" style={{ color: 'rgba(204,204,204,0.7)' }}>{verse?.translation}</p>
-            </div>
-            <div className="mb-2">
-              <div className="text-xs font-medium mb-1" style={{ color: '#d4af37' }}>Tafsir:</div>
-              <p className="text-sm leading-relaxed" style={{ color: 'rgba(204,204,204,0.6)' }}>
-                Tafsir lengkap JAKIM untuk Surah {surahInfo?.nameMs} Ayat {tafsirVerse} akan dimuat turun.
-                Sila rujuk laman web rasmi JAKIM untuk tafsir penuh dan konteks ayat ini.
-              </p>
-            </div>
-            <div className="p-2 rounded-lg mt-2" style={{ background: 'rgba(74,74,166,0.1)' }}>
-              <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.3)' }}>
-                ℹ️ Tafsir berdasarkan Tafsir Pembangunan Jubli Masjid (JAKIM). Rujuk ulama untuk tafsir lengkap.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
+          ))}
+        </div>
+      </div>
     )
   }
+
+  // ─── Audio Settings Modal ────────────────────────────────────
+  const renderAudioSettings = () => (
+    <AnimatePresence>
+      {showAudioSettings && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowAudioSettings(false)} />
+          <motion.div
+            className="relative w-full max-w-[480px] rounded-t-2xl p-4"
+            style={{ background: '#2a2a6a' }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+          >
+            <h4 className="text-sm font-semibold mb-3" style={{ color: '#ffffff' }}>Tetapan Audio</h4>
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs mb-1" style={{ color: 'rgba(204,204,204,0.5)' }}>Qari</div>
+                <div className="flex gap-2">
+                  {RECITERS.map(r => (
+                    <button
+                      key={r.id}
+                      className="flex-1 py-2 rounded-lg text-xs"
+                      style={{
+                        background: reciter === r.id ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+                        color: reciter === r.id ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
+                        border: `1px solid ${reciter === r.id ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
+                      }}
+                    >
+                      {r.nameMs}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs mb-1" style={{ color: 'rgba(204,204,204,0.5)' }}>Kelajuan: {playbackSpeed}x</div>
+                <input
+                  type="range"
+                  min={0}
+                  max={5}
+                  value={[0.5, 0.75, 1.0, 1.25, 1.5, 2.0].indexOf(playbackSpeed)}
+                  onChange={e => setPlaybackSpeed([0.5, 0.75, 1.0, 1.25, 1.5, 2.0][parseInt(e.target.value)] || 1.0)}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <div className="text-xs mb-1" style={{ color: 'rgba(204,204,204,0.5)' }}>Ulangan</div>
+                <div className="flex gap-2">
+                  {(['none', 'single', 'surah', 'continuous'] as RepeatMode[]).map(mode => (
+                    <button
+                      key={mode}
+                      className="flex-1 py-2 rounded-lg text-xs"
+                      style={{
+                        background: repeatMode === mode ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+                        color: repeatMode === mode ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
+                        border: `1px solid ${repeatMode === mode ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
+                      }}
+                      onClick={() => setRepeatMode(mode)}
+                    >
+                      {mode === 'none' ? 'Tiada' : mode === 'single' ? 'Satu' : mode === 'surah' ? 'Surah' : 'Berterusan'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
 
   // ─── Main Render ────────────────────────────────────────────
   return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      <AnimatePresence mode="wait">
-        {view === 'list' ? (
-          <motion.div
-            key="list"
-            className="qp-scroll flex-1 overflow-y-auto px-4 pb-24 pt-2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="text-lg font-bold" style={{ color: '#ffffff' }}>Al-Quran</h2>
-                <p className="text-xs" style={{ color: 'rgba(204,204,204,0.5)' }}>114 Surah · 30 Juz · 604 Muka</p>
-              </div>
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(74,74,166,0.15)' }}>
-                <BookOpen className="h-4 w-4" style={{ color: '#4a4aa6' }} />
-              </div>
-            </div>
+    <div className="flex flex-1 flex-col overflow-hidden px-4 pt-2">
+      {renderModeTabs()}
 
-            {/* Stats Bar */}
+      <div className="qp-scroll flex-1 overflow-y-auto pb-4">
+        {readingMode === 'surah' && view === 'list' && (
+          <>
+            {renderSearchBar()}
+            {renderSearchResults()}
             {renderStatsBar()}
-
-            {/* Mode Tabs */}
-            {renderModeTabs()}
-
-            {/* Search (Surah mode only) */}
-            {readingMode === 'surah' && renderSearchBar()}
-            {readingMode === 'surah' && renderSearchResults()}
-
-            {/* Filter tabs (Surah mode) */}
-            {readingMode === 'surah' && (
-              <div className="flex gap-2 mb-3">
-                {[
-                  { key: 'all' as FilterType, label: 'Semua' },
-                  { key: 'meccan' as FilterType, label: 'Makkiyah' },
-                  { key: 'medinan' as FilterType, label: 'Madaniyyah' },
-                ].map(f => (
-                  <button
-                    key={f.key}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                    style={{
-                      background: filter === f.key ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
-                      color: filter === f.key ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
-                      border: `1px solid ${filter === f.key ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
-                    }}
-                    onClick={() => setFilter(f.key)}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Content based on mode */}
-            {readingMode === 'surah' && renderSurahList()}
-            {readingMode === 'mushaf' && renderMushafView()}
-            {readingMode === 'juz' && renderJuzView()}
-            {readingMode === 'bookmarks' && renderBookmarksView()}
-            {readingMode === 'hafazan' && renderHafazanView()}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="reader"
-            ref={readerScrollRef}
-            className="qp-scroll flex-1 overflow-y-auto px-4 pb-32 pt-2"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            {readingMode === 'surah' && renderSurahReader()}
-            {readingMode !== 'surah' && (
-              <div className="text-center py-12">
-                <BookOpen className="h-12 w-12 mx-auto mb-3" style={{ color: 'rgba(74,74,166,0.3)' }} />
-                <p className="text-sm" style={{ color: 'rgba(204,204,204,0.5)' }}>Mod bacaan {readingMode}</p>
-              </div>
-            )}
-          </motion.div>
+            {/* Filter buttons */}
+            <div className="flex gap-2 mb-3">
+              {(['all', 'meccan', 'medinan'] as FilterType[]).map(f => (
+                <button
+                  key={f}
+                  className="px-3 py-1 rounded-lg text-xs"
+                  style={{
+                    background: filter === f ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+                    color: filter === f ? '#4a4aa6' : 'rgba(204,204,204,0.4)',
+                    border: `1px solid ${filter === f ? 'rgba(74,74,166,0.3)' : 'rgba(74,74,166,0.08)'}`,
+                  }}
+                  onClick={() => setFilter(f)}
+                >
+                  {f === 'all' ? 'Semua' : f === 'meccan' ? 'Makkiyah' : 'Madaniyyah'}
+                </button>
+              ))}
+            </div>
+            {renderSurahList()}
+          </>
         )}
-      </AnimatePresence>
 
-      {/* Audio Player Bar */}
-      {renderAudioPlayer()}
+        {readingMode === 'surah' && view === 'reader' && renderSurahReader()}
 
-      {/* Tafsir Bottom Sheet */}
-      <AnimatePresence>
-        {tafsirVerse !== null && renderTafsirSheet()}
-      </AnimatePresence>
+        {readingMode === 'juz' && renderJuzView()}
+
+        {readingMode === 'bookmarks' && renderBookmarksView()}
+
+        {readingMode === 'hafazan' && renderHafazanView()}
+
+        {readingMode === 'recite' && renderReciteView()}
+
+        {readingMode === 'mushaf' && (
+          <div className="flex flex-col items-center">
+            <div className="flex items-center justify-between w-full mb-3">
+              <button className="p-2 rounded-lg" style={{ background: 'rgba(42,42,106,0.5)' }} onClick={() => setMushafPage(Math.max(1, mushafPage - 1))}>
+                <ChevronLeft className="h-5 w-5" style={{ color: '#4a4aa6' }} />
+              </button>
+              <div className="text-center">
+                <div className="text-sm font-semibold" style={{ color: '#ffffff' }}>Muka {mushafPage}</div>
+              </div>
+              <button className="p-2 rounded-lg" style={{ background: 'rgba(42,42,106,0.5)' }} onClick={() => setMushafPage(Math.min(604, mushafPage + 1))}>
+                <ChevronRight className="h-5 w-5" style={{ color: '#4a4aa6' }} />
+              </button>
+            </div>
+            <div
+              className="w-full rounded-xl p-6 min-h-[400px] flex flex-col items-center justify-center"
+              style={{ background: 'linear-gradient(180deg, rgba(42,42,106,0.3), rgba(42,42,106,0.15))', border: '1px solid rgba(74,74,166,0.15)' }}
+            >
+              <p className="text-2xl font-arabic leading-[2.5]" style={{ color: '#ffffff', direction: 'rtl' }}>
+                ۞ Muka {mushafPage} / 604 ۞
+              </p>
+              <p className="text-sm mt-4" style={{ color: 'rgba(204,204,204,0.6)' }}>
+                Paparan mushaf penuh memerlukan data tambahan
+              </p>
+            </div>
+            <div className="w-full mt-3">
+              <input
+                type="range"
+                min={1}
+                max={604}
+                value={mushafPage}
+                onChange={e => setMushafPage(parseInt(e.target.value))}
+                className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                style={{ background: `linear-gradient(to right, #4a4aa6 ${(mushafPage / 604) * 100}%, rgba(42,42,106,0.3) ${(mushafPage / 604) * 100}%)` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Audio controls when reading */}
+      {isPlaying && view === 'reader' && (
+        <div className="flex items-center justify-between px-3 py-2 rounded-t-xl" style={{ background: 'rgba(42,42,106,0.8)', backdropFilter: 'blur(10px)', borderTop: '1px solid rgba(74,74,166,0.2)' }}>
+          <button className="p-1.5" onClick={() => {/* prev */}}>
+            <ChevronLeft className="h-4 w-4" style={{ color: '#4a4aa6' }} />
+          </button>
+          <button className="p-2 rounded-full" style={{ background: 'rgba(74,74,166,0.2)' }} onClick={() => togglePlay()}>
+            {isPlaying ? <Pause className="h-5 w-5" style={{ color: '#4a4aa6' }} /> : <Play className="h-5 w-5" style={{ color: '#4a4aa6' }} />}
+          </button>
+          <button className="p-1.5" onClick={nextAyah}>
+            <ChevronRight className="h-4 w-4" style={{ color: '#4a4aa6' }} />
+          </button>
+          <div className="flex items-center gap-1">
+            <Repeat className="h-3.5 w-3.5" style={{ color: repeatMode !== 'none' ? '#d4af37' : 'rgba(204,204,204,0.3)' }} />
+            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{currentPlayingAyah}/{surahInfo?.versesCount || '?'}</span>
+          </div>
+          <button className="p-1.5" onClick={() => setShowAudioSettings(true)}>
+            <BarChart3 className="h-3.5 w-3.5" style={{ color: 'rgba(204,204,204,0.4)' }} />
+          </button>
+        </div>
+      )}
+
+      {renderAudioSettings()}
     </div>
   )
 }

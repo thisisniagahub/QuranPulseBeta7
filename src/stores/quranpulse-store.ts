@@ -17,6 +17,18 @@ interface BookmarkedSurah {
   surahId: number
 }
 
+export type HafazanLevel = 'new' | 'learning' | 'review' | 'mastered'
+
+export interface HafazanVerseProgress {
+  surahId: number
+  verseNumber: number
+  level: HafazanLevel
+  lastReviewed: number // timestamp
+  correctCount: number
+  incorrectCount: number
+  nextReview: number // timestamp
+}
+
 interface QuranPulseState {
   // Navigation
   activeTab: TabId
@@ -60,6 +72,17 @@ interface QuranPulseState {
   showTasbihModal: boolean
   setShowTasbihModal: (show: boolean) => void
 
+  // Prayer zone (JAKIM)
+  selectedZone: string
+  setSelectedZone: (zone: string) => void
+
+  // Hafazan progress (spaced repetition)
+  hafazanProgress: HafazanVerseProgress[]
+  updateHafazanVerse: (surahId: number, verseNumber: number, correct: boolean) => void
+  getHafazanVerse: (surahId: number, verseNumber: number) => HafazanVerseProgress | undefined
+  getWeakVerses: () => HafazanVerseProgress[]
+  getDailyReviewVerses: () => HafazanVerseProgress[]
+
   // Actions — Bookmarks
   toggleVerseBookmark: (surahId: number, verseNumber: number) => void
   isVerseBookmarked: (surahId: number, verseNumber: number) => boolean
@@ -70,6 +93,27 @@ interface QuranPulseState {
   bookmarkedIds: string[]
   setLastRead: (surahId: number, verseNumber: number) => void
   setFontSize: (size: 'small' | 'medium' | 'large') => void
+}
+
+// Spaced repetition intervals in milliseconds
+const SR_INTERVALS: Record<HafazanLevel, number> = {
+  new: 0,
+  learning: 4 * 60 * 60 * 1000,      // 4 hours
+  review: 24 * 60 * 60 * 1000,        // 1 day
+  mastered: 7 * 24 * 60 * 60 * 1000,  // 7 days
+}
+
+function getNextLevel(current: HafazanLevel, correct: boolean): HafazanLevel {
+  if (correct) {
+    if (current === 'new') return 'learning'
+    if (current === 'learning') return 'review'
+    if (current === 'review') return 'mastered'
+    return 'mastered'
+  } else {
+    if (current === 'mastered') return 'review'
+    if (current === 'review') return 'learning'
+    return 'learning'
+  }
 }
 
 export const useQuranPulseStore = create<QuranPulseState>((set, get) => ({
@@ -127,6 +171,63 @@ export const useQuranPulseStore = create<QuranPulseState>((set, get) => ({
   // UI
   showTasbihModal: false,
   setShowTasbihModal: (show) => set({ showTasbihModal: show }),
+
+  // Prayer zone (JAKIM)
+  selectedZone: 'WPKL01',
+  setSelectedZone: (zone) => set({ selectedZone: zone }),
+
+  // Hafazan progress (spaced repetition)
+  hafazanProgress: [],
+  updateHafazanVerse: (surahId, verseNumber, correct) => {
+    const { hafazanProgress } = get()
+    const existing = hafazanProgress.find(
+      (p) => p.surahId === surahId && p.verseNumber === verseNumber
+    )
+    const now = Date.now()
+    const currentLevel = existing?.level || 'new'
+    const newLevel = getNextLevel(currentLevel, correct)
+    const nextReview = now + SR_INTERVALS[newLevel]
+
+    const updated: HafazanVerseProgress = {
+      surahId,
+      verseNumber,
+      level: newLevel,
+      lastReviewed: now,
+      correctCount: (existing?.correctCount || 0) + (correct ? 1 : 0),
+      incorrectCount: (existing?.incorrectCount || 0) + (correct ? 0 : 1),
+      nextReview,
+    }
+
+    if (existing) {
+      set({
+        hafazanProgress: hafazanProgress.map((p) =>
+          p.surahId === surahId && p.verseNumber === verseNumber ? updated : p
+        ),
+      })
+    } else {
+      set({
+        hafazanProgress: [...hafazanProgress, updated],
+      })
+    }
+  },
+  getHafazanVerse: (surahId, verseNumber) => {
+    return get().hafazanProgress.find(
+      (p) => p.surahId === surahId && p.verseNumber === verseNumber
+    )
+  },
+  getWeakVerses: () => {
+    const { hafazanProgress } = get()
+    return hafazanProgress.filter(
+      (p) => p.level === 'learning' || p.incorrectCount > p.correctCount
+    )
+  },
+  getDailyReviewVerses: () => {
+    const now = Date.now()
+    const { hafazanProgress } = get()
+    return hafazanProgress.filter(
+      (p) => p.level !== 'mastered' && p.nextReview <= now
+    )
+  },
 
   // Actions — Bookmarks
   toggleVerseBookmark: (surahId, verseNumber) => {
