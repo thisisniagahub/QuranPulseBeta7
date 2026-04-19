@@ -1,0 +1,111 @@
+{
+  "name": "QuranPulse",
+  "description": "Malaysia's first AI-powered Quran learning app with OpenClaw agent integration",
+  "version": "6.0.0",
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "openai/gpt-4o",
+        "fallbacks": ["openai/gpt-4o-mini", "anthropic/claude-sonnet-4-20250514"]
+      },
+      "imageModel": {
+        "primary": "openai/dall-e-3"
+      },
+      "imageGenerationModel": {
+        "primary": "openai/dall-e-3"
+      },
+      "models": [
+        "openai/gpt-4o",
+        "openai/gpt-4o-mini",
+        "anthropic/claude-sonnet-4-20250514",
+        "anthropic/claude-haiku-4-20250414",
+        "google/gemini-2.0-flash"
+      ]
+    },
+    "list": [
+      {
+        "id": "ustaz-azhar",
+        "name": "Ustaz Azhar",
+        "description": "Pakar Fiqh & Hukum Islam (Mazhab Syafie)",
+        "model": "openai/gpt-4o",
+        "skills": ["quranpulse-ustaz-ai", "quranpulse-quran-search", "quranpulse-prayer-ibadah"]
+      },
+      {
+        "id": "ustazah-aishah",
+        "name": "Ustazah Aishah",
+        "description": "Pakar Akidah & Akhlak Islam",
+        "model": "openai/gpt-4o",
+        "skills": ["quranpulse-ustaz-ai", "quranpulse-quran-search"]
+      },
+      {
+        "id": "ustaz-zak",
+        "name": "Ustaz Zak",
+        "description": "Pakar Sirah & Sejarah Islam",
+        "model": "openai/gpt-4o",
+        "skills": ["quranpulse-ustaz-ai", "quranpulse-quran-search"]
+      },
+      {
+        "id": "iqra-teacher",
+        "name": "Cikgu Iqra",
+        "description": "Pembantu belajar Iqra & Hafazan",
+        "model": "openai/gpt-4o",
+        "skills": ["quranpulse-iqra-hafazan", "quranpulse-ustaz-ai"]
+      },
+      {
+        "id": "islamic-artist",
+        "name": "Islamic Art Generator",
+        "description": "Jana seni Islam — khat, geometri, seni bina masjid",
+        "model": "openai/gpt-4o",
+        "skills": ["quranpulse-islamic-art"]
+      }
+    ]
+  },
+  "channels": {
+    "webchat": {
+      "enabled": true
+    },
+    "telegram": {
+      "enabled": false,
+      "botToken": "",
+      "allowFrom": [],
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      }
+    },
+    "whatsapp": {
+      "enabled": false,
+      "allowFrom": [],
+      "groups": {
+        "*": {
+          "requireMention": true
+        }
+      }
+    },
+    "discord": {
+      "enabled": false,
+      "botToken": "",
+      "servers": []
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "bind": "loopback",
+    "auth": {
+      "mode": "shared-secret",
+      "token": ""
+    },
+    "webchat": {
+      "chatHistoryMaxChars": 5000
+    },
+    "reload": {
+      "mode": "hybrid"
+    }
+  },
+  "messages": {
+    "groupChat": {
+      "mentionPatterns": ["@ustaz", "@quranpulse", "@ustazai"]
+    }
+  }
+}

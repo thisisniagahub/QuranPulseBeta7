@@ -1,8 +1,8 @@
 {
   "name": "openclaw-gateway",
-  "version": "1.0.0",
-  "description": "OpenClaw Gateway mini-service for QuranPulse",
+  "version": "2.0.0",
+  "description": "OpenClaw Gateway v2 mini-service for QuranPulse - OpenAI-compat API, Media Gen, Web Search, Prayer Scheduling",
   "scripts": {
-    "dev": "bun run index.ts"
+    "dev": "bun --hot index.ts"
   }
 }

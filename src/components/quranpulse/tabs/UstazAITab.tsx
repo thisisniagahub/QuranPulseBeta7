@@ -68,12 +68,15 @@ const SUGGESTION_CHIPS = [
 ]
 
 const OPENCLAW_TOOLS = [
-  { id: 'web-search', name: 'Web Search', icon: Globe, desc: 'Search the web for Islamic knowledge' },
-  { id: 'image-gen', name: 'Islamic Art', icon: ImageIcon, desc: 'Generate Islamic calligraphy & art' },
-  { id: 'tts', name: 'Voice Output', icon: Volume2, desc: 'Text-to-speech for responses' },
-  { id: 'cron', name: 'Prayer Reminders', icon: Clock, desc: 'Scheduled prayer notifications' },
-  { id: 'quran-search', name: 'Quran Search', icon: BookOpen, desc: 'Search Quranic verses' },
-  { id: 'solat', name: 'Prayer Times', icon: Moon, desc: 'Real-time prayer schedule' },
+  { id: 'web-search', name: 'Web Search', icon: Globe, desc: 'Search the web for Islamic knowledge', ocTool: 'web_search' },
+  { id: 'image-gen', name: 'Islamic Art', icon: ImageIcon, desc: 'Generate Islamic calligraphy & art', ocTool: 'image_generate' },
+  { id: 'video-gen', name: 'Video Gen', icon: Palette, desc: 'Generate Islamic video content', ocTool: 'video_generate' },
+  { id: 'music-gen', name: 'Nasheed Gen', icon: Volume2, desc: 'Generate nasheed/vocal music', ocTool: 'music_generate' },
+  { id: 'cron', name: 'Prayer Reminders', icon: Clock, desc: 'Scheduled prayer notifications', ocTool: 'cron' },
+  { id: 'quran-search', name: 'Quran Search', icon: BookOpen, desc: 'Search Quranic verses', ocTool: 'web_fetch' },
+  { id: 'pdf-tool', name: 'PDF Tool', icon: Search, desc: 'Read & analyze PDF documents', ocTool: 'pdf' },
+  { id: 'browser', name: 'Web Browser', icon: Globe, desc: 'Browse websites for research', ocTool: 'browser' },
+  { id: 'tts', name: 'Voice Output', icon: Volume2, desc: 'Text-to-speech for responses', ocTool: 'tts' },
 ]
 
 const REACTION_EMOJIS = ['👍', '❤️', '🤲', '✨', '🕌']
@@ -95,8 +98,13 @@ export function UstazAITab() {
   const [isRecording, setIsRecording] = useState(false)
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null)
 
-  // OpenClaw hook
-  const { isOnline, skills, cronJobs, status, loading: ocLoading, sendMessage: ocSendMessage } = useOpenClaw()
+  // OpenClaw hook (enhanced with all features)
+  const {
+    isOnline, isGatewayReachable, skills, cronJobs, models, sessions,
+    status, loading: ocLoading,
+    sendMessage: ocSendMessage, chatCompletion, generateMedia, webSearch,
+    schedulePrayer, refreshSkills, refreshCron, refreshSessions, refreshModels,
+  } = useOpenClaw()
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -142,19 +150,57 @@ export function UstazAITab() {
     try {
       // Try OpenClaw first if in OpenClaw mode and online
       if (chatMode === 'openclaw' && isOnline) {
-        const ocResult = await ocSendMessage(input.trim())
-        if (ocResult && ocResult.response) {
+        // Map persona to OpenClaw agent
+        const agentMap: Record<string, string> = {
+          'ustaz': 'ustaz-azhar',
+          'ustazah': 'ustazah-aishah',
+          'ustaz-zak': 'ustaz-zak',
+        }
+        const agentId = agentMap[activePersona] || 'ustaz-azhar'
+
+        // Determine if this is a media generation request
+        const isImageReq = userMessage.content.toLowerCase().includes('jana seni') ||
+          userMessage.content.toLowerCase().includes('generate art') ||
+          userMessage.content.toLowerCase().includes('khat islam') ||
+          userMessage.content.toLowerCase().includes('islamic art')
+        const isVideoReq = userMessage.content.toLowerCase().includes('jana video') ||
+          userMessage.content.toLowerCase().includes('generate video')
+        const isMusicReq = userMessage.content.toLowerCase().includes('jana nasyid') ||
+          userMessage.content.toLowerCase().includes('generate nasheed') ||
+          userMessage.content.toLowerCase().includes('jana muzik')
+
+        let ocResult: any = null
+
+        // Handle media generation via OpenClaw
+        if (isImageReq) {
+          ocResult = await generateMedia({ type: 'image', prompt: userMessage.content })
+        } else if (isVideoReq) {
+          ocResult = await generateMedia({ type: 'video', prompt: userMessage.content })
+        } else if (isMusicReq) {
+          ocResult = await generateMedia({ type: 'music', prompt: userMessage.content })
+        } else if (webSearchEnabled) {
+          // Use OpenClaw web search
+          ocResult = await webSearch(userMessage.content)
+        } else {
+          // Use OpenClaw agent messaging
+          ocResult = await ocSendMessage(input.trim(), { agentId })
+        }
+
+        if (ocResult && (ocResult.response || ocResult.choices?.[0])) {
+          const responseText = ocResult.response ||
+            ocResult.choices?.[0]?.message?.content ||
+            ocResult.choices?.[0]?.text || ''
           const assistantMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
-            content: ocResult.response,
+            content: responseText,
             timestamp: new Date(),
             persona: activePersona,
-            imageUrl: ocResult.imageUrl || undefined,
-            isSearching: ocResult.searching || undefined,
+            imageUrl: ocResult.imageUrl || ocResult.data?.imageUrl || undefined,
+            isSearching: webSearchEnabled || ocResult.searching || undefined,
           }
           setMessages(prev => [...prev, assistantMessage])
-          addXp(20)
+          addXp(isImageReq || isVideoReq || isMusicReq ? 25 : 20)
           return
         }
       }
@@ -517,7 +563,10 @@ export function UstazAITab() {
                 <div className="flex items-center gap-1.5 mb-2">
                   <Zap className="h-3 w-3" style={{ color: '#d4af37' }} />
                   <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>
-                    OpenClaw Skills
+                    OpenClaw Skills ({skills.length > 0 ? skills.length : 5})
+                  </span>
+                  <span className="text-[8px]" style={{ color: isGatewayReachable ? '#22c55e' : '#ef4444' }}>
+                    {isGatewayReachable ? '● Gateway Connected' : '● Gateway Offline'}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -542,19 +591,23 @@ export function UstazAITab() {
                     <>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-medium"
                         style={{ background: 'rgba(74,74,166,0.15)', border: '1px solid rgba(74,74,166,0.25)', color: '#4a4aa6' }}>
-                        ⚡ quranpulse
+                        ⚡ ustaz-ai
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-medium"
                         style={{ background: 'rgba(74,74,166,0.15)', border: '1px solid rgba(74,74,166,0.25)', color: '#4a4aa6' }}>
-                        ⚡ quranpulse-solat
+                        ⚡ quran-search
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-medium"
                         style={{ background: 'rgba(74,74,166,0.15)', border: '1px solid rgba(74,74,166,0.25)', color: '#4a4aa6' }}>
-                        ⚡ quranpulse-tasbih
+                        ⚡ prayer-ibadah
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-medium"
                         style={{ background: 'rgba(74,74,166,0.15)', border: '1px solid rgba(74,74,166,0.25)', color: '#4a4aa6' }}>
-                        ⚡ web-search
+                        ⚡ islamic-art
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-medium"
+                        style={{ background: 'rgba(74,74,166,0.15)', border: '1px solid rgba(74,74,166,0.25)', color: '#4a4aa6' }}>
+                        ⚡ iqra-hafazan
                       </span>
                     </>
                   )}
