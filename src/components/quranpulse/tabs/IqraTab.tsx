@@ -333,6 +333,35 @@ export function IqraTab() {
   }, [isDrawing])
   const stopDraw = useCallback(() => setIsDrawing(false), [])
 
+  // === Derived: filtered letters (must be before startAutoPlay) ===
+  const filteredLetters = letterFilter === 'harakat' || letterFilter === 'tanwin' || letterFilter === 'mad'
+    ? [] // harakat/tanwin/mad use separate data, not letter grid
+    : ENHANCED_LETTERS.filter(l => {
+        if (letterFilter === 'all' || letterFilter === 'hijaiyah') return true
+        return false
+      })
+
+  // === Audio playback (must be before startAutoPlay) ===
+  const playAudio = async (text: string, id: string, speed?: number) => {
+    if (playingAudio === id) return
+    setPlayingAudio(id)
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice: 'tongtong', speed: speed || audioSpeed }),
+      })
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const audio = new Audio(url)
+        audio.onended = () => { URL.revokeObjectURL(url); setPlayingAudio(null) }
+        audio.onerror = () => { URL.revokeObjectURL(url); setPlayingAudio(null) }
+        await audio.play()
+      } else { setPlayingAudio(null) }
+    } catch { setPlayingAudio(null) }
+  }
+
   // === Auto-play letters sequentially ===
   const startAutoPlay = useCallback(() => {
     if (isAutoPlaying) {
@@ -368,25 +397,6 @@ export function IqraTab() {
   const navigatePage = (delta: number) => {
     const newPage = Math.max(1, Math.min(currentBook.pages, iqraPage + delta))
     setIqraPage(newPage)
-  }
-  const playAudio = async (text: string, id: string, speed?: number) => {
-    if (playingAudio === id) return
-    setPlayingAudio(id)
-    try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voice: 'tongtong', speed: speed || audioSpeed }),
-      })
-      if (res.ok) {
-        const blob = await res.blob()
-        const url = URL.createObjectURL(blob)
-        const audio = new Audio(url)
-        audio.onended = () => { URL.revokeObjectURL(url); setPlayingAudio(null) }
-        audio.onerror = () => { URL.revokeObjectURL(url); setPlayingAudio(null) }
-        await audio.play()
-      } else { setPlayingAudio(null) }
-    } catch { setPlayingAudio(null) }
   }
   const sendAI = async () => {
     if (!aiInput.trim() || aiLoading) return
@@ -465,12 +475,6 @@ export function IqraTab() {
     { key: 'tajwid', label: 'Tajwid', icon: <Target className="h-4 w-4" /> },
     { key: 'hafazan', label: 'Hafazan', icon: <GraduationCap className="h-4 w-4" /> },
   ]
-  const filteredLetters = letterFilter === 'harakat' || letterFilter === 'tanwin' || letterFilter === 'mad'
-    ? [] // harakat/tanwin/mad use separate data, not letter grid
-    : ENHANCED_LETTERS.filter(l => {
-        if (letterFilter === 'all' || letterFilter === 'hijaiyah') return true
-        return false
-      })
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
