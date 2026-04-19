@@ -1,45 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser } from '@/lib/supabase/auth'
+import { getRateLimitResponse } from '@/lib/api-auth'
 
-// GET /api/supabase/bookmarks?user_id=xxx&type=verses|surahs
+// GET /api/supabase/bookmarks?type=verses|surahs
 export async function GET(request: NextRequest) {
-  try {
-    const userId = request.nextUrl.searchParams.get('user_id')
-    const type = request.nextUrl.searchParams.get('type') || 'verses'
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!userId) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const type = request.nextUrl.searchParams.get('type') || 'verses'
     const table = type === 'surahs' ? 'bookmarked_surahs' : 'bookmarked_verses'
 
     const { data, error } = await supabase
       .from(table)
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ bookmarks: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 // POST /api/supabase/bookmarks — Add bookmark
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { user_id, type, surah_id, verse_number } = body
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!user_id || !type || !surah_id) {
-      return NextResponse.json({ error: 'user_id, type, surah_id are required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const body = await request.json()
+    const { type, surah_id, verse_number } = body
+
+    if (!type || !surah_id) {
+      return NextResponse.json({ error: 'type, surah_id are required' }, { status: 400 })
+    }
 
     if (type === 'verses') {
       if (!verse_number) {
@@ -47,7 +56,7 @@ export async function POST(request: NextRequest) {
       }
       const { data, error } = await supabase
         .from('bookmarked_verses')
-        .insert({ user_id, surah_id, verse_number })
+        .insert({ user_id: user.id, surah_id, verse_number })
         .select()
         .single()
 
@@ -61,7 +70,7 @@ export async function POST(request: NextRequest) {
     } else {
       const { data, error } = await supabase
         .from('bookmarked_surahs')
-        .insert({ user_id, surah_id })
+        .insert({ user_id: user.id, surah_id })
         .select()
         .single()
 
@@ -73,28 +82,35 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ bookmark: data })
     }
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 // DELETE /api/supabase/bookmarks — Remove bookmark
 export async function DELETE(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { user_id, type, surah_id, verse_number } = body
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!user_id || !type || !surah_id) {
-      return NextResponse.json({ error: 'user_id, type, surah_id are required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const body = await request.json()
+    const { type, surah_id, verse_number } = body
+
+    if (!type || !surah_id) {
+      return NextResponse.json({ error: 'type, surah_id are required' }, { status: 400 })
+    }
 
     if (type === 'verses') {
       const { error } = await supabase
         .from('bookmarked_verses')
         .delete()
-        .eq('user_id', user_id)
+        .eq('user_id', user.id)
         .eq('surah_id', surah_id)
         .eq('verse_number', verse_number)
 
@@ -105,7 +121,7 @@ export async function DELETE(request: NextRequest) {
       const { error } = await supabase
         .from('bookmarked_surahs')
         .delete()
-        .eq('user_id', user_id)
+        .eq('user_id', user.id)
         .eq('surah_id', surah_id)
 
       if (error) {
@@ -114,7 +130,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

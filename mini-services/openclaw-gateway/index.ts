@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import http from 'http';
 
 const PORT = 3030;
@@ -7,6 +7,27 @@ const OPENCLAW_HOST = '127.0.0.1';
 
 console.log(`[OpenClaw Gateway v2] Starting QuranPulse-OpenClaw integration on port ${PORT}`);
 console.log(`[OpenClaw Gateway v2] OpenClaw Gateway expected on port ${OPENCLAW_PORT}`);
+
+// ─── Helper: Validate origin for CORS ──────────────────────────────────────
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return false;
+  // Allow localhost for development
+  if (origin === 'http://localhost:3000') return true;
+  // Allow sandbox preview origins
+  if (/\.space\.z\.ai$/.test(origin)) return true;
+  return false;
+}
+
+// ─── Helper: Set CORS headers safely ───────────────────────────────────────
+function setCorsHeaders(req: http.IncomingMessage, res: http.ServerResponse): void {
+  const origin = req.headers.origin;
+  if (origin && isOriginAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
 
 // ─── Helper: Proxy request to OpenClaw Gateway ────────────────────────────────
 function proxyToOpenClaw(path: string, method: string = 'GET', body?: any): Promise<{ status: number; data: any }> {
@@ -51,14 +72,29 @@ function proxyToOpenClaw(path: string, method: string = 'GET', body?: any): Prom
   });
 }
 
-// ─── Helper: Run OpenClaw CLI command ─────────────────────────────────────────
-function runOpenClawCLI(command: string, timeout: number = 5000): { success: boolean; data: any } {
+// ─── Helper: Run OpenClaw CLI command (spawnSync — no shell injection) ──────
+function runOpenClawCLI(args: string[], timeout: number = 5000): { success: boolean; data: any } {
   try {
-    const result = execSync(`openclaw ${command} --json 2>&1`, { timeout });
+    const result = spawnSync('openclaw', [...args, '--json'], {
+      timeout,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    if (result.error) {
+      return { success: false, data: { error: result.error.message, hint: 'OpenClaw CLI not available' } };
+    }
+
+    const stdout = (result.stdout || '').trim();
+    if (result.status !== 0 && !stdout) {
+      const stderr = (result.stderr || '').trim();
+      return { success: false, data: { error: stderr || `Process exited with code ${result.status}`, hint: 'OpenClaw CLI error' } };
+    }
+
     try {
-      return { success: true, data: JSON.parse(result.toString()) };
+      return { success: true, data: JSON.parse(stdout) };
     } catch {
-      return { success: true, data: { raw: result.toString().trim() } };
+      return { success: true, data: { raw: stdout } };
     }
   } catch (error: any) {
     return { success: false, data: { error: error.message, hint: 'OpenClaw CLI not available' } };
@@ -67,10 +103,8 @@ function runOpenClawCLI(command: string, timeout: number = 5000): { success: boo
 
 // ─── HTTP Server ──────────────────────────────────────────────────────────────
 const server = http.createServer(async (req, res) => {
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // CORS — restricted origin
+  setCorsHeaders(req, res);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -112,7 +146,7 @@ const server = http.createServer(async (req, res) => {
       }));
     } else {
       // Fallback to CLI
-      const cli = runOpenClawCLI('gateway status');
+      const cli = runOpenClawCLI(['gateway', 'status']);
       res.writeHead(cli.success ? 200 : 503, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         status: cli.success ? 'online' : 'offline',
@@ -130,7 +164,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(result.status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result.data));
     } else {
-      const cli = runOpenClawCLI('sessions list');
+      const cli = runOpenClawCLI(['sessions', 'list']);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(cli.data));
     }
@@ -144,7 +178,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(result.status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result.data));
     } else {
-      const cli = runOpenClawCLI('cron list');
+      const cli = runOpenClawCLI(['cron', 'list']);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(cli.data));
     }
@@ -158,7 +192,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(result.status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result.data));
     } else {
-      const cli = runOpenClawCLI('skills list');
+      const cli = runOpenClawCLI(['skills', 'list']);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(cli.data));
     }
@@ -204,6 +238,27 @@ const server = http.createServer(async (req, res) => {
       try {
         const { message, channel, target, sessionKey, agentId } = JSON.parse(body);
 
+        // ── Input validation ──
+        if (typeof message !== 'string' || message.trim().length === 0 || message.length > 2000) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid message: must be a non-empty string up to 2000 characters' }));
+          return;
+        }
+        if (channel !== undefined && channel !== null && channel !== '') {
+          if (typeof channel !== 'string' || !/^[a-z]{2,20}$/.test(channel)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid channel: must be 2-20 lowercase letters' }));
+            return;
+          }
+        }
+        if (target !== undefined && target !== null && target !== '') {
+          if (typeof target !== 'string' || !/^[a-zA-Z0-9_@.-]{1,50}$/.test(target)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid target: must be 1-50 alphanumeric/_.@- characters' }));
+            return;
+          }
+        }
+
         // Try OpenAI-compatible endpoint first (most reliable)
         const chatResult = await proxyToOpenClaw('/v1/chat/completions', 'POST', {
           model: agentId ? `openclaw/${agentId}` : 'openclaw/default',
@@ -228,10 +283,11 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        // Fallback to CLI agent command
-        const escapedMsg = message.replace(/"/g, '\\"').replace(/`/g, '\\`');
-        const cmd = `agent --message "${escapedMsg}" ${channel ? `--channel ${channel}` : ''} ${target ? `--target ${target}` : ''}`;
-        const cli = runOpenClawCLI(cmd, 30000);
+        // Fallback to CLI agent command — args passed as array, no shell interpolation
+        const cliArgs: string[] = ['agent', '--message', message];
+        if (channel) cliArgs.push('--channel', channel);
+        if (target) cliArgs.push('--target', target);
+        const cli = runOpenClawCLI(cliArgs, 30000);
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
@@ -253,8 +309,28 @@ const server = http.createServer(async (req, res) => {
     req.on('end', () => {
       try {
         const { prayerName, time, channel } = JSON.parse(body);
-        const cmd = `cron add --schedule "0 ${time.split(':').reverse().join(' ')} * * *" --task "Prayer reminder: ${prayerName} - It's time for ${prayerName} prayer! ${channel ? `--channel ${channel}` : ''}"`;
-        const cli = runOpenClawCLI(cmd, 5000);
+
+        // ── Input validation ──
+        if (typeof prayerName !== 'string' || !/^[A-Za-z\s]{2,30}$/.test(prayerName)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid prayerName: must be 2-30 letters/spaces only' }));
+          return;
+        }
+        if (typeof time !== 'string' || !/^\d{1,2}:\d{2}$/.test(time)) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid time: must be HH:MM format' }));
+          return;
+        }
+
+        // Build cron expression from validated time
+        const timeParts = time.split(':');
+        const minute = timeParts[1];
+        const hour = timeParts[0];
+        const cronExpr = `0 ${minute} ${hour} * * *`;
+        const taskDesc = `Prayer reminder: ${prayerName} - It's time for ${prayerName} prayer!`;
+
+        // Pass as array args — no shell interpolation
+        const cli = runOpenClawCLI(['cron', 'add', '--schedule', cronExpr, '--task', taskDesc], 5000);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           success: cli.success,

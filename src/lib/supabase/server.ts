@@ -27,6 +27,9 @@ export async function createServerSupabaseClient() {
   )
 }
 
+/**
+ * @danger Uses service role key — bypasses RLS. Only use in admin/system contexts, never for user-facing endpoints.
+ */
 export async function createServiceRoleClient() {
   const { createClient } = await import('@supabase/supabase-js')
   return createClient(

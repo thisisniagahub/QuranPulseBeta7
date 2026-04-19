@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getRateLimitResponse } from '@/lib/api-auth'
 
 const GATEWAY_URL = process.env.OPENCLAW_GATEWAY_URL || 'http://localhost:3030'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
     const response = await fetch(`${GATEWAY_URL}/api/models`, {
       headers: { 'Accept': 'application/json' },
@@ -11,9 +15,10 @@ export async function GET() {
 
     const data = await response.json()
     return NextResponse.json(data, { status: response.status })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'OpenClaw Gateway tidak dapat diakses', models: [], message: error.message },
+      { error: 'OpenClaw Gateway tidak dapat diakses', models: [], message },
       { status: 503 }
     )
   }

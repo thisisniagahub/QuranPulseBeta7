@@ -1,23 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser } from '@/lib/supabase/auth'
+import { getRateLimitResponse } from '@/lib/api-auth'
 
 // POST /api/supabase/xp — Add XP and log it
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { user_id, amount, source } = body
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!user_id || !amount || !source) {
-      return NextResponse.json({ error: 'user_id, amount, source are required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const body = await request.json()
+    const { amount, source } = body
+
+    // Validate amount is a positive number between 1-100
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 1 || amount > 100) {
+      return NextResponse.json({ error: 'amount must be a positive number between 1 and 100' }, { status: 400 })
+    }
+
+    // Validate source is a non-empty string max 100 chars
+    if (typeof source !== 'string' || source.trim().length === 0 || source.length > 100) {
+      return NextResponse.json({ error: 'source must be a non-empty string (max 100 characters)' }, { status: 400 })
+    }
 
     // Get current profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('xp, level')
-      .eq('user_id', user_id)
+      .eq('user_id', user.id)
       .single()
 
     const currentXp = profile?.xp || 0
@@ -29,7 +42,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('profiles')
       .update({ xp: newXp, level: newLevel })
-      .eq('user_id', user_id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -40,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Log XP
     await supabase
       .from('xp_log')
-      .insert({ user_id, amount, source })
+      .insert({ user_id: user.id, amount, source })
 
     return NextResponse.json({
       profile: data,
@@ -48,7 +61,8 @@ export async function POST(request: NextRequest) {
       newLevel,
       leveledUp: newLevel > currentLevel,
     })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

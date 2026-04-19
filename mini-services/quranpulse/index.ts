@@ -1,7 +1,8 @@
 import { serve } from "bun";
+import path from "path";
 
 const PORT = 5173;
-const DIST_DIR = "/home/z/QuranPulse-v6.0/dist";
+const DIST_DIR = process.env.DIST_DIR || path.join(process.cwd(), "dist");
 
 serve({
   port: PORT,

@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser } from '@/lib/supabase/auth'
+import { getRateLimitResponse } from '@/lib/api-auth'
 
-// GET /api/supabase/tasbih?user_id=xxx
+// GET /api/supabase/tasbih
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
-    const userId = request.nextUrl.searchParams.get('user_id')
-    if (!userId) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
     const { data, error } = await supabase
       .from('tasbih_sessions')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -23,28 +26,31 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ session: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 // POST /api/supabase/tasbih — Save tasbih state
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { user_id, count, target, total, dhikr_text } = body
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!user_id) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const body = await request.json()
+    const { count, target, total, dhikr_text } = body
 
     // Check if session exists
     const { data: existing } = await supabase
       .from('tasbih_sessions')
       .select('id')
-      .eq('user_id', user_id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -64,7 +70,7 @@ export async function POST(request: NextRequest) {
     } else {
       const { data, error } = await supabase
         .from('tasbih_sessions')
-        .insert({ user_id, count, target, total, dhikr_text })
+        .insert({ user_id: user.id, count, target, total, dhikr_text })
         .select()
         .single()
 
@@ -73,7 +79,8 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ session: data })
     }
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import { createClient } from '@/lib/supabase/client'
 
@@ -17,11 +17,11 @@ export function useSupabaseSync() {
   // Check if Supabase is configured
   const isSupabaseConfigured =
     typeof window !== 'undefined' &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Debounced sync function
-  const syncToSupabase = async () => {
+  // Debounced sync function — uses refs to avoid stale closures
+  const syncToSupabase = useCallback(async () => {
     if (!isSupabaseConfigured) return
 
     try {
@@ -31,7 +31,7 @@ export function useSupabaseSync() {
       if (!user) return // Only sync for authenticated users
 
       // Sync profile data
-      await fetch('/api/supabase/profile', {
+      const res = await fetch('/api/supabase/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -44,19 +44,23 @@ export function useSupabaseSync() {
         }),
       })
 
+      if (!res.ok) {
+        console.warn('[SupabaseSync] Failed to sync profile:', res.status)
+      }
+
       lastSyncRef.current = Date.now()
-    } catch {
-      // Silent fail — local state is still valid
+    } catch (error) {
+      console.warn('[SupabaseSync] Sync error:', error instanceof Error ? error.message : 'Unknown error')
     }
-  }
+  }, [isSupabaseConfigured, store.userName, store.xp, store.level, store.streak, store.fontSize])
 
   // Debounce sync to avoid too many requests
-  const debouncedSync = () => {
+  const debouncedSync = useCallback(() => {
     if (syncTimeoutRef.current) {
       clearTimeout(syncTimeoutRef.current)
     }
     syncTimeoutRef.current = setTimeout(syncToSupabase, 2000)
-  }
+  }, [syncToSupabase])
 
   // Watch for changes in key store values
   useEffect(() => {
@@ -67,7 +71,7 @@ export function useSupabaseSync() {
         clearTimeout(syncTimeoutRef.current)
       }
     }
-  }, [store.xp, store.level, store.streak, store.userName, store.fontSize])
+  }, [isSupabaseConfigured, debouncedSync, store.xp, store.level, store.streak, store.userName, store.fontSize])
 
   // Load from Supabase on mount
   useEffect(() => {
@@ -86,17 +90,19 @@ export function useSupabaseSync() {
           if (profile) {
             if (profile.username) store.setUserName(profile.username)
             if (profile.xp) {
-              // Use store actions to update
               const diff = profile.xp - store.xp
               if (diff > 0) store.addXp(diff)
             }
           }
+        } else {
+          console.warn('[SupabaseSync] Failed to load profile:', res.status)
         }
-      } catch {
-        // Silent fail
+      } catch (error) {
+        console.warn('[SupabaseSync] Load error:', error instanceof Error ? error.message : 'Unknown error')
       }
     }
 
     loadFromSupabase()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount
+  }, [isSupabaseConfigured])
 }

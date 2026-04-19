@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// QuranPulse Prisma Schema
+// Mirrors the Supabase tables for local dev / fallback (SQLite)
+// Primary database is Supabase (Postgres); this is for offline/local development.
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +11,115 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// User profile — mirrors Supabase `profiles`
+model Profile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  username       String   @default("Pengguna")
+  xp             Int      @default(0)
+  level          Int      @default(1)
+  streak         Int      @default(0)
+  lastStreakDate String?  // SQLite doesn't have Date-only; store as ISO date string
+  fontSize       String   @default("medium") // small | medium | large
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  readingProgress   ReadingProgress[]
+  iqraProgress      IqraProgress[]
+  tasbihSessions    TasbihSession[]
+  chatMessages      ChatMessage[]
+  bookmarkedVerses  BookmarkedVerse[]
+  bookmarkedSurahs  BookmarkedSurah[]
+  xpLogs            XpLog[]
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+/// Reading progress — mirrors Supabase `reading_progress`
+model ReadingProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  surahId     Int
+  verseNumber Int
+  surahName   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@unique([userId])
+}
+
+/// Iqra progress — mirrors Supabase `iqra_progress`
+model IqraProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  bookNumber  Int      @default(1)
+  pageNumber  Int      @default(1)
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@unique([userId, bookNumber, pageNumber])
+}
+
+/// Tasbih sessions — mirrors Supabase `tasbih_sessions`
+model TasbihSession {
+  id         String   @id @default(uuid())
+  userId     String
+  count      Int      @default(0)
+  target     Int      @default(33)
+  total      Int      @default(0)
+  dhikrText  String   @default("سُبْحَانَ اللّهِ")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  profile Profile @relation(fields: [userId], references: [userId])
+}
+
+/// Chat messages (Ustaz AI) — mirrors Supabase `chat_messages`
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String
+  role      String   // user | assistant
+  content   String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  profile Profile @relation(fields: [userId], references: [userId])
+}
+
+/// Bookmarked verses — mirrors Supabase `bookmarked_verses`
+model BookmarkedVerse {
+  id          String   @id @default(uuid())
+  userId      String
+  surahId     Int
+  verseNumber Int
+  createdAt   DateTime @default(now())
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@unique([userId, surahId, verseNumber])
+}
+
+/// Bookmarked surahs — mirrors Supabase `bookmarked_surahs`
+model BookmarkedSurah {
+  id        String   @id @default(uuid())
+  userId    String
+  surahId   Int
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [userId], references: [userId])
+
+  @@unique([userId, surahId])
+}
+
+/// XP log — mirrors Supabase `xp_log`
+model XpLog {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Int
+  source    String
+  createdAt DateTime @default(now())
+
+  profile Profile @relation(fields: [userId], references: [userId])
 }

@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser } from '@/lib/supabase/auth'
+import { getRateLimitResponse } from '@/lib/api-auth'
 
-// GET /api/supabase/chat?user_id=xxx&limit=50
+// GET /api/supabase/chat?limit=50
 export async function GET(request: NextRequest) {
-  try {
-    const userId = request.nextUrl.searchParams.get('user_id')
-    const limit = parseInt(request.nextUrl.searchParams.get('limit') || '50')
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!userId) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const rawLimit = parseInt(request.nextUrl.searchParams.get('limit') || '50')
+    // Cap limit to max 200
+    const limit = Math.min(Math.max(1, rawLimit), 200)
+
     const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: true })
       .limit(limit)
 
@@ -24,25 +29,33 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ messages: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 // POST /api/supabase/chat — Save chat message
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { user_id, role, content } = body
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!user_id || !role || !content) {
-      return NextResponse.json({ error: 'user_id, role, content are required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const body = await request.json()
+    const { role, content } = body
+
+    if (!role || !content) {
+      return NextResponse.json({ error: 'role, content are required' }, { status: 400 })
+    }
+
     const { data, error } = await supabase
       .from('chat_messages')
-      .insert({ user_id, role, content })
+      .insert({ user_id: user.id, role, content })
       .select()
       .single()
 
@@ -51,31 +64,35 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ message: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 // DELETE /api/supabase/chat — Clear chat history
 export async function DELETE(request: NextRequest) {
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
-    const userId = request.nextUrl.searchParams.get('user_id')
-    if (!userId) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
     const { error } = await supabase
       .from('chat_messages')
       .delete()
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

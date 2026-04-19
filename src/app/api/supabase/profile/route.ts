@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser } from '@/lib/supabase/auth'
+import { getRateLimitResponse } from '@/lib/api-auth'
 
-// GET /api/supabase/profile?user_id=xxx
+// GET /api/supabase/profile
 export async function GET(request: NextRequest) {
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
+
   try {
-    const userId = request.nextUrl.searchParams.get('user_id')
-    if (!userId) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .single()
 
     if (error) {
@@ -21,28 +24,30 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ profile: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
-// POST /api/supabase/profile — Create or update profile
+// POST /api/supabase/profile — Create profile
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { user_id, username, xp, level, streak, font_size } = body
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!user_id) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const body = await request.json()
+    const { username, xp, level, streak, font_size } = body
 
-    // Upsert profile
     const { data, error } = await supabase
       .from('profiles')
       .upsert({
-        user_id,
+        user_id: user.id,
         username: username || 'Pengguna',
         xp: xp || 0,
         level: level || 1,
@@ -57,26 +62,43 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ profile: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
-// PATCH /api/supabase/profile — Update specific fields
+// PATCH /api/supabase/profile — Update specific fields (whitelisted)
 export async function PATCH(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { user_id, ...updates } = body
+  const rateLimitResponse = getRateLimitResponse(request, 30, 60000)
+  if (rateLimitResponse) return rateLimitResponse
 
-    if (!user_id) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+  try {
+    const { user, error: authError, supabase } = await getAuthenticatedUser(request)
+    if (authError || !user || !supabase) {
+      return NextResponse.json({ error: authError!.message }, { status: authError!.status })
     }
 
-    const supabase = await createServiceRoleClient()
+    const body = await request.json()
+
+    // Field whitelist — only allow updating these fields
+    const allowedFields = ['username', 'xp', 'level', 'streak', 'font_size'] as const
+    const updates: Record<string, unknown> = {}
+
+    for (const field of allowedFields) {
+      if (field in body) {
+        updates[field] = body[field]
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+    }
+
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('user_id', user_id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
@@ -85,7 +107,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json({ profile: data })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An unexpected error occurred'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
