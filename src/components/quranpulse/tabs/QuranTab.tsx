@@ -17,7 +17,7 @@ import { SURAH_LIST, getSurahVerses, getSurahName, type SurahInfo } from '@/lib/
 // ─── Types ────────────────────────────────────────────────────
 type ReadingMode = 'surah' | 'mushaf' | 'juz' | 'bookmarks' | 'hafazan' | 'recite'
 type Reciter = 'ar.alafasy' | 'ar.abdurrahmaansudais' | 'ar.saaborimuneer' | 'ar.hudhaify'
-type RepeatMode = 'none' | 'single' | 'surah' | 'continuous'
+type RepeatMode = 'none' | 'single' | 'surah' | 'continuous' | 'ab-repeat'
 type FilterType = 'all' | 'meccan' | 'medinan'
 type HafazanPhase = 'select' | 'reveal' | 'practice' | 'complete'
 
@@ -186,6 +186,19 @@ export function QuranTab() {
   const [showVerseActions, setShowVerseActions] = useState<number | null>(null)
   const [showReaderSettings, setShowReaderSettings] = useState(false)
   const [khatamMarkedVerses, setKhatamMarkedVerses] = useState<Set<string>>(new Set())
+
+  // 2026: A-B Repeat
+  const [abRepeatStart, setAbRepeatStart] = useState<number | null>(null)
+  const [abRepeatEnd, setAbRepeatEnd] = useState<number | null>(null)
+
+  // 2026: Daily Reading Goal
+  const [dailyGoal, setDailyGoal] = useState<5 | 10 | 20 | 30>(10)
+  const [dailyGoalProgress, setDailyGoalProgress] = useState(0)
+
+  // 2026: Tafsir Panel
+  const [showTafsirPanel, setShowTafsirPanel] = useState(false)
+  const [tafsirLoading, setTafsirLoading] = useState(false)
+  const [tafsirText, setTafsirText] = useState('')
 
   // API verse fetching with cache
   const [apiVerses, setApiVerses] = useState<VerseData[]>([])
@@ -366,6 +379,15 @@ export function QuranTab() {
           setIsPlaying(false)
           setCurrentPlayingAyah(null)
         })
+      } else if (repeatMode === 'ab-repeat' && abRepeatEnd !== null && abRepeatStart !== null) {
+        // A-B Repeat: loop between start and end
+        if (ayahNum >= abRepeatEnd) {
+          setCurrentPlayingAyah(abRepeatStart)
+        } else if (ayahNum < surah.versesCount) {
+          setCurrentPlayingAyah(ayahNum + 1)
+        } else {
+          setCurrentPlayingAyah(abRepeatStart)
+        }
       } else if (ayahNum < surah.versesCount) {
         // Advance to next ayah
         setCurrentPlayingAyah(ayahNum + 1)
@@ -634,6 +656,46 @@ export function QuranTab() {
     { key: 'recite', label: 'Baca', icon: <Mic className="h-3.5 w-3.5" /> },
   ]
 
+  // 2026: Daily goal progress tracking
+  useEffect(() => {
+    if (pagesReadToday > 0) {
+      setDailyGoalProgress(Math.min(pagesReadToday, dailyGoal))
+    }
+  }, [pagesReadToday, dailyGoal])
+
+  // 2026: Fetch tafsir for selected verse
+  const fetchTafsir = useCallback(async (surahId: number, verseNum: number) => {
+    setTafsirLoading(true)
+    setTafsirText('')
+    try {
+      const res = await fetch(`/api/quran/tafsir?surah=${surahId}&ayah=${verseNum}`)
+      const data = await res.json()
+      if (data.success && data.data) {
+        setTafsirText(data.data.text || data.data.tafsir || 'Tafsir belum tersedia untuk ayat ini.')
+      } else {
+        setTafsirText('Tafsir belum tersedia. Sila rujuk Tafsir Abdullah Basmeih untuk huraian lengkap.')
+      }
+    } catch {
+      setTafsirText('Gagal memuatkan tafsir. Sila cuba lagi.')
+    } finally {
+      setTafsirLoading(false)
+    }
+  }, [])
+
+  // 2026: Khatam journey milestones
+  const khatamJuzCompleted = useMemo(() => {
+    const juzDone = new Set<number>()
+    for (const key of khatamMarkedVerses) {
+      const [sStr] = key.split('-')
+      const sId = parseInt(sStr)
+      const surah = SURAH_LIST.find(s => s.id === sId)
+      if (surah) surah.juz.forEach(j => juzDone.add(j))
+    }
+    return juzDone
+  }, [khatamMarkedVerses])
+
+  const khatamJuzCount = khatamJuzCompleted.size
+
   // ─── Render: Mode Tabs ──────────────────────────────────────
   const renderModeTabs = () => (
     <div className="flex gap-1 mb-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
@@ -656,32 +718,73 @@ export function QuranTab() {
 
   // ─── Render: Reading Stats Bar ──────────────────────────────
   const renderStatsBar = () => (
-    <div className="flex gap-2 mb-3">
-      <div className="flex-1 rounded-xl p-2.5" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}>
-        <div className="flex items-center gap-1.5 mb-1">
-          <Trophy className="h-3 w-3" style={{ color: '#d4af37' }} />
-          <span className="text-[10px] font-medium" style={{ color: '#d4af37' }}>Khatam</span>
+    <div className="space-y-2 mb-3">
+      {/* Daily Reading Goal - 2026 Feature */}
+      <div className="rounded-xl p-3" style={{ background: 'linear-gradient(135deg, rgba(74,74,166,0.15), rgba(212,175,55,0.08))', border: '1px solid rgba(74,74,166,0.2)' }}>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <Target className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+            <span className="text-[11px] font-semibold" style={{ color: '#d4af37' }}>Sasaran Harian</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {([5, 10, 20, 30] as const).map(g => (
+              <button key={g} className="px-1.5 py-0.5 rounded text-[9px] font-medium transition-all"
+                style={{
+                  background: dailyGoal === g ? 'rgba(212,175,55,0.2)' : 'rgba(74,74,166,0.1)',
+                  color: dailyGoal === g ? '#d4af37' : 'rgba(204,204,204,0.4)',
+                  border: `1px solid ${dailyGoal === g ? 'rgba(212,175,55,0.3)' : 'transparent'}`
+                }}
+                onClick={() => setDailyGoal(g)}
+              >{g}</button>
+            ))}
+          </div>
         </div>
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.15)' }}>
-          <div className="h-full rounded-full transition-all" style={{ width: `${Math.round((versesRead / totalQuranVerses) * 100)}%`, background: 'linear-gradient(90deg, #4a4aa6, #d4af37)' }} />
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.15)' }}>
+              <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg, #4a4aa6, #d4af37)' }}
+                animate={{ width: `${Math.min((dailyGoalProgress / dailyGoal) * 100, 100)}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              />
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{dailyGoalProgress}/{dailyGoal} muka</span>
+              <span className="text-[10px] font-medium" style={{ color: dailyGoalProgress >= dailyGoal ? '#4aff7a' : '#d4af37' }}>
+                {dailyGoalProgress >= dailyGoal ? '✓ Tercapai!' : `${Math.round((dailyGoalProgress / dailyGoal) * 100)}%`}
+              </span>
+            </div>
+          </div>
         </div>
-        <div className="text-[10px] mt-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>{Math.round((versesRead / totalQuranVerses) * 100)}%</div>
       </div>
-      <div className="flex-1 rounded-xl p-2.5" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}>
-        <div className="flex items-center gap-1.5 mb-1">
-          <Star className="h-3 w-3" style={{ color: '#6a6ab6' }} />
-          <span className="text-[10px] font-medium" style={{ color: '#6a6ab6' }}>Hari Ini</span>
+
+      {/* Stats Row */}
+      <div className="flex gap-2">
+        <div className="flex-1 rounded-xl p-2.5" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Trophy className="h-3 w-3" style={{ color: '#d4af37' }} />
+            <span className="text-[10px] font-medium" style={{ color: '#d4af37' }}>Khatam</span>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.15)' }}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${Math.round((versesRead / totalQuranVerses) * 100)}%`, background: 'linear-gradient(90deg, #4a4aa6, #d4af37)' }} />
+          </div>
+          <div className="text-[10px] mt-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>{khatamJuzCount}/30 Juz · {Math.round((versesRead / totalQuranVerses) * 100)}%</div>
         </div>
-        <div className="text-sm font-bold" style={{ color: '#ffffff' }}>{pagesReadToday}</div>
-        <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>muka dibaca</div>
-      </div>
-      <div className="flex-1 rounded-xl p-2.5" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}>
-        <div className="flex items-center gap-1.5 mb-1">
-          <Clock className="h-3 w-3" style={{ color: '#4a4aa6' }} />
-          <span className="text-[10px] font-medium" style={{ color: '#4a4aa6' }}>Streak</span>
+        <div className="flex-1 rounded-xl p-2.5" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Star className="h-3 w-3" style={{ color: '#6a6ab6' }} />
+            <span className="text-[10px] font-medium" style={{ color: '#6a6ab6' }}>Hari Ini</span>
+          </div>
+          <div className="text-sm font-bold" style={{ color: '#ffffff' }}>{pagesReadToday}</div>
+          <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>muka dibaca</div>
         </div>
-        <div className="text-sm font-bold" style={{ color: '#ffffff' }}>{store.streak}🔥</div>
-        <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>hari berturut</div>
+        <div className="flex-1 rounded-xl p-2.5" style={{ background: 'rgba(42,42,106,0.4)', border: '1px solid rgba(74,74,166,0.1)' }}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <Clock className="h-3 w-3" style={{ color: '#4a4aa6' }} />
+            <span className="text-[10px] font-medium" style={{ color: '#4a4aa6' }}>Streak</span>
+          </div>
+          <div className="text-sm font-bold" style={{ color: '#ffffff' }}>{store.streak}🔥</div>
+          <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>hari berturut</div>
+        </div>
       </div>
     </div>
   )

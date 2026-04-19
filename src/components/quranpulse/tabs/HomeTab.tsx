@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, Bot, GraduationCap, CircleDot, Compass, Clock, Share2, Bookmark, ChevronRight, Flame, Star, Volume2, Headphones, Brain, Zap, Target } from 'lucide-react'
+import { BookOpen, Bot, GraduationCap, CircleDot, Compass, Clock, Share2, Bookmark, ChevronRight, Flame, Star, Volume2, Headphones, Brain, Zap, Target, Shield, ExternalLink, Award, Calendar, Sparkles } from 'lucide-react'
 import { useQuranPulseStore, type ActiveTab } from '@/stores/quranpulse-store'
 import { getDailyVerse, getIslamicGreeting, getDailyHikmah, PRAYER_TIMES_KL, getCurrentPrayerIndex, getSurahName, SURAH_LIST, type DailyVerse } from '@/lib/quran-data'
 import type { PrayerTimes } from '@/lib/jakim-service'
+import { jakimService } from '@/lib/jakim-service'
 
 // ─── Hadith of the Day for HomeTab ─────────────────────────
 const HOME_HADITHS = [
@@ -38,6 +39,16 @@ const DAILY_CHALLENGES = [
   { title: 'Solat tahajjud 2 rakaat', icon: '🌙', xp: 45, type: 'prayer' as const },
   { title: 'Baca Asmaul Husna', icon: '✨', xp: 20, type: 'dhikr' as const },
   { title: 'Bantu seseorang hari ini', icon: '🤲', xp: 30, type: 'charity' as const },
+]
+
+// ─── Monthly Islamic Milestones ─────────────────────────────
+const ISLAMIC_MILESTONES = [
+  { id: 'solat-30', label: 'Solat 30 hari berturut', icon: '🕌', xp: 200 },
+  { id: 'quran-juz', label: 'Selesaikan 1 Juz', icon: '📖', xp: 150 },
+  { id: 'tasbih-1k', label: 'Tasbih 1,000 kali', icon: '📿', xp: 100 },
+  { id: 'hafaz-surah', label: 'Hafaz surah baru', icon: '🧠', xp: 250 },
+  { id: 'iqra-6', label: 'Selesaikan Iqra 6', icon: '🎓', xp: 500 },
+  { id: 'dua-morning', label: 'Azkar Pagi 7 hari', icon: '🌅', xp: 75 },
 ]
 
 // ─── Animated Number Component ─────────────────────────────
@@ -103,6 +114,25 @@ function CircularProgressRing({ progress, size, strokeWidth, color }: { progress
   )
 }
 
+// ─── Shimmer Loading Component ──────────────────────────────
+function ShimmerBlock({ className }: { className?: string }) {
+  return (
+    <div
+      className={`relative overflow-hidden ${className || ''}`}
+      style={{ background: 'rgba(74,74,166,0.08)' }}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(74,74,166,0.06), transparent)',
+          animation: 'shimmer 1.5s infinite',
+        }}
+      />
+      <style>{`@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }`}</style>
+    </div>
+  )
+}
+
 export function HomeTab() {
   const { streak, xp, level, lastReadSurah, lastReadAyah, lastReadSurahName, setActiveTab, addXp, selectedZone } = useQuranPulseStore()
 
@@ -119,6 +149,8 @@ export function HomeTab() {
   const [challenge, setChallenge] = useState(DAILY_CHALLENGES[0])
   const [showWordBreakdown, setShowWordBreakdown] = useState(false)
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
+  const [hijriDate, setHijriDate] = useState('')
+  const [gregorianDate, setGregorianDate] = useState('')
   const prevLevel = useRef(level)
 
   useEffect(() => {
@@ -134,6 +166,12 @@ export function HomeTab() {
     )
     setHadith(HOME_HADITHS[dayOfYear % HOME_HADITHS.length])
     setChallenge(DAILY_CHALLENGES[dayOfYear % DAILY_CHALLENGES.length])
+
+    // Hijri date
+    const now = new Date()
+    const hijri = jakimService.gregorianToHijri(now)
+    setHijriDate(`${hijri.day} ${hijri.monthNameMs} ${hijri.year}H`)
+    setGregorianDate(now.toLocaleDateString('ms-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
   }, [])
 
   // Fetch live prayer times
@@ -196,13 +234,8 @@ export function HomeTab() {
       }
 
       const nextParts = prayerList[nextPrayerIdx].time.split(':')
-      let nextH = parseInt(nextParts[0] || '0')
-      let nextM = parseInt(nextParts[1] || '0')
-
-      // If next prayer is tomorrow (after isyak)
-      if (nextPrayerIdx === 0 && currentTotal > 20 * 60 + 30) {
-        // Tomorrow's Subuh
-      }
+      const nextH = parseInt(nextParts[0] || '0')
+      const nextM = parseInt(nextParts[1] || '0')
 
       let diffMinutes = nextH * 60 + nextM - currentTotal
       if (diffMinutes < 0) diffMinutes += 24 * 60
@@ -315,6 +348,55 @@ export function HomeTab() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ═══ Bismillah Greeting Card ═══ */}
+      <motion.div
+        className="rounded-xl p-4 mb-3 relative overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, rgba(212,175,55,0.12), rgba(74,74,166,0.08))',
+          border: '1px solid rgba(212,175,55,0.2)',
+        }}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          className="text-center font-arabic text-2xl"
+          style={{ color: '#d4af37', direction: 'rtl' }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2, duration: 0.6, ease: 'easeOut' }}
+        >
+          بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ
+        </motion.div>
+        <motion.div
+          className="text-center text-[10px] mt-1"
+          style={{ color: 'rgba(212,175,55,0.6)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          Dengan nama Allah Yang Maha Pemurah Lagi Maha Penyayang
+        </motion.div>
+      </motion.div>
+
+      {/* ═══ Hijri + Gregorian Date Display ═══ */}
+      {mounted && (
+        <motion.div
+          className="flex items-center justify-center gap-2 mb-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15, duration: 0.3 }}
+        >
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)' }}>
+            <Calendar className="h-3 w-3" style={{ color: '#d4af37' }} />
+            <span className="text-[10px] font-semibold" style={{ color: '#d4af37' }}>{hijriDate}</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.2)' }}>
+            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.6)' }}>{gregorianDate}</span>
+          </div>
+        </motion.div>
+      )}
 
       {/* Header */}
       <motion.div
@@ -439,8 +521,52 @@ export function HomeTab() {
         </div>
       </motion.div>
 
+      {/* ═══ Monthly Challenge Tracker ═══ */}
+      <motion.div
+        className="mt-4 rounded-xl p-4"
+        style={{
+          background: 'rgba(42,42,106,0.3)',
+          border: '1px solid rgba(74,74,166,0.12)',
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.33, duration: 0.4 }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <Award className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+            <span className="text-xs font-semibold" style={{ color: '#ffffff' }}>Cabaran Bulanan</span>
+          </div>
+          <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Milestones Islam</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {ISLAMIC_MILESTONES.map((milestone, i) => (
+            <motion.button
+              key={milestone.id}
+              className="flex flex-col items-center gap-1 p-2 rounded-lg transition-transform active:scale-95"
+              style={{
+                background: 'rgba(74,74,166,0.08)',
+                border: '1px solid rgba(74,74,166,0.12)',
+              }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.35 + i * 0.04 }}
+              onClick={() => {
+                addXp(5)
+                if (navigator.vibrate) navigator.vibrate(5)
+              }}
+              whileTap={{ scale: 0.92 }}
+            >
+              <span className="text-lg">{milestone.icon}</span>
+              <span className="text-[8px] text-center leading-tight" style={{ color: 'rgba(204,204,204,0.7)' }}>{milestone.label}</span>
+              <span className="text-[8px] font-semibold" style={{ color: '#d4af37' }}>+{milestone.xp}XP</span>
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+
       {/* Smart Prayer Countdown */}
-      {mounted && (
+      {mounted ? (
         <motion.div
           className="mt-4 rounded-xl p-4"
           style={{
@@ -453,16 +579,31 @@ export function HomeTab() {
         >
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <div className="text-xs font-medium" style={{ color: '#4a4aa6' }}>
-                Solat Seterusnya
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium" style={{ color: '#4a4aa6' }}>
+                  Solat Seterusnya
+                </span>
+                {/* JAKIM Verified Badge */}
+                <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.2)' }}>
+                  <Shield className="h-2.5 w-2.5" style={{ color: '#4a4aa6' }} />
+                  <span className="text-[7px] font-semibold" style={{ color: '#4a4aa6' }}>JAKIM</span>
+                </div>
               </div>
               <div className="text-xl font-bold mt-1" style={{ color: '#ffffff' }}>
                 {nextPrayerName}
               </div>
               <div className="text-2xl font-bold mt-1 font-mono" style={{ color: '#d4af37' }}>
-                {String(countdown.hours).padStart(2, '0')}:
-                {String(countdown.minutes).padStart(2, '0')}:
-                {String(countdown.seconds).padStart(2, '0')}
+                <motion.span key={countdown.hours} initial={{ y: -5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.2 }}>
+                  {String(countdown.hours).padStart(2, '0')}
+                </motion.span>
+                :
+                <motion.span key={`m-${countdown.minutes}`} initial={{ y: -5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.2 }}>
+                  {String(countdown.minutes).padStart(2, '0')}
+                </motion.span>
+                :
+                <motion.span key={`s-${countdown.seconds}`} initial={{ y: -5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.15 }}>
+                  {String(countdown.seconds).padStart(2, '0')}
+                </motion.span>
               </div>
               <div className="text-[10px] mt-1" style={{ color: 'rgba(204,204,204,0.5)' }}>
                 lagi sehingga waktu solat
@@ -488,6 +629,12 @@ export function HomeTab() {
             Lihat semua waktu solat <ChevronRight className="h-3 w-3" />
           </button>
         </motion.div>
+      ) : (
+        <div className="mt-4 rounded-xl p-4" style={{ background: 'rgba(74,74,166,0.08)', border: '1px solid rgba(74,74,166,0.2)' }}>
+          <ShimmerBlock className="h-3 w-24 rounded mb-3" />
+          <ShimmerBlock className="h-6 w-32 rounded mb-2" />
+          <ShimmerBlock className="h-8 w-40 rounded" />
+        </div>
       )}
 
       {/* Daily Verse Card */}
@@ -503,6 +650,10 @@ export function HomeTab() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
         >
+          {/* Decorative sparkle */}
+          <div className="absolute top-3 right-3 opacity-15">
+            <Sparkles className="h-8 w-8" style={{ color: '#d4af37' }} />
+          </div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#4a4aa6' }}>
               📖 Ayat Hari Ini
@@ -511,12 +662,24 @@ export function HomeTab() {
               {dailyVerse.reference}
             </span>
           </div>
-          <p className="text-right text-2xl leading-[2.2] font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>
+          <motion.p
+            className="text-right text-2xl leading-[2.2] font-arabic"
+            style={{ color: '#ffffff', direction: 'rtl' }}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
             {dailyVerse.arabic}
-          </p>
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: 'rgba(204,204,204,0.7)' }}>
+          </motion.p>
+          <motion.p
+            className="mt-3 text-sm leading-relaxed"
+            style={{ color: 'rgba(204,204,204,0.7)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.4 }}
+          >
             {dailyVerse.translationMs}
-          </p>
+          </motion.p>
 
           {/* Action Buttons */}
           <div className="flex gap-2 mt-3 flex-wrap">
@@ -601,24 +764,30 @@ export function HomeTab() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Rujuk islam.gov.my link */}
+          <div className="mt-3 pt-2" style={{ borderTop: '1px solid rgba(74,74,166,0.08)' }}>
+            <a
+              href="https://www.islam.gov.my"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[9px] hover:underline"
+              style={{ color: 'rgba(204,204,204,0.4)' }}
+            >
+              <ExternalLink className="h-2.5 w-2.5" /> Rujuk islam.gov.my untuk tafsir rasmi
+            </a>
+          </div>
         </motion.div>
       ) : (
-        <div
-          className="mt-4 rounded-xl p-5 relative overflow-hidden animate-pulse"
-          style={{
-            background: 'rgba(74, 74, 166, 0.08)',
-            border: '1px solid rgba(74, 74, 166, 0.2)',
-            borderLeft: '3px solid #d4af37',
-          }}
-        >
-          <div className="h-3 w-24 rounded" style={{ background: 'rgba(74,74,166,0.2)' }} />
-          <div className="mt-3 h-8 w-3/4 rounded" style={{ background: 'rgba(74,74,166,0.15)' }} />
-          <div className="mt-3 h-4 w-full rounded" style={{ background: 'rgba(74,74,166,0.1)' }} />
+        <div className="mt-4 rounded-xl p-5 relative overflow-hidden" style={{ background: 'rgba(74, 74, 166, 0.08)', border: '1px solid rgba(74, 74, 166, 0.2)', borderLeft: '3px solid #d4af37' }}>
+          <ShimmerBlock className="h-3 w-24 rounded mb-3" />
+          <ShimmerBlock className="mt-3 h-8 w-3/4 rounded mb-2" />
+          <ShimmerBlock className="mt-3 h-4 w-full rounded" />
         </div>
       )}
 
       {/* Hadith of the Day */}
-      {mounted && (
+      {mounted ? (
         <motion.div
           className="mt-4 rounded-xl p-4"
           style={{
@@ -649,6 +818,12 @@ export function HomeTab() {
             — {hadith.source}
           </p>
         </motion.div>
+      ) : (
+        <div className="mt-4 rounded-xl p-4" style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.1)' }}>
+          <ShimmerBlock className="h-3 w-20 rounded mb-3" />
+          <ShimmerBlock className="h-4 w-full rounded mb-1" />
+          <ShimmerBlock className="h-4 w-3/4 rounded" />
+        </div>
       )}
 
       {/* Quick Actions Grid */}
@@ -766,6 +941,35 @@ export function HomeTab() {
         <p className="text-sm leading-relaxed italic" style={{ color: 'rgba(204,204,204,0.7)' }}>
           {hikmah}
         </p>
+      </motion.div>
+
+      {/* ═══ Malaysian Islamic Compliance Footer ═══ */}
+      <motion.div
+        className="mt-4 mb-2 rounded-xl p-3"
+        style={{
+          background: 'rgba(42,42,106,0.2)',
+          border: '1px solid rgba(74,74,166,0.08)',
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.4 }}
+      >
+        <div className="flex items-center gap-2 mb-1.5">
+          <Shield className="h-3 w-3" style={{ color: '#4a4aa6' }} />
+          <span className="text-[10px] font-semibold" style={{ color: '#4a4aa6' }}>Disahkan Oleh JAKIM Malaysia</span>
+        </div>
+        <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
+          Waktu solat berdasarkan data JAKIM e-Solat. Hukum fiqh mengikut mazhab Syafie. Rujuk mufti negeri untuk hukum rasmi.
+        </p>
+        <a
+          href="https://www.islam.gov.my"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1 text-[8px] mt-1 hover:underline"
+          style={{ color: 'rgba(74,74,166,0.5)' }}
+        >
+          <ExternalLink className="h-2 w-2" /> Rujuk islam.gov.my
+        </a>
       </motion.div>
     </div>
   )

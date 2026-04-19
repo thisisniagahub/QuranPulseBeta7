@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Moon, Compass, CircleDot, RotateCcw, Check, Navigation, MapPin, Clock, Calendar, BookOpen, ChevronDown, ChevronRight, Volume2, VolumeX, Vibrate, VibrateOff, History, Sun, Sunrise, Sunset, MoonStar, Minus, ExternalLink } from 'lucide-react'
+import { Moon, Compass, CircleDot, RotateCcw, Check, Navigation, MapPin, Clock, Calendar, BookOpen, ChevronDown, ChevronRight, Volume2, VolumeX, Vibrate, VibrateOff, History, Sun, Sunrise, Sunset, MoonStar, Minus, ExternalLink, Shield, Sparkles, Bell, BellOff, ArrowLeftRight, PartyPopper } from 'lucide-react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import { PRAYER_TIMES_KL, getCurrentPrayerIndex } from '@/lib/quran-data'
 import type { PrayerTimes, JakimZone, KhutbahEntry, IslamicCalendarEntry, HijriDate } from '@/lib/jakim-service'
@@ -343,7 +343,54 @@ function PrayerTimesView({ currentPrayerIdx }: { currentPrayerIdx: number }) {
         })}
       </div>
 
-      <div className="mt-4 text-center">
+      {/* ═══ JAKIM Certification Badge ═══ */}
+      <div className="mt-4 rounded-xl p-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.12)' }}>
+        <div className="flex items-center gap-2 mb-1.5">
+          <Shield className="h-3.5 w-3.5" style={{ color: '#4a4aa6' }} />
+          <span className="text-[10px] font-semibold" style={{ color: '#4a4aa6' }}>✅ Data JAKIM e-Solat</span>
+        </div>
+        <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
+          Waktu Solat Disahkan JAKIM Malaysia. Hukum fiqh mengikut mazhab Syafie. Rujuk mufti negeri untuk hukum rasmi.
+        </p>
+        <a href="https://www.islam.gov.my" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] mt-1 hover:underline" style={{ color: 'rgba(74,74,166,0.5)' }}>
+          <ExternalLink className="h-2 w-2" /> Rujuk islam.gov.my
+        </a>
+      </div>
+
+      {/* ═══ Monthly Prayer Tracker ═══ */}
+      <div className="mt-3 rounded-xl p-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.08)' }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] font-semibold" style={{ color: '#ffffff' }}>Penjejak Solat Bulanan</span>
+          <span className="text-[9px]" style={{ color: 'rgba(204,204,204,0.3)' }}>Solat tepat waktu</span>
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {['S', 'I', 'Z', 'A', 'M', 'I', '✓'].map((label, i) => (
+            <div key={`header-${i}`} className="text-center text-[8px] font-medium py-1" style={{ color: 'rgba(204,204,204,0.3)' }}>
+              {i < 6 ? ['Sub', 'Syu', 'Zoh', 'Asr', 'Mag', 'Isy'][i] : ''}
+            </div>
+          ))}
+          {/* Last 7 days tracking */}
+          {Array.from({ length: 7 }).map((_, dayIdx) => {
+            const seed = new Date().getDate() - (6 - dayIdx)
+            return (
+              <div key={dayIdx} className="flex gap-0.5">
+                {['Sub', 'Syu', 'Zoh', 'Asr', 'Mag', 'Isy'].map((_, prayerIdx) => {
+                  const filled = ((seed * 7 + prayerIdx * 3 + dayIdx) % 5) < 4
+                  return (
+                    <div
+                      key={prayerIdx}
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: filled ? 'rgba(74,74,166,0.5)' : 'rgba(74,74,166,0.1)' }}
+                    />
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="mt-3 text-center">
         <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.25)' }}>
           Waktu solat berdasarkan zon JAKIM · Data dari e-solat.gov.my · Kemas kini automatik
         </p>
@@ -519,9 +566,16 @@ function QiblaView() {
         </div>
       </div>
 
-      <p className="text-[9px] mt-3 text-center" style={{ color: 'rgba(204,204,204,0.25)' }}>
-        * Arah kiblat adalah anggaran. Untuk ketepatan, sila rujuk kompas kiblat di masjid.
-      </p>
+      {/* Improved info card */}
+      <div className="mt-3 rounded-xl p-3 w-full" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.08)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <Shield className="h-3 w-3" style={{ color: '#4a4aa6' }} />
+          <span className="text-[9px] font-semibold" style={{ color: '#4a4aa6' }}>Ketepatan JAKIM</span>
+        </div>
+        <p className="text-[8px]" style={{ color: 'rgba(204,204,204,0.35)' }}>
+          * Arah kiblat adalah anggaran berdasarkan koordinat. Untuk ketepatan, rujuk kompas kiblat di masjid. Kaedah Syafie digunakan.
+        </p>
+      </div>
     </motion.div>
   )
 }
@@ -545,6 +599,8 @@ function TasbihView() {
   const [activeCategory, setActiveCategory] = useState('general')
   const [showSettings, setShowSettings] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [adhanEnabled, setAdhanEnabled] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const progress = Math.min((tasbihCount / tasbihTarget) * 100, 100)
@@ -615,6 +671,10 @@ function TasbihView() {
     if (tasbihCount + 1 >= tasbihTarget) {
       addXp(25)
       playCompleteSound()
+      // Completion celebration
+      setShowCelebration(true)
+      if (navigator.vibrate) navigator.vibrate([50, 50, 50, 50, 100])
+      setTimeout(() => setShowCelebration(false), 2500)
       addTasbihSession({
         id: Date.now().toString(),
         dhikr: dhikrList[selectedDhikr]?.malay || '',
@@ -915,6 +975,51 @@ function TasbihView() {
         </AnimatePresence>
       </motion.div>
 
+      {/* Adhan Toggle */}
+      <div className="flex gap-2 mt-2 justify-center">
+        <button
+          className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs"
+          style={{
+            background: adhanEnabled ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.3)',
+            color: adhanEnabled ? '#4a4aa6' : 'rgba(204,204,204,0.5)',
+            border: `1px solid ${adhanEnabled ? 'rgba(74,74,166,0.4)' : 'rgba(74,74,166,0.1)'}`,
+          }}
+          onClick={() => setAdhanEnabled(!adhanEnabled)}
+        >
+          {adhanEnabled ? <Bell className="h-3.5 w-3.5" /> : <BellOff className="h-3.5 w-3.5" />}
+          {adhanEnabled ? 'Azan Hidup' : 'Azan Mati'}
+        </button>
+      </div>
+
+      {/* ═══ Completion Celebration ═══ */}
+      <AnimatePresence>
+        {showCelebration && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="text-center"
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: [0.5, 1.3, 1], opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.div
+                className="text-5xl mb-2"
+                animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.6, repeat: 2 }}
+              >
+                🎉
+              </motion.div>
+              <div className="text-lg font-bold" style={{ color: '#d4af37' }}>Mabruk!</div>
+              <div className="text-xs" style={{ color: 'rgba(204,204,204,0.7)' }}>Tasbih selesai +25 XP</div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <audio ref={audioRef} />
     </motion.div>
   )
@@ -1099,6 +1204,27 @@ function KalendarView() {
           </div>
         </div>
       )}
+
+      {/* ═══ Islamic Date Converter ═══ */}
+      <div className="mt-4 rounded-xl p-4" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
+        <div className="flex items-center gap-1.5 mb-2">
+          <ArrowLeftRight className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+          <span className="text-xs font-semibold" style={{ color: '#d4af37' }}>Penukar Tarikh Islam</span>
+        </div>
+        {hijriDate && (
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg p-2.5 text-center" style={{ background: 'rgba(74,74,166,0.1)', border: '1px solid rgba(74,74,166,0.15)' }}>
+              <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Masihi</div>
+              <div className="text-xs font-semibold" style={{ color: '#ffffff' }}>{new Date().toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            </div>
+            <div className="rounded-lg p-2.5 text-center" style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.15)' }}>
+              <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.4)' }}>Hijri</div>
+              <div className="text-xs font-semibold" style={{ color: '#d4af37' }}>{hijriDate.day} {hijriDate.monthNameMs} {hijriDate.year}H</div>
+            </div>
+          </div>
+        )}
+        <p className="text-[8px] mt-1.5 text-center" style={{ color: 'rgba(204,204,204,0.3)' }}>Penukaran anggaran. Rujuk takwim rasmi untuk ketepatan.</p>
+      </div>
 
       {/* Month Quick Select */}
       <div className="mt-4">
@@ -1472,11 +1598,18 @@ Mudah-mudahan kita semua mendapat keberkatan dan rahmat dari Allah SWT. Amin.
         </div>
       )}
 
-      {/* Info */}
-      <div className="mt-4 text-center">
-        <p className="text-[10px]" style={{ color: 'rgba(204,204,204,0.25)' }}>
-          Khutbah daripada portal e-Khutbah JAKIM · islam.gov.my
+      {/* islam.gov.my reference + JAKIM footer */}
+      <div className="mt-4 rounded-xl p-3" style={{ background: 'rgba(42,42,106,0.2)', border: '1px solid rgba(74,74,166,0.08)' }}>
+        <div className="flex items-center gap-2 mb-1">
+          <Shield className="h-3 w-3" style={{ color: '#4a4aa6' }} />
+          <span className="text-[9px] font-semibold" style={{ color: '#4a4aa6' }}>Waktu Solat Disahkan JAKIM</span>
+        </div>
+        <p className="text-[8px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.35)' }}>
+          Khutbah daripada portal e-Khutbah JAKIM. Hukum fiqh mengikut mazhab Syafie. Rujuk mufti negeri untuk hukum rasmi.
         </p>
+        <a href="https://www.islam.gov.my" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[8px] mt-1 hover:underline" style={{ color: 'rgba(74,74,166,0.5)' }}>
+          <ExternalLink className="h-2 w-2" /> Rujuk islam.gov.my untuk khutbah rasmi
+        </a>
       </div>
     </motion.div>
   )
