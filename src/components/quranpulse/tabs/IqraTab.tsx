@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   GraduationCap, BookOpen, Brain, Target, MessageCircle, Mic, X, Send,
   Zap, Flame, Volume2, Play, Pause, Star, CheckCircle,
-  Award, Shield, ChevronLeft, ChevronRight,
+  Award, Shield, ChevronLeft, ChevronRight, Lock, Calendar,
 } from 'lucide-react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import {
@@ -19,6 +19,18 @@ import { IqraBookNavigator } from './iqra/IqraBookNavigator'
 import { IqraTajwidExplorer } from './iqra/IqraTajwidExplorer'
 import { IqraRecitationPractice } from './iqra/IqraRecitationPractice'
 import { IqraWritingPractice } from './iqra/IqraWritingPractice'
+import { IqraQalqalahPractice } from './iqra/IqraQalqalahPractice'
+import { IqraSpeedReading } from './iqra/IqraSpeedReading'
+import { IqraIkhfaIqlabPractice } from './iqra/IqraIkhfaIqlabPractice'
+import { IqraLamJalalahPractice } from './iqra/IqraLamJalalahPractice'
+import { IqraMakhrajDiagram } from './iqra/IqraMakhrajDiagram'
+import { IqraConnectedForms } from './iqra/IqraConnectedForms'
+import { IqraTafsirHuruf } from './iqra/IqraTafsirHuruf'
+import { IqraTajwidReadingView } from './iqra/IqraTajwidReadingView'
+import { IqraWeakAreaDashboard } from './iqra/IqraWeakAreaDashboard'
+import { IqraGeniusView } from './iqra/IqraGeniusView'
+import { IqraStrokeAnimation } from './iqra/IqraStrokeAnimation'
+import { IQRA_PAGE_CONTENT } from './iqra/iqra-pages'
 
 // ============ Main Component ============
 export function IqraTab() {
@@ -56,8 +68,9 @@ export function IqraTab() {
   const [assessmentLetters, setAssessmentLetters] = useState<typeof ENHANCED_LETTERS[number][]>([])
   const [assessmentDone, setAssessmentDone] = useState(false)
   const [assessmentOptions, setAssessmentOptions] = useState<string[][]>([])
-  const [view, setView] = useState<'books' | 'reader' | 'letters' | 'tajwid' | 'combined'>('books')
+  const [view, setView] = useState<'books' | 'reader' | 'letters' | 'tajwid' | 'combined' | 'makhraj' | 'connected' | 'tafsir' | 'genius' | 'stroke' | 'weak-area' | 'tajwid-reading'>('books')
   const [geniusMode, setGeniusMode] = useState(false)
+  const [showMakhraj, setShowMakhraj] = useState<string | null>(null)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Derived values
@@ -650,10 +663,10 @@ export function IqraTab() {
   function LatihanView() {
     return (
       <div>
-        <div className="flex gap-1.5 mb-4">
-          {(['flashcard', 'quiz', 'matching', 'tulis', 'sebut'] as const).map(mode => (
+        <div className="flex gap-1.5 mb-4 flex-wrap">
+          {(['flashcard', 'quiz', 'matching', 'tulis', 'sebut', 'qalqalah', 'speed', 'ikhfa-iqlab', 'lam-jalalah'] as const).map(mode => (
             <button key={mode} className="px-3 py-1.5 rounded-full text-[10px] capitalize whitespace-nowrap" style={{ background: practiceMode === mode ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.4)', color: practiceMode === mode ? '#ffffff' : 'rgba(204,204,204,0.5)', border: `1px solid ${practiceMode === mode ? 'rgba(74,74,166,0.3)' : 'transparent'}` }} onClick={() => setPracticeMode(mode)}>
-              {mode === 'tulis' ? '✏️ Tulis' : mode === 'sebut' ? '🎤 Sebut' : mode === 'flashcard' ? '🃏 Kad' : mode === 'quiz' ? '❓ Kuiz' : '🔗 Padan'}
+              {mode === 'tulis' ? '✏️ Tulis' : mode === 'sebut' ? '🎤 Sebut' : mode === 'flashcard' ? '🃏 Kad' : mode === 'quiz' ? '❓ Kuiz' : mode === 'matching' ? '🔗 Padan' : mode === 'qalqalah' ? '💥 Qalqalah' : mode === 'speed' ? '⚡ Pantas' : mode === 'ikhfa-iqlab' ? '🫧 Ikhfa/Iqlab' : '🕌 Lam Jalalah'}
             </button>
           ))}
         </div>
@@ -664,6 +677,22 @@ export function IqraTab() {
 
         {practiceMode === 'tulis' && (
           <IqraWritingPractice writingLetter={writingLetter} setWritingLetter={setWritingLetter} writingFeedback={writingFeedback} setWritingFeedback={setWritingFeedback} addXp={addXp} filteredLetters={filteredLetters.length > 0 ? filteredLetters : ENHANCED_LETTERS} />
+        )}
+
+        {practiceMode === 'qalqalah' && (
+          <IqraQalqalahPractice playingAudio={playingAudio} playAudio={playAudio} addXp={addXp} />
+        )}
+
+        {practiceMode === 'speed' && (
+          <IqraSpeedReading iqraBook={iqraBook} playAudio={playAudio} addXp={addXp} />
+        )}
+
+        {practiceMode === 'ikhfa-iqlab' && (
+          <IqraIkhfaIqlabPractice addXp={addXp} playAudio={playAudio} playingAudio={playingAudio} />
+        )}
+
+        {practiceMode === 'lam-jalalah' && (
+          <IqraLamJalalahPractice playAudio={playAudio} addXp={addXp} playingAudio={playingAudio} />
         )}
 
         {practiceMode === 'flashcard' && filteredLetters.length > 0 && (
@@ -734,7 +763,39 @@ export function IqraTab() {
   }
 
   function TajwidExplorerView() {
-    return <IqraTajwidExplorer tajwidMastered={tajwidMastered} setTajwidMastered={setTajwidMastered} playingAudio={playingAudio} playAudio={playAudio} addXp={addXp} />
+    return (
+      <div>
+        {/* Tajwid Sub-view Navigation */}
+        <div className="flex gap-1 mb-3 overflow-x-auto pb-1">
+          {([
+            { key: 'explorer', label: '🧭 Hukum', viewKey: 'explorer' },
+            { key: 'reading', label: '🎨 Bacaan', viewKey: 'tajwid-reading' },
+            { key: 'weak', label: '📊 Analisis', viewKey: 'weak-area' },
+          ] as const).map(tab => (
+            <button
+              key={tab.key}
+              className="px-3 py-1.5 rounded-full text-[10px] whitespace-nowrap font-medium transition-all"
+              style={{
+                background: view === tab.viewKey || (tab.key === 'explorer' && view === 'books') ? 'rgba(74,74,166,0.2)' : 'rgba(42,42,106,0.4)',
+                color: view === tab.viewKey || (tab.key === 'explorer' && view === 'books') ? '#ffffff' : 'rgba(204,204,204,0.5)',
+                border: `1px solid ${view === tab.viewKey || (tab.key === 'explorer' && view === 'books') ? 'rgba(74,74,166,0.3)' : 'transparent'}`,
+              }}
+              onClick={() => setView(tab.viewKey)}
+            >{tab.label}</button>
+          ))}
+        </div>
+
+        {(view === 'books' || view === 'explorer') && (
+          <IqraTajwidExplorer tajwidMastered={tajwidMastered} setTajwidMastered={setTajwidMastered} playingAudio={playingAudio} playAudio={playAudio} addXp={addXp} />
+        )}
+        {view === 'tajwid-reading' && (
+          <IqraTajwidReadingView iqraBook={iqraBook} playingAudio={playingAudio} playAudio={playAudio} audioSpeed={audioSpeed} addXp={addXp} />
+        )}
+        {view === 'weak-area' && (
+          <IqraWeakAreaDashboard completedPages={completedPages} tajwidMastered={tajwidMastered} bookProgress={bookProgress} xp={xp} streak={streak} />
+        )}
+      </div>
+    )
   }
 
   function HafazanView() {

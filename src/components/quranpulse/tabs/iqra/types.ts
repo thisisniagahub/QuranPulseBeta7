@@ -2,7 +2,7 @@ import { HIJAIYAH_LETTERS } from '@/lib/quran-data'
 
 // === Type definitions ===
 export type IqraSubTab = 'belajar' | 'latihan' | 'tajwid' | 'hafazan'
-export type PracticeMode = 'flashcard' | 'quiz' | 'matching' | 'tulis'
+export type PracticeMode = 'flashcard' | 'quiz' | 'matching' | 'tulis' | 'sebut' | 'qalqalah' | 'speed' | 'ikhfa-iqlab' | 'lam-jalalah'
 export type LetterFilter = 'all' | 'hijaiyah' | 'harakat' | 'tanwin' | 'mad'
 
 export interface ChatMsg {
@@ -66,6 +66,13 @@ export interface TafsirHuruf {
 }
 
 // === NEW: IQRA Page Content ===
+export interface QuranVerse {
+  verse: string
+  translation: string
+  surah: string
+  tajwidHighlight?: Array<{ from: number; to: number; rule: string; color?: string }>
+}
+
 export interface IqraPageContent {
   book: number
   page: number
@@ -278,7 +285,7 @@ export const HARAKAT_COLORS = {
 }
 
 // === Enhanced Quran Verses with Tajwid Highlights ===
-export const QURAN_VERSES_PER_BOOK: Record<number, Array<{ verse: string; translation: string; surah: string; tajwidHighlight?: Array<{ from: number; to: number; rule: string; color?: string }> }>> = {
+export const QURAN_VERSES_PER_BOOK: Record<number, QuranVerse[]> = {
   1: [
     { verse: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', translation: 'Dengan nama Allah Yang Maha Pemurah Lagi Maha Penyayang', surah: 'Al-Fatihah 1:1', tajwidHighlight: [
       { from: 0, to: 5, rule: 'fathah', color: HARAKAT_COLORS.fathah },

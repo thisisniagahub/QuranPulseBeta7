@@ -1057,3 +1057,356 @@ Stage Summary:
 - LetterDetailModal shows all 4 letter forms with Malay labels
 - No compilation errors, app runs successfully
 
+
+---
+Task ID: 2
+Agent: makhraj-diagram-builder
+Task: Create IqraMakhrajDiagram component with visual mouth/throat SVG diagrams
+
+Work Log:
+- Read worklog.md to understand project context (Tasks 1-12 completed, Deep Blue theme)
+- Read types.ts to understand MAKHRAJ_DATA structure (28 entries with letter, name, makhraj, makhrajAr, group)
+- Verified framer-motion is installed (^12.23.2)
+- Created /src/components/quranpulse/tabs/iqra/IqraMakhrajDiagram.tsx (712 lines)
+- Implemented Full-Screen Modal:
+  - Backdrop blur overlay with click-to-dismiss
+  - Spring-animated entrance/exit via Framer Motion
+  - Deep Blue + Gold theme matching app (#1a1a4a bg, #d4af37 accents, #4a4aa6 primary)
+  - Gradient card with glow shadow that changes color per makhraj group
+- Implemented SVG Sagittal Cross-Section Diagram (viewBox 0 0 300 310):
+  - Pharynx (throat back wall) with gradient fill
+  - Larynx (voice box) at bottom
+  - Nasal cavity at top
+  - Hard palate (Lelangit Keras) with label
+  - Soft palate (Lelangit Lembut) with label
+  - Uvula hanging from soft palate
+  - Upper teeth and lower teeth
+  - Gums / Alveolar ridge (Gusi)
+  - Tongue with surface line and tip detail
+  - Lips (Bibir) with upper/lower curves
+  - Epiglottis
+  - All anatomical parts labeled in Malay
+- Implemented Articulation Point Mapping (28 letters → SVG coordinates):
+  - Halqi (Throat): ا ء ه ع ح غ خ → Points at larynx, lower/mid/upper pharynx
+  - Syafawi (Lips): ب م و ف → Points at lips, lower lip + upper teeth
+  - Lisan (Tongue):
+    - Tip + gums: ت د ط ل ن ر ص س → Anterior tongue near alveolar ridge
+    - Tip + teeth: ث ذ ظ ز → Anterior tongue between teeth
+    - Mid + palate: ج ش ي → Middle tongue touching hard palate
+    - Side: ض → Lateral tongue
+    - Back + soft palate: ق → Posterior tongue near soft palate
+    - Back + hard palate: ك → Posterior tongue near hard/soft junction
+- Implemented Animated Glowing Dot:
+  - Three-layer pulsing circles (outer glow, mid glow, core dot)
+  - #ef4444 red for highlighted point, white inner bright dot
+  - SVG filter for glow effect
+  - Framer Motion pulsing animation (2s infinite)
+  - Spring entrance animation for core dot
+- Implemented Dashed Leader Line from dot to label:
+  - Position-aware label placement (right for front, left for throat, top for middle)
+  - Dashed line connecting dot to English anatomical label
+- Implemented Group Zone Highlighting:
+  - Halqi: Red dashed ellipse around throat area
+  - Syafawi: Blue dashed ellipse around lips
+  - Lisan: Green dashed ellipse around tongue area
+- Implemented Info Section:
+  - Makhraj card with MapPin icon, Malay + Arabic makhraj name
+  - Group card with Tag icon, group name, letter count badge
+  - Articulation detail card with red dot indicator and description
+  - Same-group letters grid with clickable buttons
+- Implemented Action Bar:
+  - "Dengar" (Listen) button with Volume2 icon, gold gradient
+  - Playing state indicator ("Bermain...")
+  - "Tutup" (Close) button
+- Props interface: { letter, onClose, playAudio, playingAudio }
+- All text in Bahasa Melayu
+- Zero ESLint errors for the new file
+- Dev server compiles successfully
+
+Stage Summary:
+- Complete IqraMakhrajDiagram component created at /src/components/quranpulse/tabs/iqra/IqraMakhrajDiagram.tsx
+- 712 lines with detailed SVG sagittal cross-section of mouth/throat anatomy
+- 28 Arabic letters mapped to precise articulation point coordinates
+- Animated glowing red dot highlights the specific makhraj for each letter
+- Group zone highlighting (Halqi=red, Syafawi=blue, Lisan=green)
+- Deep Blue + Gold theme with Framer Motion entrance animations
+- All anatomical labels in Malay
+- Zero lint errors, dev server compiles successfully
+
+---
+Task ID: 4-5
+Agent: iqra-components-builder
+Task: Create IqraConnectedForms and IqraTafsirHuruf components
+
+Work Log:
+- Read worklog.md and existing project files (types.ts, IqraBelajarView.tsx, IqraTajwidExplorer.tsx)
+- Verified TAFSIR_HURUF_FUNGSI already exists in types.ts (line 675, 28 entries with all required properties)
+- Verified ENHANCED_LETTERS has forms property with isolated/initial/medial/final for all 29 letters
+- Created IqraConnectedForms.tsx (/src/components/quranpulse/tabs/iqra/IqraConnectedForms.tsx)
+  - 'use client' directive
+  - Import ENHANCED_LETTERS from ./types
+  - Accept props: { playingAudio: string | null; playAudio: (text: string, id: string, speed?: number) => void }
+  - Display scrollable list of 28 letters (excluding Hamzah ء) showing 4 forms:
+    - Tunggal (Isolated), Awal (Initial), Tengah (Medial), Akhir (Final)
+  - Each form in a card with large Arabic text in gold (#d4af37) with text shadow
+  - Tap to hear pronunciation via playAudio
+  - 3-tab group filter: Semua (28), Sambung Penuh (22), Sambung Kanan (6)
+  - Right-only connectors (ا د ذ ر ز و) shown with red accent and "Tidak sambung ke kiri" badge
+  - Connection line visualization: blue lines (#6a6ab6) showing how letters connect
+  - Full connectors show all 3 connection examples (Awal, Tengah, Akhir)
+  - Right-only connectors show only final form connection with explanatory note
+  - Expand/collapse with Framer Motion AnimatePresence
+  - Summary card at bottom showing both groups with letter lists
+  - Gold text shadow on letter forms for visual emphasis
+  - Deep Blue theme: bg rgba(42,42,106,0.3), gold #d4af37, blue lines #6a6ab6
+- Created IqraTafsirHuruf.tsx (/src/components/quranpulse/tabs/iqra/IqraTafsirHuruf.tsx)
+  - 'use client' directive
+  - Import ENHANCED_LETTERS, TAFSIR_HURUF_FUNGSI, type TafsirHuruf from ./types
+  - Accept props: { playingAudio: string | null; playAudio: (text: string, id: string) => void }
+  - Display 4-column grid of letter cards, each showing:
+    - Arabic letter in large gold text with glow effect
+    - Letter name
+    - Color-coded category dots (🔴 Red=Qalqalah, 🔵 Blue=Madd, 🟡 Gold=Thick, 🟢 Green=Syafawi, 🟣 Purple=Qamariyyah, 🟠 Orange=Syamsiyyah)
+    - Category tags (max 2 shown, with +N for more)
+  - Tap a letter to expand detail panel showing:
+    - Large Arabic letter with name + English name
+    - Active/inactive dot indicators for all 6 properties
+    - All categories as color-coded tags
+    - Properties grid (2x4): Qamariyyah, Syamsiyyah, Qalqalah, Madd, Lin, Syafawi, Tebal (Tafkhim), Halqi
+    - Checkmark icons on active properties, faded on inactive
+    - Pronunciation guide: Tafkhim (thick) or Tarqiq (thin) explanation
+    - "Dengar sebutan [name]" button with Volume2 icon
+  - Category filter pills with count badges
+  - Scrollable filter row for all unique categories
+  - IQRA Genius footer with stats: 28 huruf, 10 kategori, 5 qalqalah, 3 madd
+  - Deep Blue + Gold theme: bg #1a1a4a, cards rgba(42,42,106,0.3), gold #d4af37, white text
+  - Framer Motion for expand/collapse animations
+  - PropertyRow sub-component for property grid items
+- Fixed lint warnings:
+  - Removed unused formKeys variable in IqraConnectedForms (replaced with type alias FormKey)
+  - Removed unused ChevronDown import in IqraTafsirHuruf
+  - Removed unused enhancedLetter variable in grid section
+- ESLint passes with zero errors for both new components
+- Dev server compiles successfully (GET / 200)
+
+Stage Summary:
+- 2 new Iqra component files created
+- IqraConnectedForms: Interactive letter forms viewer with connection behavior grouping, line visualizations, and audio
+- IqraTafsirHuruf: Functional letter analysis with category dots, expandable detail panels, and property grid
+- Both use Deep Blue + Gold theme with Framer Motion animations
+- Both accept playingAudio/playAudio props for audio integration
+- All text in Bahasa Melayu
+- Zero lint errors, app compiles successfully
+
+---
+Task ID: 6-7-8-9
+Agent: Main Agent
+Task: Create FOUR new interactive practice components for the IQRA tab
+
+Work Log:
+
+1. Created IqraQalqalahPractice (/src/components/quranpulse/tabs/iqra/IqraQalqalahPractice.tsx)
+   - 5 large qalqalah letter buttons (ق ط ب ج د) with Framer Motion bounce animation [1, 1.3, 0.9, 1.1, 1]
+   - Tap letter to hear Qalqalah sound with sukun (e.g. "قْ") via playAudio
+   - Kubra vs Shugra explanation cards from QALQALAH_DETAIL.types with color coding (#ef4444 red, #f97316 orange)
+   - Mnemonic display: قطب جد (Qutha Jada)
+   - Quiz mode: Play qalqalah sound, user identifies which letter from 4 options
+   - Correct answer = +10 XP with gold star animation (Star icon with drop-shadow)
+   - Props: { playingAudio, playAudio, addXp }
+
+2. Created IqraSpeedReading (/src/components/quranpulse/tabs/iqra/IqraSpeedReading.tsx)
+   - Three difficulty levels: Perlahan (🐢 60s letters only), Biasa (🚶 45s words), Pantas (🚀 30s verses)
+   - Timer countdown with progress bar (gold → red when ≤10s)
+   - User taps "Seterusnya" when they've read the word
+   - Track: words read, time spent, words per minute
+   - Words from ENHANCED_LETTERS (letters), hardcoded word list (words), QURAN_VERSES_PER_BOOK (verses)
+   - Results screen: WPM, words read, time elapsed, accuracy estimate, XP earned (+5/word, +20 bonus if >10 words)
+   - Auto-play pronunciation on each new word
+   - Pause/resume functionality
+   - Props: { iqraBook, playAudio, addXp }
+
+3. Created IqraIkhfaIqlabPractice (/src/components/quranpulse/tabs/iqra/IqraIkhfaIqlabPractice.tsx)
+   - Two tabs: "Ikhfa'" (green #22c55e) and "Iqlab" (purple #8b5cf6)
+   - Ikhfa' tab: 15 letters grid (ص ذ ث ك ج ش ق س د ط ز ف ت ض ظ) with tap-to-hear
+   - Ikhfa' quiz: Show word with nun+letter, user identifies Ikhfa'/Iqlab/Izhar
+   - Iqlab tab: Large ب letter display with examples and "Dengar" button
+   - Iqlab quiz: Show word with nun+ب, user identifies as Iqlab
+   - Color coding: Ikhfa' = green, Iqlab = purple, Izhar = gray
+   - 3-option quiz (Ikhfa'/Iqlab/Izhar) for realistic discrimination
+   - Correct answers = +10 XP
+   - Props: { addXp, playAudio, playingAudio }
+
+4. Created IqraLamJalalahPractice (/src/components/quranpulse/tabs/iqra/IqraLamJalalahPractice.tsx)
+   - 3 color-coded examples: اَللَّهُ (gold #d4af37, Fathah→thick), اَللَّهِ (blue #4a4aa6, Kasrah→thin), اَللَّهُمَ (gold, Dhammah→thick)
+   - "Dengar" buttons for each example with playing state indicator
+   - Explanation cards: "Tebal (Thick): Selepas Fathah atau Dhammah" / "Nipis (Thin): Selepas Kasrah"
+   - Rule summary section
+   - Quiz: 5 questions per round, show word with "Allah", user identifies thick or thin
+   - 10 quiz questions with explanations (from Quran examples)
+   - Progress bar and round counter
+   - Round complete screen with score and XP summary
+   - Correct answer = +10 XP with gold star animation
+   - Props: { playAudio, addXp, playingAudio }
+
+5. Updated types.ts: Extended PracticeMode union to include 'qalqalah' | 'speed' | 'ikhfa-iqlab' | 'lam-jalalah'
+
+6. Updated IqraTab.tsx:
+   - Imported all 4 new components
+   - Added missing lucide-react imports (Lock, Calendar)
+   - Extended LatihanView practice mode selector from 5 to 9 modes with flex-wrap
+   - Added emoji labels: 💥 Qalqalah, ⚡ Pantas, 🫧 Ikhfa/Iqlab, 🕌 Lam Jalalah
+   - Rendered components conditionally with proper props
+
+7. Fixed lint errors:
+   - Removed unused AnimatePresence import from IqraSpeedReading
+   - Removed unused Eye/EyeOff imports from IqraIkhfaIqlabPractice
+   - Fixed "Cannot access variable before declaration" in Qalqalah/LamJalalah/IkhfaIqlab by reordering useCallback declarations
+   - Added playingAudio usage in IkhfaIqlab to resolve unused-var warning
+   - Added Lock and Calendar to lucide-react imports in IqraTab
+
+Stage Summary:
+- 4 new interactive practice components created (Qalqalah, Speed Reading, Ikhfa'/Iqlab, Lam Jalalah)
+- All use Deep Blue + Gold theme consistently (bg #1a1a4a, cards rgba(42,42,106,0.3), gold #d4af37, white text, #4a4aa6 primary)
+- All are self-contained with proper TypeScript typing
+- PracticeMode type extended with 4 new modes
+- LatihanView now has 9 practice modes
+- 0 lint errors, 98 warnings (all pre-existing)
+- App compiles and serves successfully (GET / 200)
+---
+Task ID: 3-10
+Agent: iqra-components-builder
+Task: Create Color-coded Tajwid Reading View and Weak Area Analysis Dashboard
+
+Work Log:
+- Read worklog.md to understand project context (Tasks 1-12, 3-a, 3-c, 4-9, 6-7 completed)
+- Read types.ts to understand existing type exports (TAJWID_COLORS, QURAN_VERSES_PER_BOOK, TAJWID_CATEGORIES, IQRA_BOOKS, etc.)
+- Read IqraTajwidExplorer.tsx for design pattern reference (Deep Blue theme, component structure)
+- Read IqraTab.tsx for integration pattern reference (props, state management, audio handling)
+- Added QuranVerse interface to types.ts (was missing as a standalone export)
+- Updated QURAN_VERSES_PER_BOOK type from inline Record to use QuranVerse[]
+- Created IqraTajwidReadingView component (/src/components/quranpulse/tabs/iqra/IqraTajwidReadingView.tsx):
+  - 'use client' directive with motion, AnimatePresence from framer-motion
+  - Imports: Volume2, BookOpen, Eye, Palette, ChevronDown, ChevronUp, Star, CheckCircle, Zap from lucide-react
+  - Imports: QURAN_VERSES_PER_BOOK, TAJWID_COLORS, IQRA_BOOKS from ./types
+  - Props: iqraBook, playingAudio, playAudio, audioSpeed, addXp
+  - Collapsible Tajwid Legend with 6 color items (dengung/green, qalqalah/red, mad/blue, tasydid/gold, lamJalalah/purple, izhar/gray)
+  - renderColoredVerse function that maps each character to its highlight color from tajwidHighlight data
+  - Per-verse card with: Arabic text (color-coded via inline spans), Malay translation, surah reference
+  - "Dengar" (Listen) button with audio speed support
+  - Tap colored segment to see rule name via fixed-position tooltip
+  - "Tandai Latih" (Mark Practiced) button that gives +10 XP
+  - RULE_LABELS mapping for tooltip display (Fathah, Kasrah, Dhammah, Lam Jalalah, Mad, Qalqalah, etc.)
+  - Empty state when no verses available
+  - Deep Blue theme (#1a1a4a bg, rgba(42,42,106,0.3) cards, #d4af37 gold accents)
+  - Framer Motion staggered entrance animations for verse cards
+- Created IqraWeakAreaDashboard component (/src/components/quranpulse/tabs/iqra/IqraWeakAreaDashboard.tsx):
+  - 'use client' directive with motion from framer-motion
+  - Imports: Target, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, BarChart3, Zap, BookOpen from lucide-react
+  - Imports: TAJWID_CATEGORIES, IQRA_BOOKS from ./types
+  - Props: completedPages, tajwidMastered, bookProgress, xp, streak
+  - 7 dashboard sections:
+    1. Overall Score Card - Circular SVG progress ring, level label (Pemula/Pertengahan/Lanjutan/Mahir/Mumtaz)
+    2. Per-Area Score Cards - 5 areas (Huruf Hijaiyah, Harakat, Tanwin & Mad, Tajwid, Hafazan) with progress bars and trend indicators
+    3. Weak Areas List - Top 3 areas needing practice with orange-themed cards
+    4. Book-by-Book Analysis - Each IQRA book with completion % and suggestions
+    5. Tajwid Rule Breakdown - Per-category mastery with individual rule score badges
+    6. Recommended Actions - Actionable suggestions with XP rewards
+    7. XP Recommendations - "Earn X XP by completing Y pages of Iqra N"
+  - Score calculations:
+    - hurufScore = completedPages starting with '1-' / 29 * 100
+    - harakatScore = (bookProgress(2) + bookProgress(3)) / 2
+    - tanwinScore = (bookProgress(3) + bookProgress(4)) / 2
+    - tajwidScore = (tajwidMastered.size / totalRules) * 100
+    - hafazanScore = 0 (shows "Belum mula")
+    - overallScore = average of active scores
+  - CircularProgress SVG component with animated stroke-dashoffset
+  - Staggered card entrance animations via Framer Motion variants
+  - Deep Blue theme throughout
+- Fixed lint warnings:
+  - Removed unused QuranVerse import from IqraTajwidReadingView
+  - Removed unused tooltipPos state from IqraTajwidReadingView
+  - Removed unused ENHANCED_LETTERS, MAKHRAJ_DATA, SIFAT_HURUF, BadgeCtx imports from IqraWeakAreaDashboard
+  - Wrapped areaScores in useMemo to fix react-hooks/exhaustive-deps warning
+- ESLint passes with zero errors for both new components
+- Dev server compiles successfully (GET / 200)
+
+Stage Summary:
+- 2 new components created for Iqra learning system:
+  - IqraTajwidReadingView: Color-coded tajwid reading view with per-character coloring, collapsible legend, audio playback, practiced tracking (+10 XP)
+  - IqraWeakAreaDashboard: 7-section analysis dashboard with circular progress, per-area scoring, weak area detection, book analysis, tajwid breakdown, recommendations, XP targets
+- 1 type added to types.ts: QuranVerse interface (with verse, translation, surah, tajwidHighlight fields)
+- QURAN_VERSES_PER_BOOK type simplified to use QuranVerse[] instead of inline Record type
+- All text in Bahasa Melayu
+- Deep Blue + Gold theme consistently applied
+- Framer Motion animations throughout both components
+- Zero lint errors, dev server running successfully
+
+---
+Task ID: 1-11-12
+Agent: iqra-content-agent
+Task: Create IQRA Page Content Data, Genius View, and Stroke Animation
+
+Work Log:
+- Created iqra-pages.ts (/src/components/quranpulse/tabs/iqra/iqra-pages.ts) — 700 lines
+  - Defined IqraPageItem and IqraPageData interfaces with display, transliteration, harakatType, rule, color
+  - Created helper functions: f(), k(), d(), sk(), sh(), tf(), tk(), td(), item() for building page items
+  - Generated content for ALL 169 pages across 6 IQRA Books:
+    - Book 1 (29 pages): 28 Hijaiyah letters → Fathah → Syllable reading → Review mixed
+    - Book 2 (28 pages): Connected letters + Fathah → Mad Asli → Similar letter differentiation → Word practice
+    - Book 3 (28 pages): Kasrah → Dhammah → Mad Ya + Mad Waw → Combined practice
+    - Book 4 (28 pages): Tanwin Fathah → Tanwin Kasrah + Dhammah → Qalqalah → Izhar Halqi → Sukun + Tasydid
+    - Book 5 (28 pages): Al-Qamariyyah → As-Syamsiyyah → Tanda Wakaf → Mad Far'i + Lam Jalalah → Idgham
+    - Book 6 (28 pages): Ikhfa' Haqiqi → Iqlab → Complete Tajwid review → Quran verses → Juz Amma transition
+  - Used HARAKAT_COLORS from types.ts for color coding (fathah=#ef4444, kasrah=#3b82f6, dhammah=#22c55e, etc.)
+  - Real Arabic with proper Unicode harakat (064E=fathah, 0650=kasrah, 064F=dhammah, 0652=sukun, 0651=shaddah, 064B=tanwin-fath, 064D=tanwin-kasr, 064C=tanwin-dham)
+  - Exported as IQRA_PAGE_CONTENT Record<string, IqraPageData> with keys "1-1", "2-5" etc.
+  - Helper functions: getIqraPage(), getIqraBookPages(), getTotalPages()
+  - Verified 169 total pages via tsx evaluation
+
+- Created IqraGeniusView.tsx (/src/components/quranpulse/tabs/iqra/IqraGeniusView.tsx) — 440 lines
+  - Combined view of all 6 IQRA siri in one scrollable view
+  - Props: bookProgress, setIqraBook, setIqraPage, playAudio
+  - Header with Tajwid Color Legend (7 categories from TAJWID_COLORS)
+  - Harakat Color Legend (8 categories from HARAKAT_COLORS)
+  - Tafsir Huruf Fungsi section: 8 letter categories (Qalqalah, Mad, Halqi, Lisan, Syafawi, Tebal, Qamariyyah, Syamsiyyah)
+  - Special detail cards for Qalqalah (قطب جد) and Hukum Mad (6 jenis)
+  - 6 expandable book sections with color-coded borders, progress bars, tajwid rule badges
+  - Per-page preview with Arabic text, type badges, rule focus labels
+  - Audio playback button per page preview
+  - "Open Book" button to launch reader mode
+  - Summary card with 6-book grid and overall stats (169 pages, tajwid rule count)
+  - Helper functions: getBookRules() (per-book tajwid rules), getPageTypeBadge() (type→color mapping)
+
+- Created IqraStrokeAnimation.tsx (/src/components/quranpulse/tabs/iqra/IqraStrokeAnimation.tsx) — 450 lines
+  - Animated writing guides for 28 Arabic letters
+  - Props: writingLetter, setWritingLetter
+  - STROKE_DATA: 28 entries with stroke count, direction descriptions, arrow indicators
+  - Large Arabic letter display with clip-path reveal animation (right-to-left, simulating writing direction)
+  - Animated pen cursor that moves across the letter during animation
+  - Stroke direction indicators showing current step with arrows
+  - Stroke order progress dots with animated current stroke indicator
+  - Progress bar showing overall animation progress
+  - Controls: Previous/Next letter, Play/Pause, Reset, Speed control (0.5x–2.0x)
+  - Letter navigation strip (28 letters) for quick selection
+  - Detailed stroke guide panel with step-by-step instructions
+  - Connected forms grid (isolated, initial, medial, final)
+  - Harakat examples grid (fathah, kasrah, dhammah, sukun, shaddah)
+  - Writing tip from ENHANCED_LETTERS[writingLetter].writingTip
+  - Deep Blue + Gold theme (navy background, gold #d4af37 accents)
+  - Framer Motion animations throughout (AnimatePresence, motion.div)
+
+- Technical:
+  - All 3 files pass ESLint with zero errors (0 errors, 98 warnings total — none from new files)
+  - Dev server compiles and serves successfully (GET / 200)
+  - Fixed lint issues: removed unused imports (Play, Zap, ENHANCED_LETTERS, AL_QAMARIYYAH, AL_SYAMSIYYAH, IKHFA_LETTERS, IDGHAM_DETAIL)
+  - Fixed React 19 strict render pattern for state reset on prop change
+
+Stage Summary:
+- 3 new files created (iqra-pages.ts, IqraGeniusView.tsx, IqraStrokeAnimation.tsx)
+- 1590 total lines of comprehensive IQRA content and interactive components
+- 169 pages of IQRA content with proper Arabic Unicode harakat
+- Color-coded Tajwid system using HARAKAT_COLORS and TAJWID_COLORS
+- IQRA' Genius combined view with expandable book sections and page previews
+- Stroke animation with clip-path reveal, pen cursor, and step-by-step guides
+- Deep Blue theme (#1a1a4a bg, #d4af37 gold) throughout
+- All text in Bahasa Melayu
