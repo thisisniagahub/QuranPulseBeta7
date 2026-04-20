@@ -52,3 +52,9 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# Research/data JSON files
+iqra_page_*.json
+iqra_research_*.json
+oc_*.json
+openclaw_*.json
