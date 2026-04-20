@@ -90,6 +90,21 @@ interface QuranPulseState {
   setIqraBook: (book: number) => void
   setIqraPage: (page: number) => void
 
+  // IQRA Progress (persisted)
+  iqraCompletedPages: string[]
+  markIqraPageComplete: (pageKey: string) => void
+  isIqraPageComplete: (pageKey: string) => boolean
+
+  // IQRA Tajwid Mastery (persisted)
+  iqraTajwidMastered: string[]
+  markTajwidRuleMastered: (ruleId: string) => void
+  toggleTajwidRuleMastered: (ruleId: string) => void
+  isTajwidRuleMastered: (ruleId: string) => boolean
+
+  // IQRA Hafazan Progress (persisted)
+  iqraHafazanProgress: Record<number, number>
+  updateIqraHafazanProgress: (surahId: number, verses: number) => void
+
   // UI
   showTasbihModal: boolean
   setShowTasbihModal: (show: boolean) => void
@@ -219,6 +234,46 @@ export const useQuranPulseStore = create<QuranPulseState>()(
       iqraPage: 1,
       setIqraBook: (book) => set({ iqraBook: book }),
       setIqraPage: (page) => set({ iqraPage: page }),
+
+      // IQRA Progress
+      iqraCompletedPages: [] as string[],
+      markIqraPageComplete: (pageKey) => {
+        const { iqraCompletedPages } = get()
+        if (!iqraCompletedPages.includes(pageKey)) {
+          set({ iqraCompletedPages: [...iqraCompletedPages, pageKey] })
+        }
+      },
+      isIqraPageComplete: (pageKey) => {
+        return get().iqraCompletedPages.includes(pageKey)
+      },
+
+      // IQRA Tajwid Mastery
+      iqraTajwidMastered: [] as string[],
+      markTajwidRuleMastered: (ruleId) => {
+        const { iqraTajwidMastered } = get()
+        if (!iqraTajwidMastered.includes(ruleId)) {
+          set({ iqraTajwidMastered: [...iqraTajwidMastered, ruleId] })
+        }
+      },
+      toggleTajwidRuleMastered: (ruleId) => {
+        const { iqraTajwidMastered } = get()
+        if (iqraTajwidMastered.includes(ruleId)) {
+          set({ iqraTajwidMastered: iqraTajwidMastered.filter(id => id !== ruleId) })
+        } else {
+          set({ iqraTajwidMastered: [...iqraTajwidMastered, ruleId] })
+        }
+      },
+      isTajwidRuleMastered: (ruleId) => {
+        return get().iqraTajwidMastered.includes(ruleId)
+      },
+
+      // IQRA Hafazan Progress
+      iqraHafazanProgress: {} as Record<number, number>,
+      updateIqraHafazanProgress: (surahId, verses) => {
+        set((state) => ({
+          iqraHafazanProgress: { ...state.iqraHafazanProgress, [surahId]: verses },
+        }))
+      },
 
       // UI
       showTasbihModal: false,
@@ -414,6 +469,9 @@ export const useQuranPulseStore = create<QuranPulseState>()(
         tasbihSessions: state.tasbihSessions,
         iqraBook: state.iqraBook,
         iqraPage: state.iqraPage,
+        iqraCompletedPages: state.iqraCompletedPages,
+        iqraTajwidMastered: state.iqraTajwidMastered,
+        iqraHafazanProgress: state.iqraHafazanProgress,
         selectedZone: state.selectedZone,
         prayerZone: state.prayerZone,
         hafazanProgress: state.hafazanProgress,

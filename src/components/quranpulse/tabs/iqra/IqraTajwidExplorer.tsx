@@ -10,7 +10,7 @@ import {
 
 interface IqraTajwidExplorerProps {
   tajwidMastered: Set<string>
-  setTajwidMastered: React.Dispatch<React.SetStateAction<Set<string>>>
+  toggleTajwidMastery: (ruleId: string) => void
   playingAudio: string | null
   playAudio: (text: string, id: string) => void
   addXp: (amount: number) => void
@@ -18,7 +18,7 @@ interface IqraTajwidExplorerProps {
 
 export function IqraTajwidExplorer({
   tajwidMastered,
-  setTajwidMastered,
+  toggleTajwidMastery,
   playingAudio,
   playAudio,
   addXp,
@@ -30,16 +30,10 @@ export function IqraTajwidExplorer({
   const masteredCount = tajwidMastered.size
 
   const toggleMastery = (ruleId: string) => {
-    setTajwidMastered(prev => {
-      const next = new Set(prev)
-      if (next.has(ruleId)) {
-        next.delete(ruleId)
-      } else {
-        next.add(ruleId)
-        addXp(15)
-      }
-      return next
-    })
+    if (!tajwidMastered.has(ruleId)) {
+      addXp(15)
+    }
+    toggleTajwidMastery(ruleId)
   }
 
   const toggleCategory = (catId: string) => {

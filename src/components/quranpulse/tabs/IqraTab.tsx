@@ -1,10 +1,11 @@
 'use client'
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   GraduationCap, BookOpen, Brain, Target, MessageCircle, Mic, X, Send,
   Zap, Flame, Volume2, Play, Pause, Star, CheckCircle,
   Award, Shield, ChevronLeft, ChevronRight, Lock, Calendar,
+  AlertCircle, RotateCcw, Check, MicOff,
 } from 'lucide-react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import {
@@ -17,7 +18,7 @@ import {
 } from './iqra/types'
 import { IqraBookNavigator } from './iqra/IqraBookNavigator'
 import { IqraTajwidExplorer } from './iqra/IqraTajwidExplorer'
-import { IqraRecitationPractice } from './iqra/IqraRecitationPractice'
+// IqraRecitationPractice replaced by inline SebutView with real ASR
 import { IqraWritingPractice } from './iqra/IqraWritingPractice'
 import { IqraQalqalahPractice } from './iqra/IqraQalqalahPractice'
 import { IqraSpeedReading } from './iqra/IqraSpeedReading'
@@ -34,11 +35,17 @@ import { IQRA_PAGE_CONTENT } from './iqra/iqra-pages'
 
 // ============ Main Component ============
 export function IqraTab() {
-  const { iqraBook, iqraPage, setIqraBook, setIqraPage, xp, streak, addXp } = useQuranPulseStore()
+  const {
+    iqraBook, iqraPage, setIqraBook, setIqraPage, xp, streak, addXp,
+    iqraCompletedPages, markIqraPageComplete,
+    iqraTajwidMastered, toggleTajwidRuleMastered,
+    iqraHafazanProgress, updateIqraHafazanProgress,
+  } = useQuranPulseStore()
   const [subTab, setSubTab] = useState<IqraSubTab>('belajar')
-  const [completedPages, setCompletedPages] = useState<Set<string>>(new Set())
-  const [hafazanProgress, setHafazanProgress] = useState<Record<number, number>>({})
-  const [tajwidMastered, setTajwidMastered] = useState<Set<string>>(new Set())
+  // Derive Sets from store arrays for local usage (wrapped in useMemo to avoid recreating on every render)
+  const completedPages = useMemo(() => new Set(iqraCompletedPages), [iqraCompletedPages])
+  const tajwidMastered = useMemo(() => new Set(iqraTajwidMastered), [iqraTajwidMastered])
+  const hafazanProgress = iqraHafazanProgress
   const [letterFilter, setLetterFilter] = useState<LetterFilter>('all')
   const [showAITutor, setShowAITutor] = useState(false)
   const [showLetterDetail, setShowLetterDetail] = useState<number | null>(null)
@@ -72,6 +79,17 @@ export function IqraTab() {
   const [geniusMode, setGeniusMode] = useState(false)
   const [showMakhraj, setShowMakhraj] = useState<string | null>(null)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // ASR pronunciation practice state
+  const [asrRecording, setAsrRecording] = useState(false)
+  const [asrProcessing, setAsrProcessing] = useState(false)
+  const [asrResult, setAsrResult] = useState<string | null>(null)
+  const [asrScore, setAsrScore] = useState<{ correct: number; total: number; details: Array<{ char: string; expected: string; got: string; match: boolean }> } | null>(null)
+  const [asrError, setAsrError] = useState<string | null>(null)
+  const [asrCurrentIdx, setAsrCurrentIdx] = useState(0)
+  const [asrMicPermission, setAsrMicPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown')
+  const asrMediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const asrChunksRef = useRef<Blob[]>([])
 
   // Derived values
   const currentBook = IQRA_BOOKS.find(b => b.id === iqraBook) || IQRA_BOOKS[0]
@@ -208,9 +226,9 @@ export function IqraTab() {
   }, [dailyItem, addXp])
 
   const markComplete = useCallback(() => {
-    setCompletedPages(prev => new Set([...prev, pageKey]))
+    markIqraPageComplete(pageKey)
     addXp(25)
-  }, [pageKey, addXp])
+  }, [pageKey, markIqraPageComplete, addXp])
 
   const sendAI = useCallback(async () => {
     if (!aiInput.trim() || aiLoading) return
@@ -660,6 +678,658 @@ export function IqraTab() {
     )
   }
 
+  // ============ ASR Pronunciation Practice View ============
+  function SebutView() {
+    // Generate practice items based on current Iqra book
+    const practiceItems = useMemo(() => {
+      // Collect all display items across first few pages for variety
+      const items: Array<{ arabic: string; transliteration: string }> = []
+      for (let p = 1; p <= Math.min(currentBook.pages, 10); p++) {
+        const pk = `${iqraBook}-${p}`
+        const pd = IQRA_PAGE_CONTENT[pk]
+        if (pd) {
+          pd.items.forEach(item => {
+            items.push({
+              arabic: item.display,
+              transliteration: item.transliteration || item.audioText || '',
+            })
+          })
+        }
+      }
+      // Fallback: use ENHANCED_LETTERS with harakat
+      if (items.length === 0) {
+        return ENHANCED_LETTERS.slice(0, 10).map(l => ({
+          arabic: l.harakat.fathah,
+          transliteration: l.name,
+        }))
+      }
+      return items
+    }, [iqraBook, currentBook.pages])
+
+    const currentItem = practiceItems[asrCurrentIdx % practiceItems.length]
+
+    // Blob to base64 helper
+    const blobToBase64 = useCallback((blob: Blob): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1]
+          resolve(base64)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+    }, [])
+
+    // Compare ASR result with expected text
+    const comparePronunciation = useCallback((expected: string, got: string) => {
+      // Normalize: remove diacritics, spaces, special chars for comparison
+      const normalize = (s: string) =>
+        s.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '') // remove harakat
+         .replace(/[\s\u0640\u0621]/g, '') // remove spaces, tatweel, hamzah
+         .replace(/[ًٌَُِّْ]/g, '') // remove additional diacritics
+         .trim()
+
+      const expectedNorm = normalize(expected)
+      const gotNorm = normalize(got)
+
+      // Build per-character comparison
+      const expectedChars = expectedNorm.split('')
+      const gotChars = gotNorm.split('')
+      const details: Array<{ char: string; expected: string; got: string; match: boolean }> = []
+
+      const maxLen = Math.max(expectedChars.length, gotChars.length)
+      for (let i = 0; i < maxLen; i++) {
+        const exp = expectedChars[i] || ''
+        const g = gotChars[i] || ''
+        details.push({
+          char: exp || g,
+          expected: exp,
+          got: g,
+          match: exp !== '' && g !== '' && exp === g,
+        })
+      }
+
+      // Also count simple letter overlap
+      const expectedSet = new Set(expectedChars.filter(c => c))
+      const gotSet = new Set(gotChars.filter(c => c))
+      let correct = 0
+      expectedSet.forEach(c => {
+        if (gotSet.has(c)) correct++
+      })
+
+      return {
+        correct,
+        total: expectedSet.size || 1,
+        details,
+      }
+    }, [])
+
+    // Start recording
+    const startRecording = useCallback(async () => {
+      setAsrError(null)
+      setAsrResult(null)
+      setAsrScore(null)
+      asrChunksRef.current = []
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        setAsrMicPermission('granted')
+
+        const mediaRecorder = new MediaRecorder(stream, {
+          mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : 'audio/webm',
+        })
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            asrChunksRef.current.push(e.data)
+          }
+        }
+
+        mediaRecorder.onstop = async () => {
+          // Stop all tracks
+          stream.getTracks().forEach(t => t.stop())
+
+          const blob = new Blob(asrChunksRef.current, { type: 'audio/webm' })
+          setAsrRecording(false)
+          setAsrProcessing(true)
+
+          try {
+            const base64 = await blobToBase64(blob)
+            const res = await fetch('/api/asr', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audioBase64: base64 }),
+            })
+
+            const data = await res.json()
+            if (data.success && data.text) {
+              setAsrResult(data.text)
+              const score = comparePronunciation(currentItem.arabic, data.text)
+              setAsrScore(score)
+
+              // XP reward
+              const pct = score.correct / score.total
+              if (pct >= 0.8) {
+                addXp(15)
+              } else if (pct >= 0.5) {
+                addXp(5)
+              }
+            } else {
+              setAsrError(data.error || 'Gagal menranskrip audio. Sila cuba lagi.')
+            }
+          } catch {
+            setAsrError('Ralat rangkaian. Sila cuba lagi.')
+          }
+          setAsrProcessing(false)
+        }
+
+        mediaRecorder.start()
+        asrMediaRecorderRef.current = mediaRecorder
+        setAsrRecording(true)
+
+        // Auto-stop after 6 seconds
+        setTimeout(() => {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop()
+          }
+        }, 6000)
+
+      } catch (err) {
+        setAsrRecording(false)
+        if (err instanceof DOMException && err.name === 'NotAllowedError') {
+          setAsrMicPermission('denied')
+          setAsrError('Kebenaran mikrofon ditolak. Sila benarkan akses mikrofon dalam tetapan penyemak imbas anda.')
+        } else {
+          setAsrError('Tidak dapat mengakses mikrofon. Sila pastikan peranti anda menyokong rakaman audio.')
+        }
+      }
+    }, [currentItem, blobToBase64, comparePronunciation, addXp])
+
+    // Stop recording manually
+    const stopRecording = useCallback(() => {
+      if (asrMediaRecorderRef.current && asrMediaRecorderRef.current.state === 'recording') {
+        asrMediaRecorderRef.current.stop()
+      }
+    }, [])
+
+    // Navigate to next/prev item
+    const goNext = useCallback(() => {
+      setAsrCurrentIdx(prev => (prev + 1) % practiceItems.length)
+      setAsrResult(null)
+      setAsrScore(null)
+      setAsrError(null)
+    }, [practiceItems.length])
+
+    const goPrev = useCallback(() => {
+      setAsrCurrentIdx(prev => (prev - 1 + practiceItems.length) % practiceItems.length)
+      setAsrResult(null)
+      setAsrScore(null)
+      setAsrError(null)
+    }, [practiceItems.length])
+
+    const resetAttempt = useCallback(() => {
+      setAsrResult(null)
+      setAsrScore(null)
+      setAsrError(null)
+    }, [])
+
+    const circumference = 2 * Math.PI * 36
+    const scorePct = asrScore ? Math.round((asrScore.correct / asrScore.total) * 100) : 0
+    const scoreOffset = asrScore ? circumference - (scorePct / 100) * circumference : circumference
+    const scoreColor = scorePct >= 80 ? '#22c55e' : scorePct >= 50 ? '#d4af37' : '#ef4444'
+
+    return (
+      <div className="flex flex-col gap-4">
+        {/* Book & progress indicator */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg">{currentBook.icon}</span>
+            <div>
+              <div className="text-xs font-semibold" style={{ color: currentBook.color }}>
+                {currentBook.title}
+              </div>
+              <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.5)' }}>
+                Sebutan — {currentBook.focus}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>
+              {asrCurrentIdx + 1}/{practiceItems.length}
+            </span>
+            <div className="h-1.5 w-16 rounded-full overflow-hidden" style={{ background: 'rgba(74,74,166,0.15)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: currentBook.color }}
+                animate={{ width: `${((asrCurrentIdx + 1) / practiceItems.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Target Display */}
+        <motion.div
+          className="rounded-2xl p-6 text-center"
+          style={{
+            background: 'rgba(42,42,106,0.3)',
+            border: `1px solid ${currentBook.color}25`,
+          }}
+          key={asrCurrentIdx}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className="text-[10px] mb-2" style={{ color: 'rgba(204,204,204,0.5)' }}>
+            Baca dengan kuat:
+          </div>
+          <div
+            className={`${learningMode === 'kids' ? 'text-5xl' : 'text-4xl'} font-arabic leading-loose`}
+            style={{ color: '#ffffff', direction: 'rtl' }}
+          >
+            {currentItem?.arabic}
+          </div>
+          {currentItem?.transliteration && (
+            <div className="text-[11px] mt-2" style={{ color: currentBook.color }}>
+              {currentItem.transliteration}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Mic Button + Controls Row */}
+        <div className="flex items-center justify-center gap-4">
+          {/* Play correct pronunciation */}
+          <button
+            className="h-11 w-11 rounded-full flex items-center justify-center"
+            style={{
+              background: 'rgba(74,74,166,0.15)',
+              border: '1px solid rgba(74,74,166,0.25)',
+            }}
+            onClick={() => playAudio(currentItem?.transliteration || currentItem?.arabic || '', `sebut-${asrCurrentIdx}`)}
+            title="Dengar sebutan yang betul"
+          >
+            {playingAudio === `sebut-${asrCurrentIdx}`
+              ? <Pause className="h-4 w-4" style={{ color: '#4a4aa6' }} />
+              : <Volume2 className="h-4 w-4" style={{ color: '#4a4aa6' }} />
+            }
+          </button>
+
+          {/* Mic Button */}
+          <motion.button
+            className="h-16 w-16 rounded-full flex items-center justify-center relative"
+            style={{
+              background: asrRecording
+                ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                : asrProcessing
+                  ? 'linear-gradient(135deg, #d4af37, #b8941f)'
+                  : 'linear-gradient(135deg, #4a4aa6, #6a6ab6)',
+              boxShadow: asrRecording
+                ? '0 0 20px rgba(239,68,68,0.4)'
+                : asrProcessing
+                  ? '0 0 20px rgba(212,175,55,0.4)'
+                  : '0 0 15px rgba(74,74,166,0.3)',
+            }}
+            onClick={asrRecording ? stopRecording : startRecording}
+            disabled={asrProcessing}
+            whileTap={{ scale: 0.9 }}
+            animate={asrRecording ? {
+              scale: [1, 1.1, 1],
+              boxShadow: [
+                '0 0 15px rgba(239,68,68,0.3)',
+                '0 0 30px rgba(239,68,68,0.5)',
+                '0 0 15px rgba(239,68,68,0.3)',
+              ],
+            } : {}}
+            transition={asrRecording ? {
+              type: 'tween',
+              duration: 1.2,
+              repeat: Infinity,
+            } : {}}
+          >
+            {asrProcessing ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                <AlertCircle className="h-6 w-6 text-white" />
+              </motion.div>
+            ) : (
+              <Mic className="h-6 w-6 text-white" />
+            )}
+
+            {/* Pulsing rings when recording */}
+            {asrRecording && (
+              <>
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: '2px solid rgba(239,68,68,0.3)' }}
+                  animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ border: '2px solid rgba(239,68,68,0.2)' }}
+                  animate={{ scale: [1, 1.8], opacity: [0.4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+                />
+              </>
+            )}
+          </motion.button>
+
+          {/* Next / Reset */}
+          <button
+            className="h-11 w-11 rounded-full flex items-center justify-center"
+            style={{
+              background: asrScore !== null ? 'rgba(212,175,55,0.15)' : 'rgba(42,42,106,0.3)',
+              border: `1px solid ${asrScore !== null ? 'rgba(212,175,55,0.25)' : 'rgba(74,74,166,0.1)'}`,
+            }}
+            onClick={asrScore !== null ? goNext : resetAttempt}
+            title={asrScore !== null ? 'Seterusnya' : 'Set semula'}
+          >
+            {asrScore !== null
+              ? <ChevronRight className="h-4 w-4" style={{ color: '#d4af37' }} />
+              : <RotateCcw className="h-4 w-4" style={{ color: 'rgba(204,204,204,0.4)' }} />
+            }
+          </button>
+        </div>
+
+        {/* Recording status indicator */}
+        <AnimatePresence>
+          {asrRecording && (
+            <motion.div
+              className="text-center"
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <motion.div
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: '#ef4444' }}
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ duration: 0.8, repeat: Infinity }}
+                />
+                <span className="text-[11px]" style={{ color: '#ef4444' }}>
+                  Merakam... Sila baca dengan kuat
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Processing status */}
+        <AnimatePresence>
+          {asrProcessing && (
+            <motion.div
+              className="text-center"
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)' }}>
+                <motion.div
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: '#d4af37' }}
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ duration: 0.6, repeat: Infinity }}
+                />
+                <span className="text-[11px]" style={{ color: '#d4af37' }}>
+                  Menganalisis sebutan...
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mic permission denied */}
+        {asrMicPermission === 'denied' && (
+          <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239,68,68,0.15)' }}>
+              <MicOff className="h-4 w-4" style={{ color: '#ef4444' }} />
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold" style={{ color: '#ef4444' }}>Mikrofon ditolak</div>
+              <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>
+                Sila benarkan akses mikrofon dalam tetapan penyemak imbas untuk menggunakan ciri sebutan.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error display */}
+        {asrError && asrMicPermission !== 'denied' && (
+          <motion.div
+            className="rounded-xl p-3 flex items-center gap-3"
+            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239,68,68,0.15)' }}>
+              <AlertCircle className="h-4 w-4" style={{ color: '#ef4444' }} />
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold" style={{ color: '#ef4444' }}>Ralat</div>
+              <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{asrError}</div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Score Display */}
+        <AnimatePresence>
+          {asrScore !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ type: 'spring', damping: 20 }}
+            >
+              {/* Circular Progress + Score */}
+              <div className="rounded-2xl p-5 text-center" style={{ background: 'rgba(42,42,106,0.3)', border: `1px solid ${scoreColor}20` }}>
+                <div className="flex items-center justify-center gap-5">
+                  {/* Circular progress */}
+                  <div className="relative">
+                    <svg width="88" height="88" viewBox="0 0 88 88">
+                      <circle
+                        cx="44" cy="44" r="36"
+                        fill="none"
+                        stroke="rgba(74,74,166,0.15)"
+                        strokeWidth="5"
+                      />
+                      <motion.circle
+                        cx="44" cy="44" r="36"
+                        fill="none"
+                        stroke={scoreColor}
+                        strokeWidth="5"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        initial={{ strokeDashoffset: circumference }}
+                        animate={{ strokeDashoffset: scoreOffset }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        transform="rotate(-90 44 44)"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-xl font-bold" style={{ color: scoreColor }}>
+                        {asrScore.correct}/{asrScore.total}
+                      </span>
+                      <span className="text-[8px]" style={{ color: 'rgba(204,204,204,0.5)' }}>
+                        huruf betul
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Score label + feedback */}
+                  <div className="text-left">
+                    <motion.div
+                      className="text-lg font-bold mb-1"
+                      style={{ color: scoreColor }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', delay: 0.3 }}
+                    >
+                      {scorePct >= 80 ? 'Bagus! 🌟' : scorePct >= 50 ? 'Hampir! ✨' : 'Cuba Lagi! 💪'}
+                    </motion.div>
+                    <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>
+                      {scorePct >= 80 ? 'Sebutan anda sangat baik!' : scorePct >= 50 ? 'Teruskan berlatih untuk lebih baik.' : 'Dengar sebutan yang betul dan cuba lagi.'}
+                    </div>
+                    {scorePct >= 50 && (
+                      <motion.div
+                        className="flex items-center gap-1 mt-1.5"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.5 }}
+                      >
+                        <Star className="h-3 w-3" style={{ color: '#d4af37' }} />
+                        <span className="text-[10px] font-medium" style={{ color: '#d4af37' }}>
+                          +{scorePct >= 80 ? '15' : '5'} XP
+                        </span>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ASR transcript display */}
+                {asrResult && (
+                  <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(74,74,166,0.1)' }}>
+                    <div className="text-[9px] mb-1" style={{ color: 'rgba(204,204,204,0.4)' }}>
+                      Anda sebut:
+                    </div>
+                    <div className="text-lg font-arabic" style={{ color: 'rgba(255,255,255,0.7)', direction: 'rtl' }}>
+                      {asrResult}
+                    </div>
+                  </div>
+                )}
+
+                {/* Per-letter breakdown */}
+                {asrScore.details.length > 0 && asrScore.details.length <= 12 && (
+                  <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(74,74,166,0.1)' }}>
+                    <div className="text-[10px] mb-2" style={{ color: 'rgba(204,204,204,0.5)' }}>
+                      Kecermasan per-huruf:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 justify-center" style={{ direction: 'rtl' }}>
+                      {asrScore.details.map((d, i) => (
+                        <motion.div
+                          key={`detail-${i}`}
+                          className="flex flex-col items-center gap-0.5 px-1.5 py-1 rounded-lg"
+                          style={{
+                            background: d.match ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                            border: `1px solid ${d.match ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                          }}
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.3 + i * 0.06 }}
+                        >
+                          <span className="text-lg font-arabic" style={{ color: d.match ? '#22c55e' : '#ef4444' }}>
+                            {d.expected || d.char}
+                          </span>
+                          <span className="text-[10px]">
+                            {d.match ? '✅' : '❌'}
+                          </span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Feedback card */}
+              <motion.div
+                className="mt-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                {scorePct >= 80 ? (
+                  <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(34,197,94,0.15)' }}>
+                      <Check className="h-5 w-5" style={{ color: '#22c55e' }} />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-semibold" style={{ color: '#22c55e' }}>Sebutan Tepat! 🎉</div>
+                      <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Anda membaca dengan baik. Teruskan!</div>
+                    </div>
+                  </div>
+                ) : scorePct < 50 ? (
+                  <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(239,68,68,0.15)' }}>
+                      <AlertCircle className="h-5 w-5" style={{ color: '#ef4444' }} />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-semibold" style={{ color: '#ef4444' }}>Jangan berputus asa! 🤲</div>
+                      <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Dengar sebutan yang betul dan cuba sekali lagi.</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-xl p-3 flex items-center gap-3" style={{ background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)' }}>
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(212,175,55,0.15)' }}>
+                      <Star className="h-5 w-5" style={{ color: '#d4af37' }} />
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-semibold" style={{ color: '#d4af37' }}>Hampir! ✨</div>
+                      <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.5)' }}>Sedikit lagi untuk mencapai tahap yang baik.</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Makhraj tips for wrong letters */}
+                {asrScore.details.some(d => !d.match && d.expected) && (
+                  <div className="mt-2 rounded-xl p-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.1)' }}>
+                    <div className="text-[10px] font-semibold mb-1.5" style={{ color: '#d4af37' }}>
+                      💡 Petunjuk Makhraj:
+                    </div>
+                    {asrScore.details.filter(d => !d.match && d.expected).slice(0, 4).map((d, i) => {
+                      const makhraj = MAKHRAJ_DATA.find(m => m.letter === d.expected)
+                      return makhraj ? (
+                        <div key={`tip-${i}`} className="text-[10px] mb-1" style={{ color: 'rgba(204,204,204,0.6)' }}>
+                          <span className="font-arabic text-sm" style={{ color: '#ffffff' }}>{d.expected}</span> — {makhraj.name}: {makhraj.makhraj} ({makhraj.group})
+                        </div>
+                      ) : null
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-2">
+          <button
+            className="flex items-center gap-1 px-3 py-2 rounded-xl text-[11px]"
+            style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.12)', color: '#4a4aa6' }}
+            onClick={goPrev}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" /> Sebelum
+          </button>
+          <div className="flex items-center gap-1">
+            {asrRecording ? (
+              <motion.div
+                className="h-2 w-2 rounded-full"
+                style={{ background: '#ef4444' }}
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              />
+            ) : (
+              <Mic className="h-3 w-3" style={{ color: 'rgba(204,204,204,0.3)' }} />
+            )}
+            <span className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)' }}>
+              {asrRecording ? 'Merakam...' : asrProcessing ? 'Memproses...' : 'Tekan mikrofon untuk mula'}
+            </span>
+          </div>
+          <button
+            className="flex items-center gap-1 px-3 py-2 rounded-xl text-[11px]"
+            style={{ background: `${currentBook.color}15`, border: `1px solid ${currentBook.color}25`, color: currentBook.color }}
+            onClick={goNext}
+          >
+            Seterusnya <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   function LatihanView() {
     return (
       <div>
@@ -672,7 +1342,7 @@ export function IqraTab() {
         </div>
 
         {practiceMode === 'sebut' && (
-          <IqraRecitationPractice iqraBook={iqraBook} playingAudio={playingAudio} playAudio={playAudio} audioSpeed={audioSpeed} addXp={addXp} learningMode={learningMode} />
+          <SebutView />
         )}
 
         {practiceMode === 'tulis' && (
@@ -786,7 +1456,7 @@ export function IqraTab() {
         </div>
 
         {(view === 'books' || view === 'explorer') && (
-          <IqraTajwidExplorer tajwidMastered={tajwidMastered} setTajwidMastered={setTajwidMastered} playingAudio={playingAudio} playAudio={playAudio} addXp={addXp} />
+          <IqraTajwidExplorer tajwidMastered={tajwidMastered} toggleTajwidMastery={toggleTajwidRuleMastered} playingAudio={playingAudio} playAudio={playAudio} addXp={addXp} />
         )}
         {view === 'tajwid-reading' && (
           <IqraTajwidReadingView iqraBook={iqraBook} playingAudio={playingAudio} playAudio={playAudio} audioSpeed={audioSpeed} addXp={addXp} />
@@ -827,7 +1497,7 @@ export function IqraTab() {
                 </div>
                 <div className="flex gap-1.5 mt-2">
                   <button className="px-2 py-1 rounded-lg text-[9px]" style={{ background: 'rgba(74,74,166,0.1)', color: '#4a4aa6', border: '1px solid rgba(74,74,166,0.15)' }} onClick={() => playAudio(surah.nameMs, `hafazan-${surah.id}`)}><Volume2 className="h-3 w-3 inline mr-1" />Dengar</button>
-                  <button className="px-2 py-1 rounded-lg text-[9px]" style={{ background: 'rgba(212,175,55,0.08)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }} onClick={() => { setHafazanProgress(prev => ({ ...prev, [surah.id]: Math.min(surah.verses, (prev[surah.id] || 0) + 1) })); addXp(15) }}>+1 Ayat</button>
+                  <button className="px-2 py-1 rounded-lg text-[9px]" style={{ background: 'rgba(212,175,55,0.08)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }} onClick={() => { updateIqraHafazanProgress(surah.id, Math.min(surah.verses, (iqraHafazanProgress[surah.id] || 0) + 1)); addXp(15) }}>+1 Ayat</button>
                 </div>
               </motion.div>
             )
@@ -1036,71 +1706,174 @@ function LetterDetailModal({ letter, learningMode, playingAudio, playAudio, onCl
 
 // ============ Iqra Content Renderers ============
 
-function renderIqraContent(iqraBook: number, iqraPage: number, playAudio: (text: string, id: string) => void) {
-  if (iqraBook === 1) {
-    const perPage = 6
-    const start = ((iqraPage - 1) * perPage) % ENHANCED_LETTERS.length
-    const pageLetters = Array.from({ length: perPage }, (_, i) => ENHANCED_LETTERS[(start + i) % ENHANCED_LETTERS.length])
+// Helper to get harakat color from type
+function getHarakatColor(type?: string): string {
+  if (!type) return '#d4af37'
+  const map: Record<string, string> = {
+    fathah: HARAKAT_COLORS.fathah,
+    kasrah: HARAKAT_COLORS.kasrah,
+    dhammah: HARAKAT_COLORS.dhammah,
+    sukun: HARAKAT_COLORS.sukun,
+    shaddah: HARAKAT_COLORS.shaddah,
+    'tanwin-fath': HARAKAT_COLORS.tanwinFath,
+    'tanwin-kasr': HARAKAT_COLORS.tanwinKasr,
+    'tanwin-dham': HARAKAT_COLORS.tanwinDham,
+  }
+  return map[type] || '#d4af37'
+}
+
+function renderIqraContent(iqraBook: number, iqraPage: number, playAudio: (text: string, id: string, speed?: number) => void) {
+  const pageKey = `${iqraBook}-${iqraPage}`
+  const pageData = IQRA_PAGE_CONTENT[pageKey]
+  const bookInfo = IQRA_BOOKS.find(b => b.id === iqraBook) || IQRA_BOOKS[0]
+
+  // If we have rich page content, use it
+  if (pageData) {
+    const isVerse = pageData.type === 'verses'
+    const isRules = pageData.type === 'rules'
+    const isLetters = pageData.type === 'letters'
+    const isPractice = pageData.type === 'practice' || pageData.type === 'review'
+
     return (
       <div className="w-full">
-        <div className="text-center mb-3"><span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(74,74,166,0.12)', color: '#4a4aa6' }}>Pengenalan Huruf Hijaiyah + Fathah</span></div>
-        <div className="grid grid-cols-3 gap-2">
-          {pageLetters.map(l => (
-            <div key={l.id} className="aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer" style={{ background: 'rgba(74,74,166,0.06)', border: '1px solid rgba(74,74,166,0.1)' }} onClick={() => playAudio(l.name, `iqra-letter-${l.id}`)}>
-              <span className="text-3xl" style={{ color: '#ffffff' }}>{l.harakat.fathah}</span>
-              <span className="text-[9px] mt-1" style={{ color: 'rgba(204,204,204,0.5)' }}>{l.name}</span>
-            </div>
-          ))}
+        {/* Page title + type badge */}
+        <div className="text-center mb-3">
+          <span className="text-[10px] px-2.5 py-1 rounded-full inline-block mb-1" style={{ background: `${bookInfo.color}15`, color: bookInfo.color, border: `1px solid ${bookInfo.color}25` }}>
+            {pageData.titleMs}
+          </span>
         </div>
+
+        {/* Rule focus badge */}
+        {pageData.ruleFocus && (
+          <div className="text-center mb-2">
+            <span className="text-[9px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.2)' }}>
+              🎯 {pageData.ruleFocus}
+            </span>
+          </div>
+        )}
+
+        {/* Instruction */}
+        <div className="text-center mb-4 px-2">
+          <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(204,204,204,0.7)' }}>{pageData.instruction}</p>
+        </div>
+
+        {/* Content items */}
+        {isLetters && (
+          <div className="grid grid-cols-3 gap-2.5">
+            {pageData.items.map((item, i) => {
+              const color = item.color || getHarakatColor(item.harakatType)
+              return (
+                <motion.button
+                  key={i}
+                  className="aspect-square rounded-xl flex flex-col items-center justify-center cursor-pointer"
+                  style={{ background: `${color}08`, border: `1px solid ${color}20` }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  onClick={() => playAudio(item.audioText || item.transliteration || '', `iqra-item-${pageKey}-${i}`, 0.7)}
+                >
+                  <span className="text-3xl font-arabic" style={{ color }}>{item.display}</span>
+                  {item.transliteration && <span className="text-[9px] mt-1" style={{ color: 'rgba(204,204,204,0.5)' }}>{item.transliteration}</span>}
+                  {item.rule && <span className="text-[7px] mt-0.5 px-1 rounded" style={{ background: `${color}15`, color }}>{item.rule}</span>}
+                </motion.button>
+              )
+            })}
+          </div>
+        )}
+
+        {isRules && (
+          <div className="space-y-3">
+            {pageData.items.map((item, i) => {
+              const color = item.color || getHarakatColor(item.harakatType)
+              return (
+                <motion.div
+                  key={i}
+                  className="rounded-xl p-3.5"
+                  style={{ background: `${color}08`, border: `1px solid ${color}20` }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl font-arabic shrink-0" style={{ color, direction: 'rtl' as const }}>{item.display}</div>
+                    <div className="flex-1 min-w-0">
+                      {item.transliteration && <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{item.transliteration}</div>}
+                      {item.rule && <div className="text-[9px] mt-0.5" style={{ color }}>{item.rule}</div>}
+                    </div>
+                    <button
+                      className="p-1.5 rounded-lg shrink-0"
+                      style={{ background: `${color}12` }}
+                      onClick={() => playAudio(item.audioText || item.transliteration || '', `iqra-item-${pageKey}-${i}`, 0.7)}
+                    >
+                      <Volume2 className="h-3.5 w-3.5" style={{ color }} />
+                    </button>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
+
+        {(pageData.type === 'harakat' || pageData.type === 'words') && (
+          <div className={`grid ${pageData.items.length <= 4 ? 'grid-cols-2' : 'grid-cols-3'} gap-2.5`}>
+            {pageData.items.map((item, i) => {
+              const color = item.color || getHarakatColor(item.harakatType)
+              return (
+                <motion.button
+                  key={i}
+                  className="rounded-xl p-3 text-center cursor-pointer"
+                  style={{ background: `${color}08`, border: `1px solid ${color}20` }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  onClick={() => playAudio(item.audioText || item.transliteration || '', `iqra-item-${pageKey}-${i}`, 0.7)}
+                >
+                  <div className="text-2xl font-arabic mb-1" style={{ color, direction: 'rtl' as const }}>{item.display}</div>
+                  {item.transliteration && <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.6)' }}>{item.transliteration}</div>}
+                  {item.rule && <div className="text-[8px] mt-1 px-1.5 py-0.5 rounded-full inline-block" style={{ background: `${color}12`, color }}>{item.rule}</div>}
+                </motion.button>
+              )
+            })}
+          </div>
+        )}
+
+        {(isVerse || isPractice) && (
+          <div className="space-y-2.5">
+            {pageData.items.map((item, i) => {
+              const color = item.color || getHarakatColor(item.harakatType)
+              return (
+                <motion.div
+                  key={i}
+                  className="rounded-xl p-3 text-center"
+                  style={{ background: isVerse ? `${bookInfo.color}06` : `${color}06`, border: `1px solid ${isVerse ? `${bookInfo.color}12` : `${color}15`}` }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04 }}
+                >
+                  <p className={`${isVerse ? 'text-xl' : 'text-2xl'} leading-loose font-arabic`} style={{ color: isVerse ? '#ffffff' : color, direction: 'rtl' as const }}>{item.display}</p>
+                  {item.transliteration && <p className="text-[10px] mt-1.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{item.transliteration}</p>}
+                  {item.rule && <p className="text-[9px] mt-1" style={{ color: `${color}90` }}>{item.rule}</p>}
+                </motion.div>
+              )
+            })}
+          </div>
+        )}
       </div>
     )
   }
-  if (iqraBook === 2) {
-    const combos = ['بَا', 'بِي', 'بُو', 'تَا', 'تِي', 'تُو', 'ثَا', 'ثِي', 'ثُو', 'جَا', 'جِي', 'جُو']
-    const perPage = 6
-    const start = ((iqraPage - 1) * perPage) % combos.length
-    const pageItems = Array.from({ length: perPage }, (_, i) => combos[(start + i) % combos.length])
-    return (
-      <div className="w-full">
-        <div className="text-center mb-3"><span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(106,106,182,0.12)', color: '#6a6ab6' }}>Huruf Bersambung + Mad Asli</span></div>
-        <div className="grid grid-cols-3 gap-2">
-          {pageItems.map((c, i) => (
-            <div key={i} className="aspect-square rounded-xl flex items-center justify-center" style={{ background: 'rgba(106,106,182,0.06)', border: '1px solid rgba(106,106,182,0.1)' }}>
-              <span className="text-2xl" style={{ color: '#ffffff', direction: 'rtl' }}>{c}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-  if (iqraBook === 3) {
-    return (
-      <div className="w-full">
-        <div className="text-center mb-3"><span className="text-[10px] px-2 py-1 rounded-full" style={{ background: 'rgba(212,175,55,0.1)', color: '#d4af37' }}>Kasrah, Dhammah & Mad</span></div>
-        <div className="grid grid-cols-3 gap-2">
-          {ENHANCED_LETTERS.slice(0, 9).map(l => (
-            <div key={l.id} className="rounded-xl p-2 text-center" style={{ background: 'rgba(212,175,55,0.04)', border: '1px solid rgba(212,175,55,0.1)' }}>
-              <div className="text-xl font-arabic" style={{ color: '#ffffff' }}>{l.harakat.fathah} {l.harakat.kasrah} {l.harakat.dhammah}</div>
-              <div className="text-[9px]" style={{ color: '#d4af37' }}>{l.name}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-  // Books 4-6: Quran verses with Tajwid
+
+  // Fallback for pages without IQRA_PAGE_CONTENT data
   const verses = QURAN_VERSES_PER_BOOK[iqraBook] || [
     { verse: 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', translation: 'Dengan nama Allah Yang Maha Pemurah Lagi Maha Penyayang', surah: 'Al-Fatihah 1:1' },
     { verse: 'قُلْ هُوَ ٱللَّهُ أَحَدٌ', translation: 'Katakanlah: Dialah Allah Yang Maha Esa', surah: 'Al-Ikhlas 112:1' },
-    { verse: 'إِنَّ مَعَ ٱلْعُسْرِ يُسْرًا', translation: 'Sesungguhnya bersama kesulitan ada kemudahan', surah: 'Al-Insyirah 94:6' },
   ]
-  const labels: Record<number, string> = { 4: 'Tanwin, Qalqalah & Izhar', 5: 'Qamariyyah, Syamsiyyah & Idgham', 6: 'Tajwid Lengkap & Bacaan Quran' }
+  const labels: Record<number, string> = { 1: 'Huruf Hijaiyah + Fathah', 2: 'Huruf Bersambung + Mad Asli', 3: 'Kasrah, Dhammah & Mad', 4: 'Tanwin, Qalqalah & Izhar', 5: 'Qamariyyah, Syamsiyyah & Idgham', 6: 'Tajwid Lengkap & Bacaan Quran' }
   return (
     <div className="w-full">
-      <div className="text-center mb-3"><span className="text-[10px] px-2 py-1 rounded-full" style={{ background: `${currentBook.color}12`, color: currentBook.color }}>{labels[iqraBook] || 'Latihan'}</span></div>
+      <div className="text-center mb-3"><span className="text-[10px] px-2.5 py-1 rounded-full" style={{ background: `${bookInfo.color}12`, color: bookInfo.color }}>{labels[iqraBook] || 'Latihan'}</span></div>
       <div className="space-y-2">
         {verses.map((v, i) => (
-          <div key={i} className="rounded-xl p-3 text-center" style={{ background: `${currentBook.color}06`, border: `1px solid ${currentBook.color}12` }}>
+          <div key={i} className="rounded-xl p-3 text-center" style={{ background: `${bookInfo.color}06`, border: `1px solid ${bookInfo.color}12` }}>
             <p className="text-xl leading-loose font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>{v.verse}</p>
             <p className="text-[10px] mt-1.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{v.translation}</p>
             <p className="text-[9px]" style={{ color: 'rgba(204,204,204,0.3)' }}>{v.surah}</p>
@@ -1112,12 +1885,10 @@ function renderIqraContent(iqraBook: number, iqraPage: number, playAudio: (text:
 }
 
 function getIqraAudioText(iqraBook: number, iqraPage: number): string {
-  if (iqraBook === 1) {
-    const perPage = 6
-    const start = ((iqraPage - 1) * perPage) % ENHANCED_LETTERS.length
-    return Array.from({ length: perPage }, (_, i) => ENHANCED_LETTERS[(start + i) % ENHANCED_LETTERS.length].name).join(', ')
+  const pageKey = `${iqraBook}-${iqraPage}`
+  const pageData = IQRA_PAGE_CONTENT[pageKey]
+  if (pageData && pageData.items.length > 0) {
+    return pageData.items.map(item => item.audioText || item.transliteration || item.display).join(', ')
   }
   return `Iqra ${iqraBook}, halaman ${iqraPage}`
 }
-
-const currentBook = IQRA_BOOKS[0] // fallback only
