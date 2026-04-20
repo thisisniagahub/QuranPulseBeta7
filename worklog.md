@@ -1014,3 +1014,46 @@ Stage Summary:
 - IqraWritingPractice: Full canvas drawing component with ghost guide, touch+mouse support, AI feedback, harakat forms, and letter selector
 - Both components follow existing patterns (Deep Blue theme, Framer Motion, Bahasa Melayu, JAKIM references)
 - ESLint passes with 0 errors on new files
+---
+Task ID: 1
+Agent: Main Agent
+Task: Enhance types.ts with connected letter forms, Tafsir Huruf Fungsi, color-coded harakat, more Quran verses, IQRA page content
+
+Work Log:
+- Added REAL connected letter forms (initial/medial/final/isolated) for all 28+ letters via REAL_LETTER_FORMS map
+- Added TafsirHuruf interface and TAFSIR_HURUF_FUNGSI data (28 letters with categories like Qalqalah, Madd, Syamsiyyah, etc.)
+- Added HARAKAT_COLORS with 8 distinct colors (fathah=red, kasrah=blue, dhammah=green, tanwinFath=orange, etc.)
+- Enhanced QURAN_VERSES_PER_BOOK from 2-3 verses to 6 verses per book with tajwidHighlight data
+- Added IqraPageContent interface and IQRA_PAGE_CONTENT with 72 pages across 6 books
+- Added 5 new IQRA-specific badges (tanwin-master, qamariyyah-star, syamsiyyah-star, speed-reader, genius-mode)
+
+Stage Summary:
+- types.ts now has comprehensive IQRA 1-6 data with real Arabic letter forms
+- Tafsir Huruf Fungsi enables Genius Mode features
+- Color-coded harakat system ready for visual rendering
+- 72 page content items provide structured IQRA curriculum
+---
+Task ID: 2
+Agent: Main Agent
+Task: Rewrite IqraTab.tsx with enhanced features
+
+Work Log:
+- Updated imports to include new types (TAFSIR_HURUF_FUNGSI, HARAKAT_COLORS, IQRA_PAGE_CONTENT, etc.)
+- Added geniusMode state for Tafsir Huruf Fungsi toggle
+- Added Genius Mode toggle button in header (purple theme)
+- Enhanced letter grid with color-coded indicators: Qalqalah=red dot, Thick=gold border, Madd=blue dot
+- Added Tafsir Huruf Fungsi category badges in letter grid (Genius Mode only)
+- Enhanced Harakat view with HARAKAT_COLORS color coding
+- Added Tanwin filter view with color-coded cards (orange/indigo/teal)
+- Added Mad filter view with 6 Mad types, length info, book reference, and audio
+- Enhanced LetterDetailModal with: all 4 letter forms (isolated/initial/medial/final), color-coded harakat, Tafsir Huruf Fungsi badges, thick letter highlighting, navigation arrows
+- Removed inline HARAKAT_DATA (now imported from types.ts)
+- Cleaned up unused imports
+
+Stage Summary:
+- IqraTab.tsx now has Genius Mode with Tafsir Huruf Fungsi
+- Letter grid shows functional category indicators
+- Color-coded harakat/tanwin/mad views fully implemented
+- LetterDetailModal shows all 4 letter forms with Malay labels
+- No compilation errors, app runs successfully
+

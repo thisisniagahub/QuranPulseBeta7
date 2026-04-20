@@ -3,16 +3,17 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   GraduationCap, BookOpen, Brain, Target, MessageCircle, Mic, X, Send,
-  Zap, Flame, Volume2, Play, Pause, Star, CheckCircle, Pen, BarChart3,
-  Award, Lock, TrendingUp, Calendar, Clock, Shield, ChevronLeft, ChevronRight,
-  RotateCcw, Shuffle,
+  Zap, Flame, Volume2, Play, Pause, Star, CheckCircle,
+  Award, Shield, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { useQuranPulseStore } from '@/stores/quranpulse-store'
 import {
   type IqraSubTab, type PracticeMode, type LetterFilter, type ChatMsg, type BadgeCtx,
-  IQRA_BOOKS, ENHANCED_LETTERS, BADGES, LEARNING_PATH, DAILY_CHALLENGES,
-  HAFAZAN_SURAHS, TAJWID_CATEGORIES, JAKIM_TAJWID_REFS,
-  MAKHRAJ_DATA, SIFAT_HURUF, TAJWID_COLORS, QURAN_VERSES_PER_BOOK,
+  IQRA_BOOKS, ENHANCED_LETTERS, BADGES, DAILY_CHALLENGES,
+  HAFAZAN_SURAHS, TAJWID_CATEGORIES,
+  MAKHRAJ_DATA, SIFAT_HURUF, QURAN_VERSES_PER_BOOK,
+  TAFSIR_HURUF_FUNGSI, HARAKAT_COLORS,
+  HARAKAT_DATA, TANWIN_MAD_DATA, MAD_DETAIL,
 } from './iqra/types'
 import { IqraBookNavigator } from './iqra/IqraBookNavigator'
 import { IqraTajwidExplorer } from './iqra/IqraTajwidExplorer'
@@ -56,6 +57,7 @@ export function IqraTab() {
   const [assessmentDone, setAssessmentDone] = useState(false)
   const [assessmentOptions, setAssessmentOptions] = useState<string[][]>([])
   const [view, setView] = useState<'books' | 'reader' | 'letters' | 'tajwid' | 'combined'>('books')
+  const [geniusMode, setGeniusMode] = useState(false)
   const autoPlayRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Derived values
@@ -310,6 +312,15 @@ export function IqraTab() {
                   onClick={() => setLearningMode(mode)}
                 >{mode === 'kids' ? '🧒 Kanak-kanak' : '👨 Dewasa'}</button>
               ))}
+              <button
+                className="px-2.5 py-1.5 rounded-full text-[9px] font-medium transition-all"
+                style={{
+                  background: geniusMode ? 'rgba(139,92,246,0.15)' : 'transparent',
+                  color: geniusMode ? '#8b5cf6' : 'rgba(204,204,204,0.4)',
+                  border: geniusMode ? '1px solid rgba(139,92,246,0.3)' : '1px solid transparent',
+                }}
+                onClick={() => setGeniusMode(!geniusMode)}
+              >🧬 Genius</button>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -453,6 +464,8 @@ export function IqraTab() {
             playingAudio={playingAudio}
             playAudio={playAudio}
             onClose={() => setShowLetterDetail(null)}
+            onPrev={showLetterDetail > 0 ? () => setShowLetterDetail(showLetterDetail - 1) : undefined}
+            onNext={showLetterDetail < ENHANCED_LETTERS.length - 1 ? () => setShowLetterDetail(showLetterDetail + 1) : undefined}
           />
         )}
       </AnimatePresence>
@@ -515,26 +528,90 @@ export function IqraTab() {
           </div>
           {(letterFilter === 'all' || letterFilter === 'hijaiyah') && (
             <div className={`grid ${learningMode === 'kids' ? 'grid-cols-3' : 'grid-cols-5'} gap-2`}>
-              {filteredLetters.map((letter, i) => (
-                <motion.button key={letter.id} className="aspect-square rounded-xl flex flex-col items-center justify-center relative" style={{ background: 'rgba(42,42,106,0.5)', border: playingAudio === `letter-grid-${letter.id}` ? '2px solid #d4af37' : '1px solid rgba(74,74,166,0.1)' }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.015 }} onClick={() => { setShowLetterDetail(i); playAudio(letter.name, `letter-grid-${letter.id}`) }}>
-                  <span className={`${learningMode === 'kids' ? 'text-3xl' : 'text-lg'}`} style={{ color: '#ffffff' }}>{letter.letter}</span>
-                  <span className={`${learningMode === 'kids' ? 'text-[10px]' : 'text-[9px]'} mt-0.5`} style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
-                  {learningMode === 'kids' && <span className="absolute bottom-1 right-1 text-[10px]" style={{ color: 'rgba(212,175,55,0.5)' }}>🔊</span>}
-                </motion.button>
-              ))}
+              {filteredLetters.map((letter, i) => {
+                const tafsir = TAFSIR_HURUF_FUNGSI.find(t => t.letter === letter.letter)
+                const isQalqalah = tafsir?.isQalqalah ?? false
+                const isThick = tafsir?.isThick ?? false
+                const isMadd = tafsir?.isMadd ?? false
+                const dotColor = isQalqalah ? '#ef4444' : isThick ? '#d4af37' : isMadd ? '#3b82f6' : null
+                return (
+                  <motion.button key={letter.id} className="aspect-square rounded-xl flex flex-col items-center justify-center relative" style={{ background: 'rgba(42,42,106,0.5)', border: playingAudio === `letter-grid-${letter.id}` ? '2px solid #d4af37' : isThick && geniusMode ? '1px solid rgba(212,175,55,0.3)' : '1px solid rgba(74,74,166,0.1)' }} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.015 }} onClick={() => { setShowLetterDetail(i); playAudio(letter.name, `letter-grid-${letter.id}`) }}>
+                    <span className={`${learningMode === 'kids' ? 'text-3xl' : 'text-lg'}`} style={{ color: isThick && geniusMode ? '#d4af37' : '#ffffff' }}>{letter.letter}</span>
+                    <span className={`${learningMode === 'kids' ? 'text-[10px]' : 'text-[9px]'} mt-0.5`} style={{ color: 'rgba(204,204,204,0.5)' }}>{letter.name}</span>
+                    {dotColor && geniusMode && <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full" style={{ background: dotColor }} />}
+                    {geniusMode && tafsir && tafsir.categories.length > 0 && <span className="absolute bottom-0.5 left-0.5 text-[7px] px-0.5 rounded" style={{ background: 'rgba(139,92,246,0.2)', color: '#8b5cf6' }}>{tafsir.categories[0]}</span>}
+                    {learningMode === 'kids' && !geniusMode && <span className="absolute bottom-1 right-1 text-[10px]" style={{ color: 'rgba(212,175,55,0.5)' }}>🔊</span>}
+                  </motion.button>
+                )
+              })}
             </div>
           )}
           {letterFilter === 'harakat' && (
             <div className="grid grid-cols-2 gap-2.5">
-              {[...HARAKAT_DATA, { id: 'sukun', name: 'Sukun', nameAr: 'سُكُون', symbol: 'ْ', desc: 'Tanpa baris — huruf mati', example: 'بْ (b)' }, { id: 'shaddah', name: 'Syaddah', nameAr: 'شَدَّة', symbol: 'ّ', desc: 'Gandaan — bunyi berulang', example: 'بّ (bb)' }].map(h => (
-                <motion.button key={h.id} className="rounded-xl p-4 text-center" style={{ background: 'rgba(42,42,106,0.5)', border: '1px solid rgba(74,74,166,0.12)' }} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} onClick={() => playAudio(h.example.replace(/[()]/g, '').trim(), `harakat-${h.id}`, 0.7)}>
-                  <div className="text-4xl font-arabic mb-1" style={{ color: '#d4af37' }}>{h.symbol}</div>
-                  <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{h.name}</div>
-                  <div className="text-2xl font-arabic my-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{h.nameAr}</div>
-                  <div className="text-[9px] mb-1.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{h.desc}</div>
-                  <div className="text-lg font-arabic" style={{ color: '#4a4aa6' }}>{h.example}</div>
-                  <Volume2 className="h-3 w-3 mx-auto mt-1.5" style={{ color: 'rgba(74,74,166,0.4)' }} />
-                </motion.button>
+              {[...HARAKAT_DATA, { id: 'sukun', name: 'Sukun', nameAr: 'سُكُون', symbol: 'ْ', desc: 'Tanpa baris — huruf mati', example: 'بْ (b)', color: HARAKAT_COLORS.sukun }, { id: 'shaddah', name: 'Syaddah', nameAr: 'شَدَّة', symbol: 'ّ', desc: 'Gandaan — bunyi berulang', example: 'بّ (bb)', color: HARAKAT_COLORS.shaddah }].map(h => {
+                const hColor = h.id === 'fathah' ? HARAKAT_COLORS.fathah : h.id === 'kasrah' ? HARAKAT_COLORS.kasrah : h.id === 'dhammah' ? HARAKAT_COLORS.dhammah : (h as { color?: string }).color || '#d4af37'
+                return (
+                  <motion.button key={h.id} className="rounded-xl p-4 text-center" style={{ background: `${hColor}10`, border: `1px solid ${hColor}25` }} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} onClick={() => playAudio(h.example.replace(/[()]/g, '').trim(), `harakat-${h.id}`, 0.7)}>
+                    <div className="text-4xl font-arabic mb-1" style={{ color: hColor }}>{h.symbol}</div>
+                    <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{h.name}</div>
+                    <div className="text-2xl font-arabic my-1" style={{ color: 'rgba(255,255,255,0.7)' }}>{h.nameAr}</div>
+                    <div className="text-[9px] mb-1.5" style={{ color: 'rgba(204,204,204,0.5)' }}>{h.desc}</div>
+                    <div className="text-lg font-arabic" style={{ color: hColor }}>{h.example}</div>
+                    <Volume2 className="h-3 w-3 mx-auto mt-1.5" style={{ color: `${hColor}80` }} />
+                  </motion.button>
+                )
+              })}
+            </div>
+          )}
+          {letterFilter === 'tanwin' && (
+            <div className="space-y-2.5">
+              {TANWIN_MAD_DATA.filter(t => t.id.startsWith('tanwin')).map((t, i) => {
+                const tColor = t.id === 'tanwin-fath' ? HARAKAT_COLORS.tanwinFath : t.id === 'tanwin-kasr' ? HARAKAT_COLORS.tanwinKasr : HARAKAT_COLORS.tanwinDham
+                return (
+                  <motion.div key={t.id} className="rounded-xl p-4" style={{ background: `${tColor}10`, border: `1px solid ${tColor}25` }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+                    <div className="flex items-center gap-3">
+                      <div className="text-4xl font-arabic" style={{ color: tColor }}>{t.symbol}</div>
+                      <div className="flex-1">
+                        <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{t.name}</div>
+                        <div className="text-xl font-arabic" style={{ color: 'rgba(255,255,255,0.6)' }}>{t.nameAr}</div>
+                        <div className="text-[9px]" style={{ color: 'rgba(204,204,204,0.5)' }}>{t.desc}</div>
+                      </div>
+                      <div className="text-2xl font-arabic" style={{ color: tColor }}>{t.example}</div>
+                    </div>
+                    <button className="mt-2 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px]" style={{ background: `${tColor}15`, border: `1px solid ${tColor}25`, color: tColor }} onClick={() => playAudio(t.example.replace(/[()]/g, '').trim(), `tanwin-${t.id}`, 0.7)}>
+                      <Volume2 className="h-3 w-3" /> Dengar
+                    </button>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+          {letterFilter === 'mad' && (
+            <div className="space-y-2.5">
+              {MAD_DETAIL.map((m, i) => (
+                <motion.div key={m.id} className="rounded-xl p-3" style={{ background: `${m.color}08`, border: `1px solid ${m.color}20` }} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: m.color }} />
+                    <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{m.name}</div>
+                    <div className="text-[10px]" style={{ color: 'rgba(204,204,204,0.4)', direction: 'rtl' as const }}>{m.nameAr}</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div className="rounded-lg p-2" style={{ background: 'rgba(42,42,106,0.4)' }}>
+                      <div className="text-[8px] uppercase tracking-wide" style={{ color: 'rgba(204,204,204,0.4)' }}>Panjang</div>
+                      <div className="text-[11px] font-semibold" style={{ color: m.color }}>{m.length}</div>
+                    </div>
+                    <div className="rounded-lg p-2" style={{ background: 'rgba(42,42,106,0.4)' }}>
+                      <div className="text-[8px] uppercase tracking-wide" style={{ color: 'rgba(204,204,204,0.4)' }}>Iqra&apos; Buku</div>
+                      <div className="text-[11px] font-semibold" style={{ color: '#ffffff' }}>{m.book}</div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg p-2 text-center" style={{ background: 'rgba(26,26,74,0.5)' }}>
+                    <div className="text-lg font-arabic" style={{ color: '#d4af37', direction: 'rtl' as const }}>{m.example}</div>
+                  </div>
+                  <button className="mt-2 flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px]" style={{ background: `${m.color}15`, border: `1px solid ${m.color}25`, color: m.color }} onClick={() => playAudio(m.example, `mad-${m.id}`)}>
+                    <Volume2 className="h-3 w-3" /> Dengar
+                  </button>
+                </motion.div>
               ))}
             </div>
           )}
@@ -789,43 +866,65 @@ export function IqraTab() {
 
 // ============ Helper Components ============
 
-const HARAKAT_DATA = [
-  { id: 'fathah', name: 'Fathah', nameAr: 'فَتْحَة', symbol: 'َ', desc: 'Baris atas — bunyi "a"', example: 'بَ (ba)' },
-  { id: 'kasrah', name: 'Kasrah', nameAr: 'كَسْرَة', symbol: 'ِ', desc: 'Baris bawah — bunyi "i"', example: 'بِ (bi)' },
-  { id: 'dhammah', name: 'Dhammah', nameAr: 'ضَمَّة', symbol: 'ُ', desc: 'Baris hadapan — bunyi "u"', example: 'بُ (bu)' },
-]
+// HARAKAT_DATA is now imported from types.ts
 
-function LetterDetailModal({ letter, learningMode, playingAudio, playAudio, onClose }: {
+function LetterDetailModal({ letter, learningMode, playingAudio, playAudio, onClose, onPrev, onNext }: {
   letter: typeof ENHANCED_LETTERS[number]
   learningMode: 'kids' | 'adult'
   playingAudio: string | null
   playAudio: (text: string, id: string, speed?: number) => void
   onClose: () => void
+  onPrev?: () => void
+  onNext?: () => void
 }) {
   const makhraj = MAKHRAJ_DATA.find(m => m.letter === letter.letter)
   const sifat = SIFAT_HURUF.find(s => s.letter === letter.letter)
+  const tafsir = TAFSIR_HURUF_FUNGSI.find(t => t.letter === letter.letter)
 
   return (
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <motion.div className="relative w-[90%] max-w-[400px] rounded-2xl p-5 max-h-[85vh] overflow-y-auto qp-scroll" style={{ background: '#1a1a4a', border: '1px solid rgba(74,74,166,0.25)' }} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
+      <motion.div className="relative w-[90%] max-w-[420px] rounded-2xl p-5 max-h-[85vh] overflow-y-auto qp-scroll" style={{ background: '#1a1a4a', border: '1px solid rgba(74,74,166,0.25)' }} initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
         <button className="absolute top-3 right-3" onClick={onClose}><X className="h-4 w-4" style={{ color: 'rgba(204,204,204,0.5)' }} /></button>
+        {onPrev && <button className="absolute top-3 left-3 p-1 rounded-lg" style={{ background: 'rgba(74,74,166,0.12)' }} onClick={onPrev}><ChevronLeft className="h-4 w-4" style={{ color: '#4a4aa6' }} /></button>}
+        {onNext && <button className="absolute top-3 left-10 p-1 rounded-lg" style={{ background: 'rgba(74,74,166,0.12)' }} onClick={onNext}><ChevronRight className="h-4 w-4" style={{ color: '#4a4aa6' }} /></button>}
 
         {/* Letter display */}
-        <div className="text-center mb-4">
-          <div className={`${learningMode === 'kids' ? 'text-7xl' : 'text-5xl'} font-arabic`} style={{ color: '#ffffff' }}>{letter.letter}</div>
+        <div className="text-center mb-3">
+          <div className={`${learningMode === 'kids' ? 'text-7xl' : 'text-5xl'} font-arabic`} style={{ color: sifat?.thick ? '#d4af37' : '#ffffff' }}>{letter.letter}</div>
           <div className="text-sm font-semibold mt-1" style={{ color: '#d4af37' }}>{letter.name}</div>
+          {tafsir && <div className="flex flex-wrap gap-1 mt-1.5 justify-center">
+            {tafsir.categories.map((cat, i) => (
+              <span key={i} className="px-1.5 py-0.5 rounded-full text-[7px] font-bold" style={{
+                background: cat === 'Qalqalah' ? 'rgba(239,68,68,0.12)' : cat === 'Huruf Madd' || cat === 'Madd' ? 'rgba(59,130,246,0.12)' : cat === 'Syamsiyyah' ? 'rgba(212,175,55,0.12)' : cat === 'Qamariyyah' ? 'rgba(106,106,182,0.12)' : 'rgba(139,92,246,0.12)',
+                color: cat === 'Qalqalah' ? '#ef4444' : cat === 'Huruf Madd' || cat === 'Madd' ? '#3b82f6' : cat === 'Syamsiyyah' ? '#d4af37' : cat === 'Qamariyyah' ? '#6a6ab6' : '#8b5cf6',
+                border: `1px solid ${cat === 'Qalqalah' ? 'rgba(239,68,68,0.2)' : cat === 'Huruf Madd' || cat === 'Madd' ? 'rgba(59,130,246,0.2)' : 'rgba(139,92,246,0.2)'}`
+              }}>{cat}</span>
+            ))}
+          </div>}
         </div>
 
-        {/* Harakat grid */}
-        <div className="grid grid-cols-5 gap-1.5 mb-4">
+        {/* All 4 Letter Forms */}
+        <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(42,42,106,0.3)', border: '1px solid rgba(74,74,166,0.12)' }}>
+          <div className="text-[10px] font-semibold mb-2" style={{ color: '#8b5cf6' }}>📝 Bentuk Huruf</div>
+          <div className="grid grid-cols-4 gap-1.5">
+            {(['isolated', 'initial', 'medial', 'final'] as const).map(form => (
+              <div key={form} className="rounded-lg p-2 text-center" style={{ background: 'rgba(26,26,74,0.5)', border: '1px solid rgba(74,74,166,0.08)' }}>
+                <div className="text-2xl font-arabic" style={{ color: '#ffffff', direction: 'rtl' }}>{letter.forms[form]}</div>
+                <div className="text-[7px] mt-0.5" style={{ color: 'rgba(204,204,204,0.4)' }}>{form === 'isolated' ? 'Tunggal' : form === 'initial' ? 'Depan' : form === 'medial' ? 'Tengah' : 'Belakang'}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Color-Coded Harakat grid */}
+        <div className="grid grid-cols-5 gap-1.5 mb-3">
           {Object.entries(letter.harakat).map(([key, val]) => {
-            const bg = key === 'fathah' ? 'rgba(212,175,55,0.1)' : key === 'kasrah' ? 'rgba(74,74,166,0.1)' : key === 'dhammah' ? 'rgba(128,90,182,0.1)' : key === 'shaddah' ? 'rgba(212,175,55,0.06)' : 'rgba(106,106,182,0.06)'
-            const clr = key === 'fathah' ? '#d4af37' : key === 'kasrah' ? '#4a4aa6' : key === 'dhammah' ? '#6a6ab6' : key === 'shaddah' ? '#d4af37' : '#6a6ab6'
+            const hColor = key === 'fathah' ? HARAKAT_COLORS.fathah : key === 'kasrah' ? HARAKAT_COLORS.kasrah : key === 'dhammah' ? HARAKAT_COLORS.dhammah : key === 'shaddah' ? HARAKAT_COLORS.shaddah : HARAKAT_COLORS.sukun
             return (
-              <button key={key} className="rounded-xl p-2 text-center" style={{ background: bg, border: `1px solid ${clr}20` }} onClick={() => playAudio(val, `${letter.id}-${key}`)}>
-                <div className="text-2xl font-arabic" style={{ color: '#ffffff' }}>{val}</div>
-                <div className="text-[8px] capitalize" style={{ color: clr }}>{key}</div>
+              <button key={key} className="rounded-xl p-2 text-center" style={{ background: `${hColor}10`, border: `1px solid ${hColor}25` }} onClick={() => playAudio(val, `${letter.id}-${key}`)}>
+                <div className="text-2xl font-arabic" style={{ color: hColor }}>{val}</div>
+                <div className="text-[7px] capitalize" style={{ color: hColor }}>{key === 'fathah' ? 'Atas' : key === 'kasrah' ? 'Bawah' : key === 'dhammah' ? 'Depan' : key === 'shaddah' ? 'Ganda' : 'Mati'}</div>
               </button>
             )
           })}
@@ -851,7 +950,7 @@ function LetterDetailModal({ letter, learningMode, playingAudio, playAudio, onCl
               {sifat.sifat.map((s, i) => (
                 <span key={i} className="px-1.5 py-0.5 rounded-full text-[8px]" style={{ background: 'rgba(212,175,55,0.08)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.15)' }}>{s}</span>
               ))}
-              <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${sifat.thick ? '' : ''}`} style={{ background: sifat.thick ? 'rgba(239,68,68,0.1)' : 'rgba(74,74,166,0.1)', color: sifat.thick ? '#ef4444' : '#4a4aa6', border: `1px solid ${sifat.thick ? 'rgba(239,68,68,0.2)' : 'rgba(74,74,166,0.2)'}` }}>{sifat.thick ? 'Tebal (Tafkhim)' : 'Nipis (Tarqiq)'}</span>
+              <span className="px-1.5 py-0.5 rounded-full text-[8px] font-bold" style={{ background: sifat.thick ? 'rgba(239,68,68,0.1)' : 'rgba(74,74,166,0.1)', color: sifat.thick ? '#ef4444' : '#4a4aa6', border: `1px solid ${sifat.thick ? 'rgba(239,68,68,0.2)' : 'rgba(74,74,166,0.2)'}` }}>{sifat.thick ? 'Tebal (Tafkhim)' : 'Nipis (Tarqiq)'}</span>
             </div>
           </div>
         )}
