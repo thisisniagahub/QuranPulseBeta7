@@ -906,3 +906,111 @@ Stage Summary:
 - Touch targets meet 44px WCAG minimum
 - Viewport meta configured for mobile with safe-area support
 - Lint: 0 errors, 0 warnings
+
+---
+Task ID: 2
+Agent: iqra-types-upgrader
+Task: Upgrade IQRA types.ts with Complete 6-Book Curriculum Data
+
+Work Log:
+- Read existing types.ts at /src/components/quranpulse/tabs/iqra/types.ts (200 lines)
+- Read worklog.md to understand project context and previous agent work
+- Replaced IQRA_BOOKS with enhanced 6-book curriculum data matching real IQRA 1-6 curriculum
+  - Added focus, level fields to each book (Pemula, Asas, Pertengahan, Lanjutan, Mahir, Mumtaz)
+  - Updated descriptions: Huruf Hijaiyah & Fathah, Bersambung & Mad Asli, Kasrah/Dhammah & Mad, Tanwin/Qalqalah/Izhar, Qamariyyah/Syamsiyyah/Idgham, Tajwid Lengkap & Bacaan Quran
+  - Added IqraBook interface with id, title, desc, icon, color, pages, letters, focus, level fields
+  - Added IqraBook[] type annotation to IQRA_BOOKS constant
+- Added MAKHRAJ_DATA: 28 Arabic letters with articulation point data (makhraj, makhrajAr, group: Halqi/Lisan/Syafawi)
+- Added SIFAT_HURUF: 28 letters with characteristics (sifat: Lembut/Teguh/Berbisik/Serak/Dengung/Qalqalah) and thick boolean
+- Added WAQAF_SIGNS: 8 stopping signs (م, لا, ج, ز, صلى, قلى, ⊃, طين) with name, nameAr, desc, color
+- Added AL_QAMARIYYAH: 14 moon letters with example
+- Added AL_SYAMSIYYAH: 14 sun letters with example
+- Added IDGHAM_DETAIL: Bighunnah (4 letters: ي ن م و) and Bilaghunnah (2 letters: ل ر) with examples
+- Added IKHFA_LETTERS: 15 letters with examples
+- Added IQLAB_DATA: letter ب with example
+- Added QALQALAH_DETAIL: 5 letters (قطب جد), mnemonic, 2 types (Kubra/Shugra)
+- Added MAD_DETAIL: 6 mad types (Thabi'i, Wajib Muttashil, Jaiz Munfashil, 'Aridh Lil Sukun, Lin, Lazim) with book mapping
+- Added TAJWID_COLORS: 7 color categories (dengung, qalqalah, mad, tasydid, lamJalalah, izhar, wakaf)
+- Added QURAN_VERSES_PER_BOOK: Practice verses for each IQRA book (1-6) with tajwidHighlight
+- Enhanced BADGES: Added 7 new badges (fathah-fan, qalqalah-king, mad-master, idgham-expert, book1-done, book3-done, makhraj-pro)
+- Enhanced LEARNING_PATH: Added book field mapping, updated to 6 steps matching IQRA 1-6
+- Enhanced DAILY_CHALLENGES: Added 3 new challenges (qalqalah letters, tanwin types, halqi letters) for 5 total
+- Enhanced TAJWID_CATEGORIES: Added 2 new categories (qamariyyah-syamsiyyah, lam-jalalah with 4 rules)
+- Enhanced JAKIM_TAJWID_REFS: Added 2 new references for qamariyyah-syamsiyyah and lam-jalalah
+- All existing exports preserved intact (types, WRITING_TIPS, ENHANCED_LETTERS, HARAKAT_DATA, TANWIN_MAD_DATA, HAFAZAN_SURAHS)
+- ESLint: 0 errors, only pre-existing warnings
+
+Stage Summary:
+- Complete types.ts upgrade from ~200 lines to ~350+ lines
+- 11 new data exports added (MAKHRAJ_DATA, SIFAT_HURUF, WAQAF_SIGNS, AL_QAMARIYYAH, AL_SYAMSIYYAH, IDGHAM_DETAIL, IKHFA_LETTERS, IQLAB_DATA, QALQALAH_DETAIL, MAD_DETAIL, TAJWID_COLORS, QURAN_VERSES_PER_BOOK)
+- 1 new interface (IqraBook)
+- 6 existing exports enhanced (IQRA_BOOKS, BADGES, LEARNING_PATH, DAILY_CHALLENGES, TAJWID_CATEGORIES, JAKIM_TAJWID_REFS)
+- Deep Blue theme colors maintained (#4a4aa6, #6a6ab6, #d4af37, #2a2a6a)
+- All Arabic text properly encoded
+- ESLint passes with 0 errors
+
+---
+Task ID: 5
+Agent: iqra-components-builder
+Task: Build IqraTajwidExplorer + IqraWritingPractice components
+
+Work Log:
+- Read worklog.md and types.ts to understand existing data layer and project context
+- Read existing IqraTab.tsx, IqraBelajarView.tsx, IqraHeader.tsx to understand patterns
+
+- Created IqraTajwidExplorer.tsx (/src/components/quranpulse/tabs/iqra/IqraTajwidExplorer.tsx):
+  - 4-section tab navigation: Hukum (Rules), Rujukan (Visual), Mad, Kuasai (Mastery)
+  - Quick mastery progress bar showing X/Y rules mastered with gradient animation
+  - **Rules Section**: Accordion-based category explorer for all 7 TAJWID_CATEGORIES:
+    - Collapsible sections with category name, Arabic name, mastered/total badge
+    - Each rule card has: color dot from TAJWID_COLORS, name + Arabic name, description, example (large Arabic with direction:rtl), Quran reference, "Tandai Kuasai" toggle button, "Dengar" audio play button
+    - JAKIM reference footer for each category using JAKIM_TAJWID_REFS
+    - AnimatePresence expand/collapse animation
+  - **Visual Reference Section**: Comprehensive grid cards for:
+    - Qalqalah letters (قطب جد) — 5 cards in red/orange with Kubra/Shugra type detail
+    - Idgham Bighunnah (ينمو) — 4 cards in green with example pairs
+    - Idgham Bilaghunnah (ل ر) — 2 cards in blue with example pairs
+    - Ikhfa' 15 letters — scrollable horizontal row in green
+    - Iqlab (ب) — 1 large card in purple with example
+    - Al-Qamariyyah 14 letters — grid in blue with example
+    - As-Syamsiyyah 14 letters — grid in gold with example
+    - Waqaf Signs — 8 sign cards with symbol + name + color
+  - **Mad Types Section**: All 6 MAD_DETAIL entries as cards with:
+    - Color-coded border/background per mad type
+    - Name, Arabic name, length, condition, example, Iqra book reference
+    - Audio play button per mad type
+  - **Mastery Section**: Comprehensive tracking with:
+    - Overall percentage with color-coded progress (green ≥75%, gold ≥40%, blue <40%)
+    - Per-category progress bars with animated fill
+    - Clickable rule badges to toggle mastery
+    - JAKIM certification note with shield icon
+
+- Created IqraWritingPractice.tsx (/src/components/quranpulse/tabs/iqra/IqraWritingPractice.tsx):
+  - **Target letter display**: Large animated Arabic letter with name (Arabic + English)
+  - **Canvas drawing area**:
+    - White background with gold border (rgba(255,255,255,0.95) + 2px gold border)
+    - useRef<HTMLCanvasElement> for canvas reference
+    - Canvas resolution scaled 2x for crisp drawing (canvas.width = rect.width * 2)
+    - Gold stroke color (#d4af37), lineWidth 4, lineCap round
+    - Both mouse and touch event support with proper coordinate calculation
+    - Ghost guide: Target letter rendered at 0.1 opacity behind canvas via absolute positioning (text-[180px] font-arabic)
+    - Guide toggle button to show/hide ghost guide
+  - **Controls row**: Sebelum/Next buttons, Panduan (guide toggle), Padam (clear), Semak +10XP (check with AI)
+  - **Writing tip**: Display writingTip from ENHANCED_LETTERS data
+  - **Harakat forms**: 5-column grid showing fathah, kasrah, dhammah, sukun, shaddah forms
+  - **AI feedback display**: Animated card showing "Nasihat Cikgu" from /api/ustaz-ai
+  - **Stroke counter and position indicator**
+  - **Letter selector**: Horizontal scrollable row of all 28 letters for quick jump
+  - **Session reset**: resetSession() callback called from navigation and letter selector (avoids React lint error for setState in effect)
+  - +10 XP reward when checking writing with AI
+
+- Fixed lint error: Removed setStrokeCount/setWritingFeedback from useEffect, moved to resetSession callback pattern
+- All files pass ESLint with zero errors (only pre-existing warnings from other files)
+- Deep Blue theme maintained: #1a1a4a bg, #2a2a6a cards, #4a4aa6 primary, #d4af37 gold
+
+Stage Summary:
+- 2 new component files created in /src/components/quranpulse/tabs/iqra/
+- IqraTajwidExplorer: Comprehensive 4-section Tajwid explorer with rules accordion, visual reference cards, mad types detail, and mastery tracking
+- IqraWritingPractice: Full canvas drawing component with ghost guide, touch+mouse support, AI feedback, harakat forms, and letter selector
+- Both components follow existing patterns (Deep Blue theme, Framer Motion, Bahasa Melayu, JAKIM references)
+- ESLint passes with 0 errors on new files
